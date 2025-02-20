@@ -7,9 +7,9 @@
     <script>
         async function fetchData() {
             try {
-                const cpuResponse = await fetch("http://192.168.1.196:61208/api/3/cpu/total");
-                const ramResponse = await fetch("http://192.168.1.196:61208/api/3/mem/percent");
-                const diskResponse = await fetch("http://192.168.1.196:61208/api/3/disk/percent");
+                const cpuResponse = await fetch("http://192.168.1.196:61208/api/4/cpu/total");
+                const ramResponse = await fetch("http://192.168.1.196:61208/api/4/mem/percent");
+                //const diskResponse = await fetch("http://192.168.1.196:61208/api/4/disk/percent");
     
                 const cpuData = await cpuResponse.json();
                 const ramData = await ramResponse.json();
@@ -30,6 +30,6 @@
     <h1>PC Resource Monitor</h1>
     <p id="cpu">CPU: Loading...</p>
     <p id="ram">RAM: Loading...</p>
-    <p id="disk">Disk: Loading...</p>
+    //<p id="disk">Disk: Loading...</p>
 </body>
 </html>
