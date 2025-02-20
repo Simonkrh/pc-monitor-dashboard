@@ -7,22 +7,21 @@
     <script>
         async function fetchData() {
             try {
-                const cpuResponse = await fetch("http://192.168.1.196:61208/api/4/cpu/total");
-                const ramResponse = await fetch("http://192.168.1.196:61208/api/4/mem/percent");
-                //const diskResponse = await fetch("http://192.168.1.196:61208/api/4/disk/percent");
-    
-                const cpuData = await cpuResponse.json();
-                const ramData = await ramResponse.json();
-                //const diskData = await diskResponse.json();
-    
-                document.getElementById("cpu").innerText = "CPU: " + cpuData.total + "%";
-                document.getElementById("ram").innerText = "RAM: " + ramData.percent + "%";
-                //document.getElementById("disk").innerText = "Disk: " + diskData + "%";
+                // Fetch all data from Raspberry Pi's API (server.py)
+                const response = await fetch("http://192.168.1.72:5000/api/stats");
+                const data = await response.json();
+
+                // Update UI with system stats
+                document.getElementById("cpu").innerText = "CPU: " + data.cpu + "%";
+                document.getElementById("ram").innerText = "RAM: " + data.ram + "%";
+                document.getElementById("disk").innerText = "Disk: " + data.disk + "%";
             } catch (error) {
                 console.error("Error fetching system data:", error);
             }
         }
-        setInterval(fetchData, 2000);
+
+        setInterval(fetchData, 2000); // Refresh every 2 seconds
+
     </script>
     
 </head>

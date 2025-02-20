@@ -1,25 +1,28 @@
 # API-server som henter data fra Windows-PC
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 import requests
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
-# Sett IP-adressen til din Windows-PC med Glances
 WINDOWS_PC_IP = "192.168.1.196"
-GLANCES_API_URL = f"http://{WINDOWS_PC_IP}:61208/api/3/"
+GLANCES_API_URL = f"http://{WINDOWS_PC_IP}:61208/api/4"
+
+@app.route('/')
+def index():
+    """Serve the frontend (index.html)"""
+    return send_from_directory('static', 'index.html')
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
+    """Fetch and return system stats from Glances"""
     try:
-        response = requests.get(GLANCES_API_URL)
-        data = response.json()
+        cpu_data = requests.get(f"{GLANCES_API_URL}/cpu/total").json()
+        ram_data = requests.get(f"{GLANCES_API_URL}/mem/percent").json()
 
-        # Formaterer dataene for nettsiden
         formatted_data = {
-            "cpu": data["cpu"]["total"],
-            "ram": data["mem"]["percent"],
-            "disk": data["disk"]["percent"]
+            "cpu": cpu_data.get("total", "N/A"),
+            "ram": ram_data.get("percent", "N/A"),
         }
 
         return jsonify(formatted_data)
@@ -27,4 +30,4 @@ def get_stats():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
