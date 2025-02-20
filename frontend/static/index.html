@@ -15,8 +15,8 @@
                 const ramData = await ramResponse.json();
                 //const diskData = await diskResponse.json();
     
-                document.getElementById("cpu").innerText = "CPU: " + cpuData + "%";
-                document.getElementById("ram").innerText = "RAM: " + ramData + "%";
+                document.getElementById("cpu").innerText = "CPU: " + cpuData.total + "%";
+                document.getElementById("ram").innerText = "RAM: " + ramData.total + "%";
                 //document.getElementById("disk").innerText = "Disk: " + diskData + "%";
             } catch (error) {
                 console.error("Error fetching system data:", error);
