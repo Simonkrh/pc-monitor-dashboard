@@ -1,9 +1,11 @@
 # API-server som henter data fra Windows-PC
 
 from flask import Flask, jsonify, send_from_directory
+from flask_cors import CORS
 import requests
 
 app = Flask(__name__, static_folder='static')
+CORS(app)
 
 WINDOWS_PC_IP = "192.168.1.196"
 GLANCES_API_URL = f"http://{WINDOWS_PC_IP}:61208/api/4"
