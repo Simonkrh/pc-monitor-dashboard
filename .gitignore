@@ -1,0 +1,23 @@
+# Ignore Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore logs
+*.log
+logs/
+server.log
+webserver.log
+
+# Ignore virtual environment
+venv/
+.env
+*.venv
+
+# Ignore system files (macOS, Windows, Linux)
+.DS_Store
+Thumbs.db
+*.swp
+
+# Ignore sh scripts
+*.sh
