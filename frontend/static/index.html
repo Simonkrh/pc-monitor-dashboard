@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Monitor</title>
+    <script>
+        async function fetchData() {
+            const response = await fetch('http://<Raspberry-Pi-IP>:5000/api/stats');
+            const data = await response.json();
+
+            document.getElementById("cpu").innerText = "CPU: " + data.cpu + "%";
+            document.getElementById("ram").innerText = "RAM: " + data.ram + "%";
+            document.getElementById("disk").innerText = "Disk: " + data.disk + "%";
+        }
+        setInterval(fetchData, 2000);
+    </script>
+</head>
+<body>
+    <h1>PC Resource Monitor</h1>
+    <p id="cpu">CPU: Loading...</p>
+    <p id="ram">RAM: Loading...</p>
+    <p id="disk">Disk: Loading...</p>
+</body>
+</html>
