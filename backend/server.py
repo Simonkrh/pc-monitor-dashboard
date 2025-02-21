@@ -19,21 +19,37 @@ def fetch_ohm_data():
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
 
-def extract_sensor_value(data, sensor_name, parent_name=None):
-    """Extract a sensor value from Open Hardware Monitor JSON data, ensuring it belongs to the correct parent category."""
+def extract_sensor_value(data, sensor_name, desired_parent=None, current_parent=None):
+    """
+    Recursively search for a sensor value.
+    
+    :param data: The JSON data (dict)
+    :param sensor_name: The sensor we are looking for (e.g., "CPU Package")
+    :param desired_parent: The parent category we expect (e.g., "Temperatures" or "Powers")
+    :param current_parent: The parent text passed down during recursion
+    :return: The sensor value if found, otherwise None.
+    """
+    # If the current node is a parent that matches our desired parent, update current_parent.
+    if "Text" in data and desired_parent and data["Text"] == desired_parent:
+        current_parent = data["Text"]
+    
+    # Recurse through children if present.
     if "Children" in data:
         for child in data["Children"]:
-            result = extract_sensor_value(child, sensor_name, data.get("Text", parent_name))
+            result = extract_sensor_value(child, sensor_name, desired_parent, current_parent)
             if result is not None:
                 return result
 
-    # Check if the current node is the correct sensor
+    # If the current node is our sensor, check the parent's context.
     if "Text" in data and data["Text"] == sensor_name:
-        if parent_name and parent_name not in data.get("Text", ""):  
-            return None  # Skip if not in the correct category
-
+        if desired_parent:
+            # Only return if the parent's value matches the desired parent.
+            if current_parent == desired_parent:
+                return data.get("Value", "N/A")
+            else:
+                return None
         return data.get("Value", "N/A")
-
+    
     return None
 
 @app.route('/')
@@ -59,12 +75,11 @@ def get_stats():
             "ram_usage_mb": extract_sensor_value(data, "Used Memory", "Data"),
         }
 
-        print("\n✅ Extracted Stats:", stats)  # Debugging Output
+        print("\n✅ Extracted Stats:", stats)  # Debugging output
 
         return jsonify(stats)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
