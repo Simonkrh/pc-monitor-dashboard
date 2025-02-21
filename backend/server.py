@@ -13,39 +13,42 @@ OHM_API_URL = f"http://{WINDOWS_PC_IP}:8085/data.json"
 def fetch_ohm_data():
     """Fetch data from Open Hardware Monitor"""
     try:
-        response = requests.get(OHM_API_URL)
+        response = requests.get(OHM_API_URL, timeout=5)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
 
-def extract_sensor_value(data, sensor_name, desired_parent=None, current_parent=None):
+def find_sensor_value(data, sensor_name, desired_parent=None):
     """
-    Recursively search for a sensor value.
+    Iteratively search for a sensor value using DFS.
     
-    - If a node's "Text" matches the desired_parent, update current_parent.
-    - Then, when a node with sensor_name is found, return its Value if the current_parent matches desired_parent.
+    - data: The JSON object (dict)
+    - sensor_name: The sensor to look for (e.g., "CPU Package")
+    - desired_parent: The parent category (e.g., "Temperatures" or "Powers")
+    
+    Returns the sensor's value if found, else None.
     """
-    # If the current node is the desired parent, update current_parent.
-    if "Text" in data and desired_parent and data["Text"] == desired_parent:
-        current_parent = data["Text"]
+    stack = [(data, None)]  # each element is (node, current_parent)
     
-    # Recurse through children (if any)
-    if "Children" in data:
-        for child in data["Children"]:
-            result = extract_sensor_value(child, sensor_name, desired_parent, current_parent)
-            if result is not None:
-                return result
-
-    # If this node is our sensor...
-    if "Text" in data and data["Text"] == sensor_name:
-        if desired_parent:
-            if current_parent == desired_parent:
-                return data.get("Value", "N/A")
+    while stack:
+        node, current_parent = stack.pop()
+        # If this node is the desired parent, update current_parent
+        if "Text" in node and desired_parent and node["Text"] == desired_parent:
+            current_parent = node["Text"]
+        
+        # Check if the node matches the sensor_name
+        if "Text" in node and node["Text"] == sensor_name:
+            if desired_parent:
+                if current_parent == desired_parent:
+                    return node.get("Value", "N/A")
             else:
-                return None
-        return data.get("Value", "N/A")
-    
+                return node.get("Value", "N/A")
+        
+        # Add children to the stack if present
+        if "Children" in node:
+            for child in node["Children"]:
+                stack.append((child, current_parent))
     return None
 
 @app.route('/')
@@ -62,16 +65,16 @@ def get_stats():
             return jsonify({"error": data["error"]}), 500
 
         stats = {
-            "cpu_usage": extract_sensor_value(data, "CPU Total", "Load"),
-            "cpu_temp": extract_sensor_value(data, "CPU Package", "Temperatures"),
-            "cpu_power": extract_sensor_value(data, "CPU Package", "Powers"),
-            "gpu_usage": extract_sensor_value(data, "GPU Core", "Load"),
-            "gpu_temp": extract_sensor_value(data, "GPU Core", "Temperatures"),
-            "gpu_power": extract_sensor_value(data, "GPU Power", "Powers"),
-            "ram_usage_mb": extract_sensor_value(data, "Used Memory", "Data"),
+            "cpu_usage": find_sensor_value(data, "CPU Total", "Load"),
+            "cpu_temp": find_sensor_value(data, "CPU Package", "Temperatures"),
+            "cpu_power": find_sensor_value(data, "CPU Package", "Powers"),
+            "gpu_usage": find_sensor_value(data, "GPU Core", "Load"),
+            "gpu_temp": find_sensor_value(data, "GPU Core", "Temperatures"),
+            "gpu_power": find_sensor_value(data, "GPU Power", "Powers"),
+            "ram_usage_mb": find_sensor_value(data, "Used Memory", "Data"),
         }
 
-        print("\n✅ Extracted Stats:", stats)  # Debugging output
+        print("\n✅ Extracted Stats:", stats)
         return jsonify(stats)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
