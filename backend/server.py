@@ -62,7 +62,7 @@ def get_stats():
         "gpu_usage": extract_sensor_value(data, "GPU Core", "Load"),
         "gpu_temp": extract_sensor_value(data, "GPU Core", "Temperatures"),
         "gpu_power": extract_sensor_value(data, "GPU Power", "Powers"),
-        "ram_usage_mb": extract_sensor_value(data, "Used Memory", "Data"),
+        "ram_usage_gb": extract_sensor_value(data, "Used Memory", "Data"),
     }
 
 
