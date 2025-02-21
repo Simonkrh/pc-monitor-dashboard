@@ -13,8 +13,9 @@ This project sets up a PC monitoring dashboard using:
 
 ### Installing Required Packages
 
-## Open Hardware Monitor for resouce utilization API
-https://openhardwaremonitor.org/
+- Open Hardware Monitor for resouce utilization API
+
+  https://openhardwaremonitor.org/
 
 ### Start API Server (server.py) on Raspberry Pi
 
