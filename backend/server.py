@@ -20,17 +20,17 @@ def fetch_ohm_data():
         return {"error": str(e)}
 
 def extract_sensor_value(data, sensor_name, parent_name=None):
-    """Extract a sensor value from Open Hardware Monitor JSON data"""
+    """Extract a sensor value from Open Hardware Monitor JSON data, ensuring it belongs to the correct parent category."""
     if "Children" in data:
         for child in data["Children"]:
-            result = extract_sensor_value(child, sensor_name, data.get("Text", None))
+            result = extract_sensor_value(child, sensor_name, data.get("Text", parent_name))
             if result is not None:
                 return result
 
+    # Check if the current node is the correct sensor
     if "Text" in data and data["Text"] == sensor_name:
-        # Ensure we get the correct sensor based on parent section (if provided)
-        if parent_name and parent_name != data.get("Text", ""):
-            return None  # Skip if this is not the right parent
+        if parent_name and parent_name not in data.get("Text", ""):  
+            return None  # Skip if not in the correct category
 
         return data.get("Value", "N/A")
 
@@ -50,14 +50,16 @@ def get_stats():
             return jsonify({"error": data["error"]}), 500
 
         stats = {
-            "cpu_usage": extract_sensor_value(data, "CPU Total"),
+            "cpu_usage": extract_sensor_value(data, "CPU Total", "Load"),
             "cpu_temp": extract_sensor_value(data, "CPU Package", "Temperatures"),  
             "cpu_power": extract_sensor_value(data, "CPU Package", "Powers"),
-            "gpu_usage": extract_sensor_value(data, "GPU Core Load"),
-            "gpu_temp": extract_sensor_value(data, "GPU Temperature"),
-            "gpu_power": extract_sensor_value(data, "GPU Power"),
-            "ram_usage_mb": extract_sensor_value(data, "Used Memory"),
+            "gpu_usage": extract_sensor_value(data, "GPU Core", "Load"),
+            "gpu_temp": extract_sensor_value(data, "GPU Core", "Temperatures"),
+            "gpu_power": extract_sensor_value(data, "GPU Power", "Powers"),
+            "ram_usage_mb": extract_sensor_value(data, "Used Memory", "Data"),
         }
+
+        print("\n✅ Extracted Stats:", stats)  # Debugging Output
 
         return jsonify(stats)
     except Exception as e:
