@@ -1,0 +1,64 @@
+/* Make sure the body takes up the full viewport */
+body, html {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #222; 
+  color: #eee; 
+  font-family: sans-serif;
+}
+
+/* The container holding all elements */
+.dashboard {
+  width: 90vw;  /* 90% of the viewport width */
+  height: 90vh; /* 90% of the viewport height */
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* The stats section takes the full width */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+/* Gauge Styling */
+.gauge {
+  width: 300px; 
+  height: 300px;
+  border-radius: 50%;
+  background: conic-gradient(#4e9ef3 var(--value), #444 var(--value));
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gauge-text {
+  position: absolute;
+  font-weight: bold;
+  font-size: 7rem;
+  margin-bottom: 3rem;
+}
+
+.gauge-label {
+  position: absolute;
+  margin-top: 7rem;
+  margin-left: 1rem;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+/* Ensure text-based stats align properly */
+.text-stats {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+}

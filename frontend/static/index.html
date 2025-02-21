@@ -4,50 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PC Monitor</title>
-  <style>
-    body {
-      background: #222; 
-      color: #eee; 
-      font-family: sans-serif;
-      margin: 20px;
-    }
-    h1 {
-      margin-bottom: 1rem;
-    }
-    .stats {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-    }
-
-    /* A simple “gauge” using conic-gradient */
-    .gauge {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      /* --value will be a degree from 0deg to 360deg */
-      background: conic-gradient(#4e9ef3 var(--value), #444 var(--value));
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 0.5rem;
-    }
-    .gauge-text {
-      position: absolute;
-      font-weight: bold;
-    }
-    .gauge-label {
-      text-align: center;
-      margin-top: -5px;
-      font-size: 0.95rem;
-      color: #ccc;
-    }
-
-    .text-stats {
-      margin-top: 1rem;
-    }
-  </style>
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
   <h1>PC Resource Monitor</h1>
@@ -55,9 +12,9 @@
 
     <div>
       <div class="gauge" id="cpu-gauge" style="--value: 0deg;">
-        <div class="gauge-text" id="cpu-gauge-text">0%</div>
+        <div class="gauge-text" id="cpu-gauge-text">0</div>
+        <div class="gauge-label">CPU %</div>
       </div>
-      <div class="gauge-label">CPU Usage</div>
 
       <div class="text-stats">
         <p id="cpu_temp">CPU Temp: Loading...</p>
@@ -67,9 +24,10 @@
 
     <div>
       <div class="gauge" id="gpu-gauge" style="--value: 0deg;">
-        <div class="gauge-text" id="gpu-gauge-text">0%</div>
+        <div class="gauge-text" id="gpu-gauge-text">0</div>
+        <div class="gauge-label">GPU %</div>
       </div>
-      <div class="gauge-label">GPU Usage</div>
+      
 
       <div class="text-stats">
         <p id="gpu_temp">GPU Temp: Loading...</p>
@@ -79,9 +37,9 @@
 
     <div>
       <div class="gauge" id="ram-gauge" style="--value: 0deg;">
-        <div class="gauge-text" id="ram-gauge-text">0%</div>
+        <div class="gauge-text" id="ram-gauge-text">0</div>
+        <div class="gauge-label">RAM %</div>
       </div>
-      <div class="gauge-label">RAM Usage</div>
 
       <div class="text-stats">
         <p id="ram">RAM Usage: Loading...</p>
@@ -99,7 +57,7 @@
         const cpuUsage = parseFloat(data.cpu_usage) || 0; 
         const cpuDegrees = (cpuUsage / 100) * 360;
         document.getElementById("cpu-gauge").style.setProperty("--value", cpuDegrees + "deg");
-        document.getElementById("cpu-gauge-text").textContent = Math.round(cpuUsage) + "%";
+        document.getElementById("cpu-gauge-text").textContent = Math.round(cpuUsage);
         document.getElementById("cpu_temp").innerText = `CPU Temp: ${data.cpu_temp || "N/A"}°`;
         document.getElementById("cpu_power").innerText = `CPU Power: ${data.cpu_power || "N/A"}`;
 
@@ -107,7 +65,7 @@
         const gpuUsage = parseFloat(data.gpu_usage) || 0;
         const gpuDegrees = (gpuUsage / 100) * 360;
         document.getElementById("gpu-gauge").style.setProperty("--value", gpuDegrees + "deg");
-        document.getElementById("gpu-gauge-text").textContent = Math.round(gpuUsage) + "%";
+        document.getElementById("gpu-gauge-text").textContent = Math.round(gpuUsage);
         document.getElementById("gpu_temp").innerText = `GPU Temp: ${data.gpu_temp || "N/A"}°`;
         document.getElementById("gpu_power").innerText = `GPU Power: ${data.gpu_power || "N/A"}`;
 
@@ -117,7 +75,7 @@
         const ramPercent = (usedRamGB / totalRamGB) * 100;
         const ramDegrees = (ramPercent / 100) * 360;
         document.getElementById("ram-gauge").style.setProperty("--value", ramDegrees + "deg");
-        document.getElementById("ram-gauge-text").textContent = Math.round(ramPercent) + "%";
+        document.getElementById("ram-gauge-text").textContent = Math.round(ramPercent);
         document.getElementById("ram").innerText = `RAM Usage: ${usedRamGB.toFixed(0)} GB of ${totalRamGB} GB`;
 
       } catch (error) {
