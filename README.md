@@ -13,31 +13,8 @@ This project sets up a PC monitoring dashboard using:
 
 ### Installing Required Packages
 
-#### On Window/Linux (Glances & Python)
-
-`pip install glances`
-
-`pip install fastapi uvicorn`
-
-With stats for NVIDIA graphics card:
-
-`pip install nvidia-ml-p`
-
-Start Glances:
-
-`glances -w`
-
-#### On Raspberry Pi (Flask & Flask-CORS)
-
-`sudo apt update`
-
-`sudo apt install python3-flask python3-flask-cors`
-
-## Running the Servers Manually
-
-### Start Glances on Window/Linux
-
-`glances -w`
+## Open Hardware Monitor for resouce utilization API
+https://openhardwaremonitor.org/
 
 ### Start API Server (server.py) on Raspberry Pi
 
