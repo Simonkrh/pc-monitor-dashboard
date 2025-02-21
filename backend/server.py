@@ -13,42 +13,33 @@ OHM_API_URL = f"http://{WINDOWS_PC_IP}:8085/data.json"
 def fetch_ohm_data():
     """Fetch data from Open Hardware Monitor"""
     try:
-        response = requests.get(OHM_API_URL, timeout=5)
+        response = requests.get(OHM_API_URL)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
 
-def find_sensor_value(data, sensor_name, desired_parent=None):
+def extract_sensor_value(data, sensor_name, required_parent_text=None, parent_text=None):
     """
-    Iteratively search for a sensor value using DFS.
-    
-    - data: The JSON object (dict)
-    - sensor_name: The sensor to look for (e.g., "CPU Package")
-    - desired_parent: The parent category (e.g., "Temperatures" or "Powers")
-    
-    Returns the sensor's value if found, else None.
+    Extract a sensor value from OHM JSON data, ensuring (if required_parent_text
+    is given) that the sensor is *directly* inside that parent's text.
     """
-    stack = [(data, None)]  # each element is (node, current_parent)
-    
-    while stack:
-        node, current_parent = stack.pop()
-        # If this node is the desired parent, update current_parent
-        if "Text" in node and desired_parent and node["Text"] == desired_parent:
-            current_parent = node["Text"]
-        
-        # Check if the node matches the sensor_name
-        if "Text" in node and node["Text"] == sensor_name:
-            if desired_parent:
-                if current_parent == desired_parent:
-                    return node.get("Value", "N/A")
-            else:
-                return node.get("Value", "N/A")
-        
-        # Add children to the stack if present
-        if "Children" in node:
-            for child in node["Children"]:
-                stack.append((child, current_parent))
+    for child in data.get("Children", []):
+        val = extract_sensor_value(
+            child, 
+            sensor_name, 
+            required_parent_text, 
+            parent_text=data.get("Text", "")
+        )
+        if val is not None:
+            return val
+
+    if data.get("Text") == sensor_name:
+        if required_parent_text is not None:
+            if parent_text != required_parent_text:
+                return None
+        return data.get("Value", "N/A")
+
     return None
 
 @app.route('/')
@@ -65,19 +56,22 @@ def get_stats():
             return jsonify({"error": data["error"]}), 500
 
         stats = {
-            "cpu_usage": find_sensor_value(data, "CPU Total", "Load"),
-            "cpu_temp": find_sensor_value(data, "CPU Package", "Temperatures"),
-            "cpu_power": find_sensor_value(data, "CPU Package", "Powers"),
-            "gpu_usage": find_sensor_value(data, "GPU Core", "Load"),
-            "gpu_temp": find_sensor_value(data, "GPU Core", "Temperatures"),
-            "gpu_power": find_sensor_value(data, "GPU Power", "Powers"),
-            "ram_usage_mb": find_sensor_value(data, "Used Memory", "Data"),
-        }
+        "cpu_usage": extract_sensor_value(data, "CPU Total", "Load"),
+        "cpu_temp": extract_sensor_value(data, "CPU Package", "Temperatures"),
+        "cpu_power": extract_sensor_value(data, "CPU Package", "Powers"),
+        "gpu_usage": extract_sensor_value(data, "GPU Core", "Load"),
+        "gpu_temp": extract_sensor_value(data, "GPU Core", "Temperatures"),
+        "gpu_power": extract_sensor_value(data, "GPU Power", "Powers"),
+        "ram_usage_mb": extract_sensor_value(data, "Used Memory", "Data"),
+    }
 
-        print("\n✅ Extracted Stats:", stats)
+
+        print("\n✅ Extracted Stats:", stats)  # Debugging Output
+
         return jsonify(stats)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
