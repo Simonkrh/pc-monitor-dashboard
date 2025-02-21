@@ -10,15 +10,15 @@
                 const response = await fetch("http://192.168.1.72:5000/api/stats");
                 const data = await response.json();
 
-                document.getElementById("cpu").innerText = `CPU Usage: ${data.cpu_usage || "N/A"}%`;
-                document.getElementById("cpu_temp").innerText = `CPU Temp: ${data.cpu_temp || "N/A"}°C`;
-                document.getElementById("cpu_power").innerText = `CPU Power: ${data.cpu_power || "N/A"} W`;
+                document.getElementById("cpu").innerText = `CPU Usage: ${data.cpu_usage || "N/A"}`;
+                document.getElementById("cpu_temp").innerText = `CPU Temp: ${data.cpu_temp || "N/A"}`;
+                document.getElementById("cpu_power").innerText = `CPU Power: ${data.cpu_power || "N/A"}`;
 
-                document.getElementById("gpu").innerText = `GPU Usage: ${data.gpu_usage || "N/A"}%`;
-                document.getElementById("gpu_temp").innerText = `GPU Temp: ${data.gpu_temp || "N/A"}°C`;
-                document.getElementById("gpu_power").innerText = `GPU Power: ${data.gpu_power || "N/A"} W`;
+                document.getElementById("gpu").innerText = `GPU Usage: ${data.gpu_usage || "N/A"}`;
+                document.getElementById("gpu_temp").innerText = `GPU Temp: ${data.gpu_temp || "N/A"}°`;
+                document.getElementById("gpu_power").innerText = `GPU Power: ${data.gpu_power || "N/A"}`;
 
-                document.getElementById("ram").innerText = `RAM Usage: ${data.ram_usage_mb || "N/A"} MB`;
+                document.getElementById("ram").innerText = `RAM Usage: ${data.ram_usage_mb || "N/A"}`;
 
             } catch (error) {
                 console.error("Error fetching system data:", error);

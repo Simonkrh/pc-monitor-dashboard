@@ -19,15 +19,21 @@ def fetch_ohm_data():
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
 
-def extract_sensor_value(data, sensor_name):
+def extract_sensor_value(data, sensor_name, parent_name=None):
     """Extract a sensor value from Open Hardware Monitor JSON data"""
     if "Children" in data:
         for child in data["Children"]:
-            result = extract_sensor_value(child, sensor_name)
+            result = extract_sensor_value(child, sensor_name, data.get("Text", None))
             if result is not None:
                 return result
-    if "Text" in data and sensor_name in data["Text"]:
+
+    if "Text" in data and data["Text"] == sensor_name:
+        # Ensure we get the correct sensor based on parent section (if provided)
+        if parent_name and parent_name != data.get("Text", ""):
+            return None  # Skip if this is not the right parent
+
         return data.get("Value", "N/A")
+
     return None
 
 @app.route('/')
@@ -45,8 +51,8 @@ def get_stats():
 
         stats = {
             "cpu_usage": extract_sensor_value(data, "CPU Total"),
-            "cpu_temp": extract_sensor_value(data, "CPU Package"),
-            "cpu_power": extract_sensor_value(data, "CPU Power"),
+            "cpu_temp": extract_sensor_value(data, "CPU Package", "Temperatures"),  
+            "cpu_power": extract_sensor_value(data, "CPU Package", "Powers"),
             "gpu_usage": extract_sensor_value(data, "GPU Core Load"),
             "gpu_temp": extract_sensor_value(data, "GPU Temperature"),
             "gpu_power": extract_sensor_value(data, "GPU Power"),
@@ -56,6 +62,7 @@ def get_stats():
         return jsonify(stats)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
