@@ -19,6 +19,10 @@ This project sets up a PC monitoring dashboard using:
 
 `pip install fastapi uvicorn`
 
+With stats for NVIDIA graphics card:
+
+`pip install nvidia-ml-p`
+
 Start Glances:
 
 `glances -w`
