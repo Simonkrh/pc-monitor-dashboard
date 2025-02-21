@@ -7,27 +7,39 @@
     <script>
         async function fetchData() {
             try {
-                // Fetch all data from Raspberry Pi's API (server.py)
                 const response = await fetch("http://192.168.1.72:5000/api/stats");
                 const data = await response.json();
 
-                // Update UI with system stats
-                document.getElementById("cpu").innerText = "CPU: " + data.cpu + "%";
-                document.getElementById("ram").innerText = "RAM: " + data.ram + "%";
-                document.getElementById("disk").innerText = "Disk: " + data.disk + "%";
+                document.getElementById("cpu").innerText = `CPU Usage: ${data.cpu_usage || "N/A"}%`;
+                document.getElementById("cpu_temp").innerText = `CPU Temp: ${data.cpu_temp || "N/A"}°C`;
+                document.getElementById("cpu_power").innerText = `CPU Power: ${data.cpu_power || "N/A"} W`;
+
+                document.getElementById("gpu").innerText = `GPU Usage: ${data.gpu_usage || "N/A"}%`;
+                document.getElementById("gpu_temp").innerText = `GPU Temp: ${data.gpu_temp || "N/A"}°C`;
+                document.getElementById("gpu_power").innerText = `GPU Power: ${data.gpu_power || "N/A"} W`;
+
+                document.getElementById("ram").innerText = `RAM Usage: ${data.ram_usage_mb || "N/A"} MB`;
+
             } catch (error) {
                 console.error("Error fetching system data:", error);
             }
         }
 
-        setInterval(fetchData, 2000); // Refresh every 2 seconds
-
+        // Refresh every 2 seconds
+        setInterval(fetchData, 2000);
     </script>
     
 </head>
 <body>
     <h1>PC Resource Monitor</h1>
-    <p id="cpu">CPU: Loading...</p>
-    <p id="ram">RAM: Loading...</p>
+    <p id="cpu">CPU Usage: Loading...</p>
+    <p id="cpu_temp">CPU Temp: Loading...</p>
+    <p id="cpu_power">CPU Power: Loading...</p>
+    
+    <p id="gpu">GPU Usage: Loading...</p>
+    <p id="gpu_temp">GPU Temp: Loading...</p>
+    <p id="gpu_power">GPU Power: Loading...</p>
+
+    <p id="ram">RAM Usage: Loading...</p>
 </body>
 </html>

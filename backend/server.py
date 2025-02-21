@@ -1,4 +1,4 @@
-# API-server som henter data fra Windows-PC
+# API-server som henter data fra Windows-PC ved hjelp av Open Hardware Monitor
 
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
@@ -8,7 +8,27 @@ app = Flask(__name__, static_folder='static')
 CORS(app)
 
 WINDOWS_PC_IP = "192.168.1.196"
-GLANCES_API_URL = f"http://{WINDOWS_PC_IP}:61208/api/4"
+OHM_API_URL = f"http://{WINDOWS_PC_IP}:8085/data.json"
+
+def fetch_ohm_data():
+    """Fetch data from Open Hardware Monitor"""
+    try:
+        response = requests.get(OHM_API_URL)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}
+
+def extract_sensor_value(data, sensor_name):
+    """Extract a sensor value from Open Hardware Monitor JSON data"""
+    if "Children" in data:
+        for child in data["Children"]:
+            result = extract_sensor_value(child, sensor_name)
+            if result is not None:
+                return result
+    if "Text" in data and sensor_name in data["Text"]:
+        return data.get("Value", "N/A")
+    return None
 
 @app.route('/')
 def index():
@@ -17,17 +37,23 @@ def index():
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
-    """Fetch and return system stats from Glances"""
+    """Fetch and return system stats from Open Hardware Monitor"""
     try:
-        cpu_data = requests.get(f"{GLANCES_API_URL}/cpu/total").json()
-        ram_data = requests.get(f"{GLANCES_API_URL}/mem/percent").json()
+        data = fetch_ohm_data()
+        if "error" in data:
+            return jsonify({"error": data["error"]}), 500
 
-        formatted_data = {
-            "cpu": cpu_data.get("total", "N/A"),
-            "ram": ram_data.get("percent", "N/A"),
+        stats = {
+            "cpu_usage": extract_sensor_value(data, "CPU Total"),
+            "cpu_temp": extract_sensor_value(data, "CPU Package"),
+            "cpu_power": extract_sensor_value(data, "CPU Power"),
+            "gpu_usage": extract_sensor_value(data, "GPU Core Load"),
+            "gpu_temp": extract_sensor_value(data, "GPU Temperature"),
+            "gpu_power": extract_sensor_value(data, "GPU Power"),
+            "ram_usage_mb": extract_sensor_value(data, "Used Memory"),
         }
 
-        return jsonify(formatted_data)
+        return jsonify(stats)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
