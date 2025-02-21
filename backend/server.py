@@ -23,27 +23,23 @@ def extract_sensor_value(data, sensor_name, desired_parent=None, current_parent=
     """
     Recursively search for a sensor value.
     
-    :param data: The JSON data (dict)
-    :param sensor_name: The sensor we are looking for (e.g., "CPU Package")
-    :param desired_parent: The parent category we expect (e.g., "Temperatures" or "Powers")
-    :param current_parent: The parent text passed down during recursion
-    :return: The sensor value if found, otherwise None.
+    - If a node's "Text" matches the desired_parent, update current_parent.
+    - Then, when a node with sensor_name is found, return its Value if the current_parent matches desired_parent.
     """
-    # If the current node is a parent that matches our desired parent, update current_parent.
+    # If the current node is the desired parent, update current_parent.
     if "Text" in data and desired_parent and data["Text"] == desired_parent:
         current_parent = data["Text"]
     
-    # Recurse through children if present.
+    # Recurse through children (if any)
     if "Children" in data:
         for child in data["Children"]:
             result = extract_sensor_value(child, sensor_name, desired_parent, current_parent)
             if result is not None:
                 return result
 
-    # If the current node is our sensor, check the parent's context.
+    # If this node is our sensor...
     if "Text" in data and data["Text"] == sensor_name:
         if desired_parent:
-            # Only return if the parent's value matches the desired parent.
             if current_parent == desired_parent:
                 return data.get("Value", "N/A")
             else:
@@ -67,7 +63,7 @@ def get_stats():
 
         stats = {
             "cpu_usage": extract_sensor_value(data, "CPU Total", "Load"),
-            "cpu_temp": extract_sensor_value(data, "CPU Package", "Temperatures"),  
+            "cpu_temp": extract_sensor_value(data, "CPU Package", "Temperatures"),
             "cpu_power": extract_sensor_value(data, "CPU Package", "Powers"),
             "gpu_usage": extract_sensor_value(data, "GPU Core", "Load"),
             "gpu_temp": extract_sensor_value(data, "GPU Core", "Temperatures"),
@@ -76,7 +72,6 @@ def get_stats():
         }
 
         print("\n✅ Extracted Stats:", stats)  # Debugging output
-
         return jsonify(stats)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
