@@ -54,9 +54,19 @@
 
       <div class="col-md-6">
         <div class="section-container">
-          <div class="gauge">
-            <div class="gauge-text">N/A</div>
-            <div class="gauge-label">TBD</div>
+          <div class="disk-stats">
+            <p>SSD M2 (C:)</p>
+            <div class="progress">
+              <div id="disk-c-bar" class="progress-bar" role="progressbar"></div>
+            </div>
+            <p>SSD M2 (F:)</p>
+            <div class="progress">
+              <div id="disk-f-bar" class="progress-bar" role="progressbar"></div>
+            </div>
+            <p>SSD Sata (D:)</p>
+            <div class="progress">
+              <div id="disk-d-bar" class="progress-bar" role="progressbar"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -76,7 +86,7 @@
   <script>
     async function fetchData() {
       try {
-        const response = await fetch("http://192.168.1.72:5000/api/stats");
+        const response = await fetch("http://192.168.1.196:5000/api/stats");
         const data = await response.json();
 
         // CPU
@@ -102,9 +112,22 @@
         const ramDegrees = (ramPercent / 100) * 360;
         document.getElementById("ram-gauge").style.setProperty("--value", ramDegrees + "deg");
         document.getElementById("ram-gauge-text").textContent = Math.round(ramPercent);
-        document.getElementById("ram").innerText = `RAM Usage: ${usedRamGB.toFixed(0)} GB of ${totalRamGB} GB`;
+        
+        // Disks
+        function updateDiskBar(diskId, value) {
+          const diskElement = document.getElementById(diskId);
+          if (diskElement) {
+            const percent = parseFloat(value) || 0;
+            diskElement.style.width = percent + "%";
+            diskElement.textContent = percent.toFixed(1) + "%";
+          }
+        }
 
-      } catch (error) {
+        updateDiskBar("disk-c-bar", data.disk_c_usage);
+        updateDiskBar("disk-f-bar", data.disk_f_usage);
+        updateDiskBar("disk-d-bar", data.disk_d_usage);      
+        
+          } catch (error) {
         console.error("Error fetching system data:", error);
       }
     }

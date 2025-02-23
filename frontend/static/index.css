@@ -66,10 +66,37 @@ h1 {
   flex-grow: 1;
 }
 
-/* Time & Date Gauge Styling */
+/* Disk Usage Section */
+.disk-stats {
+  text-align: left;
+  flex-grow: 1;
+  width: 100%;
+}
+
+.disk-stats p {
+  margin-bottom: 5px;
+  font-size: 0.8rem;
+}
+
+.progress {
+  height: 15px;
+  background-color: #444;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background-color: #4e9ef3;
+  border-radius: 10px;
+  transition: width 0.5s ease-in-out;
+}
+
+/* Time & Date */
 #current-time {
   font-size: 3rem; 
-  top: 15%;
+  top: 20%;
   font-weight: bold;
   margin-left: 5%;
 }
@@ -77,7 +104,7 @@ h1 {
 #current-date {
   font-size: 1.3rem; 
   font-weight: 400;
-  top: 15%;
+  top: 20%;
   color: #ddd;
   margin-left: 5%;
 }

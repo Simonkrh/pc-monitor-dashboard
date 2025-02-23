@@ -42,6 +42,34 @@ def extract_sensor_value(data, sensor_name, required_parent_text=None, parent_te
 
     return None
 
+def find_node_by_text(node, text):
+    """
+    Recursively search for the first node whose "Text" matches 'text'.
+    Returns the node if found, otherwise None.
+    """
+    if node.get("Text") == text:
+        return node
+    for child in node.get("Children", []):
+        found = find_node_by_text(child, text)
+        if found:
+            return found
+    return None
+
+def get_disk_used_space(data, disk_name):
+    disk_node = find_node_by_text(data, disk_name)
+    if not disk_node:
+        return "N/A"
+
+    load_node = find_node_by_text(disk_node, "Load")
+    if not load_node:
+        return "N/A"
+
+    used_space_node = find_node_by_text(load_node, "Used Space")
+    if not used_space_node:
+        return "N/A"
+
+    return used_space_node.get("Value", "N/A")
+
 @app.route('/')
 def index():
     """Serve the frontend (index.html)"""
@@ -63,10 +91,11 @@ def get_stats():
         "gpu_temp": extract_sensor_value(data, "GPU Core", "Temperatures"),
         "gpu_power": extract_sensor_value(data, "GPU Power", "Powers"),
         "ram_usage_gb": extract_sensor_value(data, "Used Memory", "Data"),
+
+        "disk_d_usage": get_disk_used_space(data, "SSD Sata (D:)"),
+        "disk_c_usage": get_disk_used_space(data, "SSD M2 (C:)"),
+        "disk_f_usage": get_disk_used_space(data, "SSD M2 (F:)"),
     }
-
-
-        print("\n✅ Extracted Stats:", stats)  # Debugging Output
 
         return jsonify(stats)
     except Exception as e:
