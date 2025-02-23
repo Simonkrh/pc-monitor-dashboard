@@ -148,7 +148,7 @@
 
     // Ensure the next update always gets scheduled
     const elapsedTime = Date.now() - startTime;
-    const nextUpdateIn = Math.max(2000 - elapsedTime, 500); 
+    const nextUpdateIn = Math.max(500 - elapsedTime, 500); 
     setTimeout(fetchData, nextUpdateIn);
   }
 
