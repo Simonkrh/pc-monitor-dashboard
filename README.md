@@ -17,6 +17,12 @@ This project sets up a PC monitoring dashboard using:
 
   https://openhardwaremonitor.org/
 
+- Glances for Network utilization API
+
+  `pip install glances`
+
+  `pip install fastapi uvicorn`
+
 ### Start API Server (server.py) on Raspberry Pi
 
 `cd ~/pc-monitor-dashboard/backend`
