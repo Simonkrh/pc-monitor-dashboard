@@ -64,13 +64,13 @@
       <div class="col-md-3">
         <div class="section-container">
           <div class="gauge">
-            <div class="gauge-text">N/A</div>
-            <div class="gauge-label">TBD</div>
+            <div class="gauge-text" id="current-time">00:00:00</div>
+            <div class="gauge-label" id="current-date">Loading...</div>
           </div>
         </div>
       </div>
+      </div>
     </div>
-
   </div> 
 
   <script>
@@ -112,6 +112,29 @@
     // Run once, then repeat every 2 seconds
     fetchData();
     setInterval(fetchData, 2000);
+
+
+    function updateTimeAndDate() {
+      const now = new Date();
+      
+      // Format time as HH:MM:SS
+      const timeString = now.toLocaleTimeString("en-GB", { hour12: false });
+
+      // Format date as YYYY-MM-DD
+      const dateString = now.toLocaleDateString("en-GB", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      // Update elements
+      document.getElementById("current-time").textContent = timeString;
+      document.getElementById("current-date").textContent = dateString;
+    }
+    setInterval(updateTimeAndDate, 1000);
+    updateTimeAndDate(); 
+
   </script>
 
 </body>

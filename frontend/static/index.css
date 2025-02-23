@@ -21,7 +21,6 @@ h1 {
 .section-container {
   display: flex;
   align-items: center; 
-  justify-content: space-between; 
   border: 2px solid white;
   border-radius: 15px;
   padding: 20px;
@@ -67,6 +66,24 @@ h1 {
   flex-grow: 1;
 }
 
+/* Time & Date Gauge Styling */
+#current-time {
+  font-size: 3rem; 
+  top: 15%;
+  font-weight: bold;
+  margin-left: 5%;
+}
+
+#current-date {
+  font-size: 1.3rem; 
+  font-weight: 400;
+  top: 15%;
+  color: #ddd;
+  margin-left: 5%;
+}
+
+
+
 @media (max-width: 1300px) {
   .gauge {
     width: 16vw; 
@@ -79,5 +96,16 @@ h1 {
   .gauge-label {
     font-size: 1.2rem;
     margin-top: 4vw;
+  }
+    
+  #current-time {
+    font-size: 2.6rem; 
+    top: 15%;
+  }
+
+  #current-date {
+    font-size: 1.2rem; 
+    font-weight: 400;
+    top: 28%;
   }
 }
