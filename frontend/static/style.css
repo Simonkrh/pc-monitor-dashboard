@@ -1,0 +1,25 @@
+
+body {
+    cursor: none;
+    user-select: none; 
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+  
+/* Disable dragging of elements */
+img, a, div, span, p {
+pointer-events: none;
+}
+
+/* Smooth fade-out transition */
+.fade-out {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+  }
+  
+/* Ensure page starts fully visible */
+body {
+opacity: 1;
+transition: opacity 0.5s ease-in-out;
+}
