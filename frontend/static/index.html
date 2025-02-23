@@ -89,6 +89,7 @@
 
     try {
       const response = await fetch("http://192.168.1.72:5000/api/stats");
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
 
       // CPU
@@ -149,9 +150,14 @@
 
     // Ensure the next update always gets scheduled
     const elapsedTime = Date.now() - startTime;
-    const nextUpdateIn = Math.max(500 - elapsedTime, 500); 
+    const nextUpdateIn = Math.max(1000 - elapsedTime, 1000); 
     setTimeout(fetchData, nextUpdateIn);
   }
+
+  // Restart fetching when tab is active
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") fetchData();
+  });
 
   fetchData();
 
