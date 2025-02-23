@@ -9,6 +9,7 @@ CORS(app)
 
 WINDOWS_PC_IP = "192.168.1.196"
 OHM_API_URL = f"http://{WINDOWS_PC_IP}:8085/data.json"
+NETWORK_API_URL = "http://localhost:61208/api/4/network"
 
 def fetch_ohm_data():
     """Fetch data from Open Hardware Monitor"""
@@ -18,6 +19,27 @@ def fetch_ohm_data():
         return response.json()
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
+
+def fetch_network_data():
+    """Fetch network data from the local API."""
+    try:
+        response = requests.get(NETWORK_API_URL)
+        response.raise_for_status()
+        network_data = response.json()
+
+        # Find Ethernet interface
+        ethernet = next((iface for iface in network_data if iface.get("interface_name") == "Ethernet"), None)
+
+        if ethernet:
+            return {
+                "download_speed": ethernet.get("bytes_recv_rate_per_sec", 0),  # Bytes per sec
+                "upload_speed": ethernet.get("bytes_sent_rate_per_sec", 0)     # Bytes per sec
+            }
+        return {"download_speed": 0, "upload_speed": 0}
+
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}
+
 
 def extract_sensor_value(data, sensor_name, required_parent_text=None, parent_text=None):
     """
@@ -77,30 +99,34 @@ def index():
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
-    """Fetch and return system stats from Open Hardware Monitor"""
+    """Fetch and return system stats from Open Hardware Monitor & Network API"""
     try:
         data = fetch_ohm_data()
+        network_stats = fetch_network_data()
+
         if "error" in data:
             return jsonify({"error": data["error"]}), 500
 
         stats = {
-        "cpu_usage": extract_sensor_value(data, "CPU Total", "Load"),
-        "cpu_temp": extract_sensor_value(data, "CPU Package", "Temperatures"),
-        "cpu_power": extract_sensor_value(data, "CPU Package", "Powers"),
-        "gpu_usage": extract_sensor_value(data, "GPU Core", "Load"),
-        "gpu_temp": extract_sensor_value(data, "GPU Core", "Temperatures"),
-        "gpu_power": extract_sensor_value(data, "GPU Power", "Powers"),
-        "ram_usage_gb": extract_sensor_value(data, "Used Memory", "Data"),
+            "cpu_usage": extract_sensor_value(data, "CPU Total", "Load"),
+            "cpu_temp": extract_sensor_value(data, "CPU Package", "Temperatures"),
+            "cpu_power": extract_sensor_value(data, "CPU Package", "Powers"),
+            "gpu_usage": extract_sensor_value(data, "GPU Core", "Load"),
+            "gpu_temp": extract_sensor_value(data, "GPU Core", "Temperatures"),
+            "gpu_power": extract_sensor_value(data, "GPU Power", "Powers"),
+            "ram_usage_gb": extract_sensor_value(data, "Used Memory", "Data"),
 
-        "disk_d_usage": get_disk_used_space(data, "SSD Sata (D:)"),
-        "disk_c_usage": get_disk_used_space(data, "SSD M2 (C:)"),
-        "disk_f_usage": get_disk_used_space(data, "SSD M2 (F:)"),
-    }
+            "disk_d_usage": get_disk_used_space(data, "SSD Sata (D:)"),
+            "disk_c_usage": get_disk_used_space(data, "SSD M2 (C:)"),
+            "disk_f_usage": get_disk_used_space(data, "SSD M2 (F:)"),
+
+            "network_download": network_stats["download_speed"],
+            "network_upload": network_stats["upload_speed"]
+        }
 
         return jsonify(stats)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
