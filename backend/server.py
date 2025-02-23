@@ -9,7 +9,7 @@ CORS(app)
 
 WINDOWS_PC_IP = "192.168.1.196"
 OHM_API_URL = f"http://{WINDOWS_PC_IP}:8085/data.json"
-NETWORK_API_URL = "http://{WINDOWS_PC_IP}:61208/api/4/network"
+NETWORK_API_URL = f"http://{WINDOWS_PC_IP}:61208/api/4/network"
 
 def fetch_ohm_data():
     """Fetch data from Open Hardware Monitor"""
