@@ -2,13 +2,27 @@ let startX = 0;
 let moveX = 0;
 const threshold = 50; // Minimum swipe distance
 
+// Define the order of the pages
+const pages = ["/static/index.html", "/static/spotify.html", "/static/macro.html"];
+let currentPage = window.location.pathname;
+let currentIndex = pages.findIndex((page) => currentPage.includes(page.split('/').pop()));
+
+if (currentIndex === -1) {
+  currentIndex = 0;
+}
+
+// Ensure the new page fades in quickly
+window.onload = () => {
+  document.body.classList.add("show");
+};
+
 // Touch Events
 document.addEventListener("touchstart", (event) => {
   startX = event.touches[0].clientX;
 });
 
 document.addEventListener("touchmove", (event) => {
-  event.preventDefault(); 
+  event.preventDefault();
   moveX = event.touches[0].clientX;
 }, { passive: false });
 
@@ -29,7 +43,7 @@ document.addEventListener("mouseup", () => {
   handleSwipe();
 });
 
-// Swipe Handling (shared for both mouse & touch)
+// Swipe Handling
 function handleSwipe() {
   const diffX = startX - moveX;
 
@@ -40,15 +54,17 @@ function handleSwipe() {
   }
 }
 
-// Page Navigation with Smooth Fade-Out
+// Swipe Transition + Fade-in Effect on New Page
 function navigateToPage(direction) {
-  document.body.classList.add("fade-out");
+  if (direction === "next") {
+    document.body.classList.add("swipe-left");
+    currentIndex = (currentIndex + 1) % pages.length;
+  } else {
+    document.body.classList.add("swipe-right");
+    currentIndex = (currentIndex - 1 + pages.length) % pages.length;
+  }
 
   setTimeout(() => {
-    if (direction === "next") {
-      window.location.href = "/static/next-page.html";
-    } else {
-      window.location.href = "/static/previous-page.html";
-    }
-  }, 500);
+    window.location.href = pages[currentIndex];
+  }, 250); 
 }

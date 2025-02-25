@@ -1,25 +1,35 @@
-
 body {
-    cursor: none;
-    user-select: none; 
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
-  
-/* Disable dragging of elements */
-img, a, div, span, p {
-pointer-events: none;
+  cursor: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  opacity: 0; 
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-out;
 }
 
-/* Smooth fade-out transition */
-.fade-out {
-    opacity: 0;
-    transition: opacity 0.5s ease-in-out;
-  }
-  
-/* Ensure page starts fully visible */
-body {
-opacity: 1;
-transition: opacity 0.5s ease-in-out;
+body, html {
+  height: 100%;
+  margin: 0;
+  background: #222; 
+  color: #eee; 
+  font-family: "Space Grotesk", serif;
+  scrollbar-width: none; 
+}
+
+body::-webkit-scrollbar {
+  display: none; 
+}
+
+/* Swiping */
+.swipe-left {
+  transform: translateX(-100%);
+}
+
+.swipe-right {
+  transform: translateX(100%);
+}
+
+body.show {
+  opacity: 1;
 }
