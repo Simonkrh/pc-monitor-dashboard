@@ -4,25 +4,53 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spotify Controller</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/frontend/global/css/style.css">
+  <link rel="stylesheet" href="/frontend/pages/spotify/spotify.css">
 </head>
 <body>
-  <h1>Spotify Controller</h1>
-  <div class="controls">
-    <button onclick="sendCommand('/prev')">⏮️ Previous</button>
-    <button onclick="sendCommand('/play')">▶️ Play</button>
-    <button onclick="sendCommand('/pause')">⏸️ Pause</button>
-    <button onclick="sendCommand('/next')">⏭️ Next</button>
-  </div>
 
-  <script>
-    function sendCommand(command) {
-    fetch(`http://192.168.1.196:5000${command}`, { method: "POST" })  
-      .then(response => response.json())
-      .then(data => console.log(data))
-      .catch(err => console.error("Error:", err));
-  }
-  </script>
-  <script src="/frontend/global/js/swipe-navigation.js"></script>
+  <div class="player">
+    <div class="wrapper">
+  
+      <!-- Music Info -->
+      <div class="info-wrapper">
+        <img id="album-art" src="https://cdn.pixabay.com/photo/2016/03/26/13/09/cup-of-coffee-1280537_1280.jpg" alt="Album Art">
+        <div class="info">
+          <h1 id="song-title">Loading...</h1>
+          <p id="artist-name">Fetching artist...</p>
+        </div>
+      </div>
+  
+      <!-- Controls -->
+      <div class="controls">
+        <div class="prev" onclick="sendCommand('prev')">
+          <i class="fa-solid fa-backward"></i>
+        </div>
+        
+        <div class="play" onclick="togglePlayPause()">
+          <i id="play-pause-icon" class="fa-solid fa-play"></i>
+        </div>
+        
+        <div class="next" onclick="sendCommand('next')">
+          <i class="fa-solid fa-forward"></i>
+        </div>
+      </div>
+  
+      <!-- Track & Time -->
+      <div class="track-time">
+        <div class="track">
+            <div class="progress-bar"></div>
+        </div>
+        <div class="time">
+            <div id="current-time">00:00</div>
+            <div id="total-time">00:00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/frontend/pages/spotify/spotify.js"></script>
+  <script src="/frontend/global/js/swipe-navigation.js"></script>  
 </body>
 </html>

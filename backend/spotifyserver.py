@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import requests
 import os
 from dotenv import load_dotenv
@@ -13,6 +14,8 @@ TOKEN_URL = "https://accounts.spotify.com/api/token"
 SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1/me/player"
 
 app = Flask(__name__)
+CORS(app) 
+
 app.secret_key = "supersecretkey"
 
 def get_access_token():
@@ -67,14 +70,15 @@ def send_spotify_command(command):
 
     if response.status_code in [204, 202]:
         return jsonify({"success": True})
-    else:
-        try:
-            error_message = response.json()  
-        except requests.exceptions.JSONDecodeError:
-            error_message = {"error": "Empty response from Spotify", "status_code": response.status_code}
 
-        print(f"Spotify API Error ({response.status_code}): {error_message}")  
-        return jsonify(error_message), response.status_code
+    try:
+        error_message = response.json()
+    except requests.exceptions.JSONDecodeError:
+        error_message = {"error": "Empty response from Spotify", "status_code": response.status_code}
+
+    print(f"Spotify API Error ({response.status_code}): {error_message}")  
+    return jsonify(error_message), response.status_code
+
 
 
 @app.route("/play", methods=["POST"])
@@ -92,6 +96,29 @@ def next_track():
 @app.route("/prev", methods=["POST"])
 def prev_track():
     return send_spotify_command("previous")
+
+@app.route("/current-song", methods=["GET"])
+def current_song():
+    access_token = get_access_token()
+    if not access_token:
+        return jsonify({"error": "Failed to get access token"}), 401
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(f"{SPOTIFY_API_BASE_URL}/currently-playing", headers=headers)
+
+    if response.status_code == 200:
+        data = response.json()
+        if not data or "item" not in data:
+            return jsonify({"error": "No song currently playing"}), 204
+
+        return jsonify(data)
+
+    elif response.status_code == 204:  
+        return jsonify({"error": "No song currently playing"}), 204
+
+    else:
+        return jsonify({"error": "Failed to fetch song info"}), response.status_code
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)  
