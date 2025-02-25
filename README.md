@@ -24,14 +24,3 @@ This project sets up a PC monitoring dashboard using:
 
   `pip install fastapi uvicorn`
 
-### Start API Server (server.py) on Raspberry Pi
-
-`cd ~/pc-monitor-dashboard/backend`
-
-`python3 server.py`
-
-### Start Web Server (webserver.py) on Raspberry Pi
-
-`cd ~/pc-monitor-dashboard/backend`
-
-`python3 webserver.py`
