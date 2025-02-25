@@ -31,9 +31,9 @@ document.addEventListener("touchmove", (event) => {
   let diffX = Math.abs(moveX - startX);
   let diffY = Math.abs(moveY - startY);
 
-  // Only prevent scrolling if horizontal movement is larger than vertical movement
-  if (diffX > diffY) {
-    event.preventDefault();
+  // Only prevent default if actual horizontal swipe detected
+  if (diffX > diffY && Math.abs(diffX) > 10) {
+    event.preventDefault(); 
   }
 }, { passive: false });
 
@@ -56,16 +56,19 @@ document.addEventListener("mouseup", () => {
 
 // Swipe Handling
 function handleSwipe() {
-  const diffX = startX - moveX;
+  const diffX = moveX - startX;
+  const diffY = moveY - startY;
 
-  if (Math.abs(diffX) < threshold) return; // Ignore small movements
+  // Ignore taps (when the movement is too small)
+  if (Math.abs(diffX) < threshold || Math.abs(diffY) > threshold / 2) return;
 
-  if (diffX > 0) {
+  if (diffX < 0) {
     navigateToPage("next"); // Swipe Left
   } else {
     navigateToPage("prev"); // Swipe Right
   }
 }
+
 
 // Swipe Transition + Fade-in Effect on New Page
 function navigateToPage(direction) {

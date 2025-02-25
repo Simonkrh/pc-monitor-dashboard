@@ -3,12 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spotify Page</title>
+  <title>Spotify Controller</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <h1>Spotify Page</h1>
-  <p>Swipe left or right to navigate.</p>
+  <h1>Spotify Controller</h1>
+  <div class="controls">
+    <button onclick="sendCommand('/prev')">⏮️ Previous</button>
+    <button onclick="sendCommand('/play')">▶️ Play</button>
+    <button onclick="sendCommand('/pause')">⏸️ Pause</button>
+    <button onclick="sendCommand('/next')">⏭️ Next</button>
+  </div>
+
+  <script>
+    function sendCommand(command) {
+    fetch(`http://192.168.1.196:5000${command}`, { method: "POST" })  
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(err => console.error("Error:", err));
+  }
+  </script>
   <script src="/static/swipe-navigation.js"></script>
 </body>
 </html>
