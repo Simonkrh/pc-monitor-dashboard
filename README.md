@@ -4,7 +4,8 @@
 
 This project sets up a PC monitoring dashboard using:
 
-- Glances on Window/Linux to collect system stats
+- Open Hardware Monitor to collect system stats
+- Glances to collect network stats
 - Flask (server.py) on Raspberry Pi as an API proxy
 - Flask (webserver.py) to serve the frontend
 - JavaScript (index.html) to display real-time stats
