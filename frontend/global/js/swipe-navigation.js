@@ -5,7 +5,7 @@ let moveY = 0;
 const threshold = 50; // Minimum swipe distance
 
 // Define the order of the pages
-const pages = ["/static/index.html", "/static/spotify.html", "/static/macro.html"];
+const pages = ["/resources", "/spotify", "/macro"];
 let currentPage = window.location.pathname;
 let currentIndex = pages.findIndex((page) => currentPage.includes(page.split('/').pop()));
 
@@ -82,5 +82,5 @@ function navigateToPage(direction) {
 
   setTimeout(() => {
     window.location.href = pages[currentIndex];
-  }, 250);
+  }, 300);
 }
