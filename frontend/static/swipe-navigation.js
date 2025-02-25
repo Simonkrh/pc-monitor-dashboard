@@ -1,5 +1,7 @@
 let startX = 0;
+let startY = 0;
 let moveX = 0;
+let moveY = 0;
 const threshold = 50; // Minimum swipe distance
 
 // Define the order of the pages
@@ -19,11 +21,20 @@ window.onload = () => {
 // Touch Events
 document.addEventListener("touchstart", (event) => {
   startX = event.touches[0].clientX;
+  startY = event.touches[0].clientY;
 });
 
 document.addEventListener("touchmove", (event) => {
-  event.preventDefault();
   moveX = event.touches[0].clientX;
+  moveY = event.touches[0].clientY;
+
+  let diffX = Math.abs(moveX - startX);
+  let diffY = Math.abs(moveY - startY);
+
+  // Only prevent scrolling if horizontal movement is larger than vertical movement
+  if (diffX > diffY) {
+    event.preventDefault();
+  }
 }, { passive: false });
 
 document.addEventListener("touchend", () => {
@@ -47,9 +58,11 @@ document.addEventListener("mouseup", () => {
 function handleSwipe() {
   const diffX = startX - moveX;
 
-  if (diffX > threshold) {
+  if (Math.abs(diffX) < threshold) return; // Ignore small movements
+
+  if (diffX > 0) {
     navigateToPage("next"); // Swipe Left
-  } else if (diffX < -threshold) {
+  } else {
     navigateToPage("prev"); // Swipe Right
   }
 }
@@ -66,5 +79,5 @@ function navigateToPage(direction) {
 
   setTimeout(() => {
     window.location.href = pages[currentIndex];
-  }, 250); 
+  }, 250);
 }
