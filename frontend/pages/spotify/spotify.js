@@ -198,7 +198,6 @@ async function playTrack(trackUri) {
   }
 }
 
-
 setInterval(updateSongInfo, 5000);
 updateSongInfo();
 loadPlaylist("4TGxJb0nQLc4bDg0DtasLE");

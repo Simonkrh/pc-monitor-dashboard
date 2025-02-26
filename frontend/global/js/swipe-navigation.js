@@ -2,7 +2,7 @@ let startX = 0;
 let startY = 0;
 let moveX = 0;
 let moveY = 0;
-const threshold = 200; // Minimum swipe distance
+const threshold = 300; // Minimum swipe distance
 
 // Define the order of the pages
 const pages = ["/resources", "/spotify", "/macro"];
@@ -31,9 +31,17 @@ document.addEventListener("touchmove", (event) => {
   let diffX = Math.abs(moveX - startX);
   let diffY = Math.abs(moveY - startY);
 
-  // Only prevent default if actual horizontal swipe detected
-  if (diffX > diffY && Math.abs(diffX) > 10) {
-    event.preventDefault(); 
+  // Check if swiping inside the playlist
+  let isSwipingPlaylist = event.target.closest(".playlist-container");
+
+  // If swiping inside playlist, allow vertical scrolling but prevent page navigation swipe
+  if (isSwipingPlaylist && diffY > diffX) {
+    return;
+  }
+
+  // If horizontal swipe detected and not inside the playlist, prevent default for page navigation
+  if (!isSwipingPlaylist && diffX > diffY && Math.abs(diffX) > 10) {
+    event.preventDefault();
   }
 }, { passive: false });
 
