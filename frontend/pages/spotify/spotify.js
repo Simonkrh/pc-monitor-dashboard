@@ -198,6 +198,47 @@ async function playTrack(trackUri) {
   }
 }
 
+const volumeSlider = document.getElementById("volume-slider");
+
+volumeSlider.addEventListener("input", async (event) => {
+  const volume = event.target.value; 
+  await setSpotifyVolume(volume);
+});
+
+async function setSpotifyVolume(volume) {
+  const invertedVolume = 100 - volume;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/set-volume?volume=${invertedVolume}`, {
+      method: "PUT",
+    });
+
+    if (!response.ok) {
+      console.error("Error setting volume:", await response.text());
+    } else {
+      console.log(`Spotify volume set to ${invertedVolume}%`);
+    }
+  } catch (error) {
+    console.error("Error sending volume command:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const volumeSlider = document.getElementById("volume-slider");
+
+  function updateSliderBackground() {
+    let value = volumeSlider.value; 
+    let percent = (value / volumeSlider.max) * 100; 
+
+    // Apply gradient fill dynamically
+    volumeSlider.style.setProperty("--volume-fill", `${100 - percent}%`);
+  }
+  volumeSlider.addEventListener("input", updateSliderBackground);
+  
+  updateSliderBackground();
+});
+
+
 setInterval(updateSongInfo, 5000);
 updateSongInfo();
 loadPlaylist("4TGxJb0nQLc4bDg0DtasLE");

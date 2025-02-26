@@ -172,6 +172,26 @@ def play_track():
 
     return jsonify({"error": "Failed to play track", "details": r.json()}), r.status_code
 
+@app.route("/set-volume", methods=["PUT"])
+def set_volume():
+    access_token = get_access_token()
+    if not access_token:
+        return jsonify({"error": "Failed to get access token"}), 401
+
+    volume = request.args.get("volume")  # Get volume from request
+    if volume is None or not volume.isdigit():
+        return jsonify({"error": "Invalid volume value"}), 400
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {"volume_percent": int(volume)}
+
+    response = requests.put(f"{SPOTIFY_API_BASE_URL}/volume", headers=headers, params=params)
+
+    if response.status_code in [200, 204]:
+        return jsonify({"success": True})
+
+    return jsonify({"error": "Failed to change volume"}), response.status_code
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
