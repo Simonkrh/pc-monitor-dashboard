@@ -199,29 +199,34 @@ async function playTrack(trackUri) {
 }
 
 const volumeSlider = document.getElementById("volume-slider");
+let debounceTimeout;
+async function setSpotifyVolume(volume) {
+  clearTimeout(debounceTimeout); 
 
-volumeSlider.addEventListener("input", async (event) => {
-  const volume = event.target.value; 
-  await setSpotifyVolume(volume);
+  debounceTimeout = setTimeout(async () => {
+    const invertedVolume = 100 - volume; 
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/set-volume?volume=${invertedVolume}`, {
+        method: "PUT",
+      });
+
+      if (!response.ok) {
+        console.error("Error setting volume:", await response.text());
+      } else {
+        console.log(`Spotify volume set to ${invertedVolume}%`);
+      }
+    } catch (error) {
+      console.error("Error sending volume command:", error);
+    }
+  }, 300); 
+}
+
+volumeSlider.addEventListener("input", (event) => {
+  const volume = event.target.value;
+  setSpotifyVolume(volume);
 });
 
-async function setSpotifyVolume(volume) {
-  const invertedVolume = 100 - volume;
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/set-volume?volume=${invertedVolume}`, {
-      method: "PUT",
-    });
-
-    if (!response.ok) {
-      console.error("Error setting volume:", await response.text());
-    } else {
-      console.log(`Spotify volume set to ${invertedVolume}%`);
-    }
-  } catch (error) {
-    console.error("Error sending volume command:", error);
-  }
-}
 
 document.addEventListener("DOMContentLoaded", function () {
   const volumeSlider = document.getElementById("volume-slider");

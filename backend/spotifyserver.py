@@ -70,7 +70,7 @@ def send_spotify_command(command):
         endpoint = "previous" if command == "prev" else "next"
         response = requests.post(f"{SPOTIFY_API_BASE_URL}/{endpoint}?device_id={device_id}", headers=headers)
 
-    if response.status_code in [204, 202]:
+    if response.status_code in [200, 202, 204]:
         return jsonify({"success": True})
 
     try:
@@ -94,9 +94,9 @@ def pause():
 def next_track():
     return send_spotify_command("next")
 
-@app.route("/prev", methods=["POST"])
+@app.route("/previous", methods=["POST"])
 def prev_track():
-    return send_spotify_command("prev")
+    return send_spotify_command("previous")
 
 @app.route("/current-song", methods=["GET"])
 def current_song():
@@ -148,6 +148,7 @@ def play_track():
 
     req_data = request.get_json()
     track_uri = req_data.get("uri")
+    playlist_id = "4TGxJb0nQLc4bDg0DtasLE"  # Your fixed playlist ID
 
     if not track_uri:
         return jsonify({"error": "No URI provided"}), 400
@@ -158,7 +159,9 @@ def play_track():
     }
 
     payload = {
-        "uris": [track_uri]
+        "context_uri": f"spotify:playlist:{playlist_id}",  # Load full playlist
+        "offset": {"uri": track_uri},  # Start at selected track
+        "position_ms": 0
     }
 
     r = requests.put(
