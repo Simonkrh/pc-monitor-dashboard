@@ -115,3 +115,26 @@ body {
   justify-content: space-between;
   padding-top: 9.6px;
 }
+
+/* Make the playlist container fill height and scroll if needed */
+.playlist-container {
+  background-color: #1e1e2f;
+  padding: 10px;
+  border-radius: 8px;
+  height: 80vh;           
+  overflow-y: auto;        
+}
+
+/* Style for the list items in the playlist */
+#playlist .list-group-item {
+  background-color: #2a2a40;
+  color: #ffffff;
+  border: none; 
+  margin-bottom: 5px; 
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#playlist .list-group-item:hover {
+  background-color: #3a3a55;
+}

@@ -1,56 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Spotify Controller</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/frontend/global/css/style.css">
-  <link rel="stylesheet" href="/frontend/pages/spotify/spotify.css">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  
+  <link rel="stylesheet" href="/frontend/global/css/style.css" />
+  <link rel="stylesheet" href="/frontend/pages/spotify/spotify.css" />
 </head>
 <body>
 
-  <div class="player">
-    <div class="wrapper">
-  
-      <!-- Music Info -->
-      <div class="info-wrapper">
-        <img id="album-art" src="https://cdn.pixabay.com/photo/2016/03/26/13/09/cup-of-coffee-1280537_1280.jpg" alt="Album Art">
-        <div class="info">
-          <h1 id="song-title">Loading...</h1>
-          <p id="artist-name">Fetching artist...</p>
-        </div>
+<div class="container-fluid my-3">
+  <div class="row">
+    <!-- Playlist Panel -->
+    <div class="col-md-3">
+      <div class="playlist-container">
+        <h3 class="text-white mb-3">My Playlist</h3>
+        <ul id="playlist" class="list-group"></ul>
       </div>
-  
-      <!-- Controls -->
-      <div class="controls">
-        <div class="prev" onclick="sendCommand('prev')">
-          <i class="fa-solid fa-backward"></i>
-        </div>
-        
-        <div class="play" onclick="togglePlayPause()">
-          <i id="play-pause-icon" class="fa-solid fa-play"></i>
-        </div>
-        
-        <div class="next" onclick="sendCommand('next')">
-          <i class="fa-solid fa-forward"></i>
-        </div>
-      </div>
-  
-      <!-- Track & Time -->
-      <div class="track-time">
-        <div class="track">
-            <div class="progress-bar"></div>
-        </div>
-        <div class="time">
-            <div id="current-time">00:00</div>
-            <div id="total-time">00:00</div>
+    </div>
+
+    <!-- Player -->
+    <div class="col-md-9">
+      <div class="player">
+        <div class="wrapper">
+          <!-- Music Info -->
+          <div class="info-wrapper">
+            <img
+              id="album-art"
+              src="https://cdn.pixabay.com/photo/2016/03/26/13/09/cup-of-coffee-1280537_1280.jpg"
+              alt="Album Art"
+            />
+            <div class="info">
+              <h1 id="song-title">Loading...</h1>
+              <p id="artist-name">Fetching artist...</p>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="controls">
+            <div class="prev" onclick="sendCommand('prev')">
+              <i class="fa-solid fa-backward"></i>
+            </div>
+
+            <div class="play" onclick="togglePlayPause()">
+              <i id="play-pause-icon" class="fa-solid fa-play"></i>
+            </div>
+
+            <div class="next" onclick="sendCommand('next')">
+              <i class="fa-solid fa-forward"></i>
+            </div>
+          </div>
+
+          <!-- Track & Time -->
+          <div class="track-time">
+            <div class="track">
+              <div class="progress-bar"></div>
+            </div>
+            <div class="time">
+              <div id="current-time">00:00</div>
+              <div id="total-time">00:00</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  
-  <script src="/frontend/pages/spotify/spotify.js"></script>
-  <script src="/frontend/global/js/swipe-navigation.js"></script>  
+</div>
+
+<script src="/frontend/pages/spotify/spotify.js"></script>
+<script src="/frontend/global/js/swipe-navigation.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
