@@ -24,3 +24,7 @@ This project sets up a PC monitoring dashboard using:
 
   `pip install fastapi uvicorn`
 
+### Spotify Music Player:
+https://codepen.io/correiamendes/pen/RwBLvGa
+
+
