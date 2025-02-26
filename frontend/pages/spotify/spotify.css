@@ -27,11 +27,11 @@ body {
   justify-content: space-between; 
   position: relative;
 }
+
 /* Controls */
 .controls i {
   font-size: 5rem; 
   color: #E1E1E6;  
-  cursor: pointer;  
   transition: opacity 0.2s ease-in-out;
 }
 
@@ -81,7 +81,7 @@ body {
 /* Controls Section */
 .controls-container {
   position: absolute;
-  bottom: 0;
+  bottom: 20px;
   left: 0;
   width: 100%;
   padding: 5%;
@@ -130,22 +130,27 @@ body {
 }
 
 /* Playlist */
+.playlist-col-md {
+  padding-right: 0;
+}
+
+#playlist-title {
+  font-size: 2rem;
+  padding-bottom: 0.7rem;
+  padding-left: 0.5rem;
+}
+
 .playlist-container {
   background-color: #1e1e2f;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 15px; 
+  padding-right: 0px;
+  border-radius: 20px;
   height: 80vh;
-  overflow-y: auto; 
+  overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  scrollbar-width: none; 
   user-select: none;
-  cursor: grab;
-}
-
-.playlist-container::-webkit-scrollbar {
-  display: none;
 }
 
 #playlist .list-group-item {
@@ -154,14 +159,52 @@ body {
   border: none;
   display: flex;
   align-items: center;
-  padding: 10px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  border-radius: 5px;
-  touch-action: pan-y; 
+  padding: 20px; 
+  font-size: 1.2rem; 
+  transition: background-color 0.2s ease, transform 0.1s ease-in-out;
+  border-radius: 10px;
+  margin-bottom: 15px; 
+  touch-action: pan-y;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 #playlist .list-group-item:hover {
   background-color: #3a3a55;
+  transform: scale(1.02);
+}
+
+#playlist .list-group-item img {
+  width: 70px !important;
+  height: 70px !important;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-right: 15px;
+}
+
+/* Custom scrollbar for playlist*/
+.playlist-container::-webkit-scrollbar {
+  width: 30px; 
+}
+
+.playlist-container::-webkit-scrollbar-track {
+  background: #1e1e2f;
+  border-radius: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.playlist-container::-webkit-scrollbar-thumb {
+  background-color: rgba(225, 225, 230, 0.8);
+  border-radius: 15px;
+  min-height: 120px; 
+  border: 7px solid rgba(0, 0, 0, 0);
+  background-clip: padding-box; 
+}
+
+.playlist-container::-webkit-scrollbar-thumb:hover {
+  background-color: #e1e1e6;
+  transform: scaleX(1.1); 
 }
 
