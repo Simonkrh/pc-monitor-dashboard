@@ -121,11 +121,16 @@ async function loadPlaylist(playlistId) {
       const response = await fetch(`${API_BASE_URL}/playlist/${playlistId}`);
       const data = await response.json();
   
-      if (data.error) {
+        if (data.error) {
         console.error("Error fetching playlist:", data.error);
         return;
+        }
+      
+      const playlistTitle = document.getElementById("playlist-title");
+        if (playlistTitle) {
+        playlistTitle.innerText = data.name || "Unknown Playlist";
       }
-  
+    
       const playlistUl = document.getElementById("playlist");
       playlistUl.innerHTML = ""; // clear old items if any
   

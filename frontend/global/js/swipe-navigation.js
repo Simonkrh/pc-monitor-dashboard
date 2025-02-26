@@ -2,7 +2,7 @@ let startX = 0;
 let startY = 0;
 let moveX = 0;
 let moveY = 0;
-const threshold = 50; // Minimum swipe distance
+const threshold = 200; // Minimum swipe distance
 
 // Define the order of the pages
 const pages = ["/resources", "/spotify", "/macro"];
