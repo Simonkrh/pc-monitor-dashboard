@@ -24,7 +24,7 @@ def get_access_token():
         "grant_type": "refresh_token",
         "refresh_token": REFRESH_TOKEN,
         "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET
+        "client_secret": CLIENT_SECRET,
     }
     response = requests.post(TOKEN_URL, data=token_data)
     token_info = response.json()
@@ -84,47 +84,7 @@ def send_spotify_command(command):
 
 @app.route("/play", methods=["POST"])
 def play():
-    access_token = get_access_token()
-    if not access_token:
-        return jsonify({"error": "Failed to get access token"}), 401
-
-    device_id = get_active_device()
-    if not device_id:
-        return jsonify({"error": "No active Spotify device found"}), 404
-    
-    if request.is_json:
-        body = request.get_json()
-    else:
-        body = {}  
-
-    context_uri = body.get("context_uri")
-    track_uri = body.get("uri")
-
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
-
-    payload = {}
-    if context_uri:
-        payload["context_uri"] = context_uri
-    elif track_uri:
-        payload["uris"] = [track_uri]
-
-    url = f"{SPOTIFY_API_BASE_URL}/play?device_id={device_id}"
-    response = requests.put(url, headers=headers, json=payload)
-
-    if response.status_code in [200, 202, 204]:
-        return jsonify({"success": True})
-
-    try:
-        error_message = response.json()
-    except requests.exceptions.JSONDecodeError:
-        error_message = {"error": "Empty response from Spotify", "status_code": response.status_code}
-
-    return jsonify(error_message), response.status_code
-
-
+    return send_spotify_command("play")
 
 @app.route("/pause", methods=["POST"])
 def pause():
@@ -253,20 +213,35 @@ def get_volume():
     else:
         return jsonify({"error": "Failed to retrieve volume"}), response.status_code
 
-@app.route("/albums", methods=["GET"])
-def get_albums():
+@app.route("/playlists", methods=["GET"])
+def get_playlists():
     access_token = get_access_token()
     if not access_token:
         return jsonify({"error": "Failed to get access token"}), 401
 
-    headers = {"Authorization": f"Bearer {access_token}"}
-    # Retrieve up to 20 saved albums 
-    response = requests.get(f"{SPOTIFY_API_GENERIC}/me/albums", headers=headers)
+    playlists = []
+    next_url = f"{SPOTIFY_API_GENERIC}/me/playlists?limit=50"
 
-    if response.status_code != 200:
-        return jsonify({"error": "Failed to fetch albums"}), response.status_code
-    
-    return jsonify(response.json())
+    while next_url:
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(next_url, headers=headers)
+
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to fetch playlists"}), response.status_code
+
+        data = response.json()
+        playlists.extend(data["items"])
+
+        next_url = data.get("next")  
+
+    # Debug: Print all playlist names to verify
+    print("Fetched Playlists:")
+    for playlist in playlists:
+        print(f"- {playlist['name']} (Public: {playlist['public']})")
+
+    return jsonify({"items": playlists})
+
+
 
 
 if __name__ == "__main__":
