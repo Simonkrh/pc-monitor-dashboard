@@ -9,17 +9,19 @@ let trackUpdateRequest;
 // Existing sendCommand function
 async function sendCommand(command) {
   try {
+    let requestOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json" 
+      },
+    };
+
+    // If sending a request with a body, make sure to include it as JSON
     if (command === "play") {
-      isPlaying = true;
-      updatePlayPauseIcon(true);
-      updateTrackTime();
-    } else if (command === "pause") {
-      isPlaying = false;
-      updatePlayPauseIcon(false);
+      requestOptions.body = JSON.stringify({});
     }
 
-    // Send command to Spotify API
-    const response = await fetch(`${API_BASE_URL}/${command}`, { method: "POST" });
+    const response = await fetch(`${API_BASE_URL}/${command}`, requestOptions);
     const data = await response.json();
     console.log(`Command sent: ${command}`, data);
 
@@ -34,6 +36,7 @@ async function sendCommand(command) {
     console.error("Error sending command:", error);
   }
 }
+
 
 async function updateSongInfo() {
   try {
@@ -215,6 +218,65 @@ async function getSpotifyVolume() {
   }
 }
 
+async function loadAlbums() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/albums`);
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("Error fetching albums:", data.error);
+      return;
+    }
+
+    const playlistTitle = document.getElementById("playlist-title");
+    if (playlistTitle) {
+      playlistTitle.innerText = "My Albums";
+    }
+
+    // Clear the existing playlist items
+    const playlistUl = document.getElementById("playlist");
+    playlistUl.innerHTML = "";
+
+
+    data.items.forEach((item) => {
+      const album = item.album;
+      if (!album) return;
+
+      const li = document.createElement("li");
+      li.classList.add("list-group-item", "d-flex", "align-items-center");
+
+      const albumImages = album.images;
+      const albumCoverUrl =
+        albumImages.length > 0 ? albumImages[albumImages.length - 1].url : "default.jpg";
+
+      const img = document.createElement("img");
+      img.src = albumCoverUrl;
+      img.alt = album.name;
+      img.style.width = "40px";
+      img.style.height = "40px";
+      img.style.objectFit = "cover";
+      img.style.marginRight = "10px";
+
+      const textDiv = document.createElement("div");
+
+      textDiv.innerText = `${album.name} — ${album.artists
+        .map((artist) => artist.name)
+        .join(", ")}`;
+
+ 
+      li.addEventListener("click", () => {
+        playAlbum(album.uri);
+      });
+
+      li.appendChild(img);
+      li.appendChild(textDiv);
+      playlistUl.appendChild(li);
+    });
+  } catch (error) {
+    console.error("Error loading albums:", error);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", getSpotifyVolume);
 
 const volumeSlider = document.getElementById("volume-slider");
@@ -262,6 +324,37 @@ document.addEventListener("DOMContentLoaded", function () {
   updateSliderBackground();
 });
 
+async function playAlbum(albumUri) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/play`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        context_uri: albumUri
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) {
+      console.error("Error playing album:", data.error);
+      return;
+    }
+
+    setTimeout(updateSongInfo, 1000);
+  } catch (error) {
+    console.error("Error playing album:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  const musicIcon = document.getElementById("album-icon");
+  musicIcon.addEventListener("click", function() {
+    // Switch from songs to albums
+    loadAlbums();
+  });
+});
 
 setInterval(updateSongInfo, 5000);
 updateSongInfo();

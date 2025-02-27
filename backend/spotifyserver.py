@@ -84,7 +84,47 @@ def send_spotify_command(command):
 
 @app.route("/play", methods=["POST"])
 def play():
-    return send_spotify_command("play")
+    access_token = get_access_token()
+    if not access_token:
+        return jsonify({"error": "Failed to get access token"}), 401
+
+    device_id = get_active_device()
+    if not device_id:
+        return jsonify({"error": "No active Spotify device found"}), 404
+    
+    if request.is_json:
+        body = request.get_json()
+    else:
+        body = {}  
+
+    context_uri = body.get("context_uri")
+    track_uri = body.get("uri")
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {}
+    if context_uri:
+        payload["context_uri"] = context_uri
+    elif track_uri:
+        payload["uris"] = [track_uri]
+
+    url = f"{SPOTIFY_API_BASE_URL}/play?device_id={device_id}"
+    response = requests.put(url, headers=headers, json=payload)
+
+    if response.status_code in [200, 202, 204]:
+        return jsonify({"success": True})
+
+    try:
+        error_message = response.json()
+    except requests.exceptions.JSONDecodeError:
+        error_message = {"error": "Empty response from Spotify", "status_code": response.status_code}
+
+    return jsonify(error_message), response.status_code
+
+
 
 @app.route("/pause", methods=["POST"])
 def pause():
@@ -212,6 +252,22 @@ def get_volume():
             return jsonify({"error": "No active device found"}), 404
     else:
         return jsonify({"error": "Failed to retrieve volume"}), response.status_code
+
+@app.route("/albums", methods=["GET"])
+def get_albums():
+    access_token = get_access_token()
+    if not access_token:
+        return jsonify({"error": "Failed to get access token"}), 401
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+    # Retrieve up to 20 saved albums 
+    response = requests.get(f"{SPOTIFY_API_GENERIC}/me/albums", headers=headers)
+
+    if response.status_code != 200:
+        return jsonify({"error": "Failed to fetch albums"}), response.status_code
+    
+    return jsonify(response.json())
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -92,11 +92,6 @@ def get_disk_used_space(data, disk_name):
 
     return used_space_node.get("Value", "N/A")
 
-@app.route('/')
-def index():
-    """Serve the frontend (index.html)"""
-    return send_from_directory('static', 'index.html')
-
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
     """Fetch and return system stats from Open Hardware Monitor & Network API"""

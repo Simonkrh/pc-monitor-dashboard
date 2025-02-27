@@ -8,7 +8,7 @@
 
 body {
   font-family: 'Roboto', sans-serif;
-  
+
   /* Flexbox for centering */
   display: flex;
   justify-content: center;
@@ -76,7 +76,6 @@ body {
   font-size: 3rem;
   color: #E1E1E6;
   padding-bottom: 7px;
-
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%; 
@@ -135,14 +134,25 @@ body {
 }
 
 /* Playlist */
-.playlist-col-md {
-  padding-right: 0;
+.playlist-header {
+  padding: 15px;
+  background-color: #1e1e2f;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  display: flex;
+  justify-content: space-between; 
+  align-items: center; 
+  width: 100%;
+}
+
+.playlist-header i {
+  font-size: 2rem; 
+  color: #E1E1E6; 
+  transform: scaleY(1.2);
 }
 
 #playlist-title {
   font-size: 2rem;
-  padding-bottom: 0.7rem;
-  padding-left: 0.5rem;
 }
 
 .playlist-container {
