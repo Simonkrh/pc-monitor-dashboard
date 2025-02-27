@@ -211,7 +211,6 @@ async function getSpotifyVolume() {
     const volumeSlider = document.getElementById("volume-slider");
     volumeSlider.value = 100 - data.volume_percent; // Inverting if needed
     volumeSlider.style.setProperty("--volume-fill", `${100 - volumeSlider.value}%`);
-    console.log(`Current Spotify volume: ${data.volume_percent}%`);
   } catch (error) {
     console.error("Error getting volume:", error);
   }
