@@ -195,6 +195,23 @@ def set_volume():
 
     return jsonify({"error": "Failed to change volume"}), response.status_code
 
+@app.route("/get-volume", methods=["GET"])
+def get_volume():
+    access_token = get_access_token()
+    if not access_token:
+        return jsonify({"error": "Failed to get access token"}), 401
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(f"{SPOTIFY_API_BASE_URL}", headers=headers)
+
+    if response.status_code == 200:
+        data = response.json()
+        if "device" in data and data["device"]:
+            return jsonify({"volume_percent": data["device"]["volume_percent"]})
+        else:
+            return jsonify({"error": "No active device found"}), 404
+    else:
+        return jsonify({"error": "Failed to retrieve volume"}), response.status_code
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -198,6 +198,27 @@ async function playTrack(trackUri) {
   }
 }
 
+async function getSpotifyVolume() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/get-volume`);
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("Error fetching volume:", data.error);
+      return;
+    }
+
+    const volumeSlider = document.getElementById("volume-slider");
+    volumeSlider.value = 100 - data.volume_percent; // Inverting if needed
+    volumeSlider.style.setProperty("--volume-fill", `${100 - volumeSlider.value}%`);
+    console.log(`Current Spotify volume: ${data.volume_percent}%`);
+  } catch (error) {
+    console.error("Error getting volume:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", getSpotifyVolume);
+
 const volumeSlider = document.getElementById("volume-slider");
 let debounceTimeout;
 async function setSpotifyVolume(volume) {
