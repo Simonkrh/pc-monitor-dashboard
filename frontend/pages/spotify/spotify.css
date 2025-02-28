@@ -183,6 +183,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+
 }
 
 #playlist .list-group-item:hover {

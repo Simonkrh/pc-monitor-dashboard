@@ -3,6 +3,7 @@ const DEAFULT_PLAYLIST = "4TGxJb0nQLc4bDg0DtasLE";
 
 let currentPlayingUri = null;
 let currentPlaylistId = null;
+let currentlyLoadedPlaylist  = null;
 
 let lastProgress = 0;
 let lastUpdateTime = 0;
@@ -64,14 +65,14 @@ async function updateSongInfo() {
     document.getElementById("album-art").src =
       data.item.album.images[0]?.url || "default.jpg";
 
-    // Store progress info for local tracking
     lastProgress = data.progress_ms || 0;
     songDuration = data.item.duration_ms || 0;
     lastUpdateTime = Date.now();
     isPlaying = data.is_playing;
 
-    currentPlayingUri = data.item.uri;
-
+    currentPlayingUri = data.item.uri; 
+    currentPlaylistId = data.context?.uri?.split(":").pop() || null; 
+    
     updatePlayPauseIcon(isPlaying);
     updateTrackTime();
 
@@ -80,6 +81,7 @@ async function updateSongInfo() {
     console.error("Error fetching song info:", error);
   }
 }
+
 
 function updateTrackTime() {
   if (!isPlaying) return;
@@ -132,6 +134,7 @@ async function togglePlayPause() {
 
 async function loadPlaylist(playlistId) {
     try {
+      currentlyLoadedPlaylist = playlistId; 
       currentPlaylistId = playlistId;
 
       const response = await fetch(`${API_BASE_URL}/playlist/${playlistId}`);
@@ -329,6 +332,29 @@ volumeSlider.addEventListener("input", (event) => {
   setSpotifyVolume(volume);
 });
 
+
+async function goToCurrentPlaylist() {
+  if (!currentPlaylistId) {
+    console.warn("No associated playlist for the current song.");
+    return;
+  }
+
+  if (currentPlaylistId !== currentlyLoadedPlaylist) {
+    await loadPlaylist(currentPlaylistId);
+    setTimeout(scrollToHighlightedSong, 500);
+  } else {
+    scrollToHighlightedSong();
+  }
+}
+
+
+function scrollToHighlightedSong() {
+  const highlightedSong = document.querySelector(".playing-highlight");
+  if (highlightedSong) {
+    highlightedSong.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   updateSongInfo();
   loadPlaylist(DEAFULT_PLAYLIST);
@@ -344,6 +370,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     volumeSlider.addEventListener("input", updateSliderBackground);
     updateSliderBackground();
+  }
+
+  const infoWrapper = document.getElementById("album-art");
+  if (infoWrapper) {
+    infoWrapper.addEventListener("click", goToCurrentPlaylist);
   }
 
   const musicIcon = document.getElementById("playlist-icon");
