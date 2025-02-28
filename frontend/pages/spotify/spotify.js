@@ -111,11 +111,15 @@ function updatePlayPauseIcon(isPlaying) {
 }
 
 async function togglePlayPause() {
+  isPlaying = !isPlaying;
+  updatePlayPauseIcon(isPlaying);
+
   if (isPlaying) {
-    sendCommand("pause");
-    cancelAnimationFrame(trackUpdateRequest);
-  } else {
+    trackUpdateRequest = requestAnimationFrame(updateTrackTime);
     sendCommand("play");
+  } else {
+    cancelAnimationFrame(trackUpdateRequest);
+    sendCommand("pause");
   }
 }
 
