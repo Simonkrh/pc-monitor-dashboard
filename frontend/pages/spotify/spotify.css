@@ -198,6 +198,11 @@ body {
   margin-right: 15px;
 }
 
+.playing-highlight {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
 /* Custom scrollbar for playlist*/
 .playlist-container::-webkit-scrollbar {
   width: 30px; 

@@ -1,6 +1,9 @@
 const API_BASE_URL = "http://192.168.1.196:5000";
 const DEAFULT_PLAYLIST = "4TGxJb0nQLc4bDg0DtasLE";
 
+let currentPlayingUri = null;
+let currentPlaylistId = null;
+
 let lastProgress = 0;
 let lastUpdateTime = 0;
 let songDuration = 0;
@@ -67,8 +70,12 @@ async function updateSongInfo() {
     lastUpdateTime = Date.now();
     isPlaying = data.is_playing;
 
+    currentPlayingUri = data.item.uri;
+
     updatePlayPauseIcon(isPlaying);
     updateTrackTime();
+
+    highlightPlayingSong();
   } catch (error) {
     console.error("Error fetching song info:", error);
   }
@@ -125,6 +132,8 @@ async function togglePlayPause() {
 
 async function loadPlaylist(playlistId) {
     try {
+      currentPlaylistId = playlistId;
+
       const response = await fetch(`${API_BASE_URL}/playlist/${playlistId}`);
       const data = await response.json();
   
@@ -147,6 +156,7 @@ async function loadPlaylist(playlistId) {
   
         const li = document.createElement("li");
         li.classList.add("list-group-item", "d-flex", "align-items-center");
+        li.dataset.trackUri = track.uri;
   
         const albumImages = track.album.images;
         const albumCoverUrl = albumImages.length 
@@ -177,6 +187,8 @@ async function loadPlaylist(playlistId) {
         });
   
         playlistUl.appendChild(li);
+
+        highlightPlayingSong();
       });
     } catch (error) {
       console.error("Error loading playlist:", error);
@@ -200,10 +212,25 @@ async function playTrack(trackUri, trackPlaylistId) {
       return;
     }
 
+    currentPlayingUri = trackUri; 
+    highlightPlayingSong();
+
     setTimeout(updateSongInfo, 1000);
   } catch (error) {
     console.error("Error playing track:", error);
   }
+}
+
+function highlightPlayingSong() {
+  const playlistItems = document.querySelectorAll("#playlist .list-group-item");
+
+  playlistItems.forEach((li) => {
+    if (li.dataset.trackUri === currentPlayingUri) {
+      li.classList.add("playing-highlight");
+    } else {
+      li.classList.remove("playing-highlight");
+    }
+  });
 }
 
 async function getSpotifyVolume() {
