@@ -148,7 +148,7 @@ def play_track():
 
     req_data = request.get_json()
     track_uri = req_data.get("uri")
-    playlist_id = "4TGxJb0nQLc4bDg0DtasLE"  # Your fixed playlist ID
+    playlist_id = req_data.get("playlistId")
 
     if not track_uri:
         return jsonify({"error": "No URI provided"}), 400
@@ -159,8 +159,8 @@ def play_track():
     }
 
     payload = {
-        "context_uri": f"spotify:playlist:{playlist_id}",  # Load full playlist
-        "offset": {"uri": track_uri},  # Start at selected track
+        "context_uri": f"spotify:playlist:{playlist_id}", 
+        "offset": {"uri": track_uri},  
         "position_ms": 0
     }
 
@@ -234,15 +234,7 @@ def get_playlists():
 
         next_url = data.get("next")  
 
-    # Debug: Print all playlist names to verify
-    print("Fetched Playlists:")
-    for playlist in playlists:
-        print(f"- {playlist['name']} (Public: {playlist['public']})")
-
     return jsonify({"items": playlists})
-
-
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

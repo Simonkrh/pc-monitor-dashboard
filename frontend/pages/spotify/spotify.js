@@ -1,4 +1,5 @@
 const API_BASE_URL = "http://192.168.1.196:5000";
+const DEAFULT_PLAYLIST = "4TGxJb0nQLc4bDg0DtasLE";
 
 let lastProgress = 0;
 let lastUpdateTime = 0;
@@ -167,7 +168,8 @@ async function loadPlaylist(playlistId) {
         li.appendChild(textDiv);
   
         li.addEventListener("click", () => {
-          playTrack(track.uri);
+          console.log(track.uri);
+          playTrack(track.uri, playlistId);
         });
   
         playlistUl.appendChild(li);
@@ -178,14 +180,14 @@ async function loadPlaylist(playlistId) {
   }
   
 
-async function playTrack(trackUri) {
+async function playTrack(trackUri, trackPlaylistId) {
   try {
     const response = await fetch(`${API_BASE_URL}/play-track`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ uri: trackUri }),
+      body: JSON.stringify({ uri: trackUri, playlistId: trackPlaylistId}),
     });
     const data = await response.json();
 
@@ -267,8 +269,6 @@ async function loadPlaylists() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", getSpotifyVolume);
-
 const volumeSlider = document.getElementById("volume-slider");
 let debounceTimeout;
 async function setSpotifyVolume(volume) {
@@ -298,31 +298,27 @@ volumeSlider.addEventListener("input", (event) => {
   setSpotifyVolume(volume);
 });
 
-
 document.addEventListener("DOMContentLoaded", function () {
+  updateSongInfo();
+  loadPlaylist(DEAFULT_PLAYLIST);
+  getSpotifyVolume(); 
+
   const volumeSlider = document.getElementById("volume-slider");
+  if (volumeSlider) {
+    function updateSliderBackground() {
+      let value = volumeSlider.value;
+      let percent = (value / volumeSlider.max) * 100;
+      volumeSlider.style.setProperty("--volume-fill", `${100 - percent}%`);
+    }
 
-  function updateSliderBackground() {
-    let value = volumeSlider.value; 
-    let percent = (value / volumeSlider.max) * 100; 
-
-    // Apply gradient fill dynamically
-    volumeSlider.style.setProperty("--volume-fill", `${100 - percent}%`);
+    volumeSlider.addEventListener("input", updateSliderBackground);
+    updateSliderBackground();
   }
-  volumeSlider.addEventListener("input", updateSliderBackground);
-  
-  updateSliderBackground();
-});
 
-
-document.addEventListener("DOMContentLoaded", function() {
   const musicIcon = document.getElementById("playlist-icon");
-  musicIcon.addEventListener("click", function() {
-    loadPlaylists(); 
-  });
+  if (musicIcon) {
+    musicIcon.addEventListener("click", loadPlaylists);
+  }
 });
-
 
 setInterval(updateSongInfo, 5000);
-updateSongInfo();
-loadPlaylist("4TGxJb0nQLc4bDg0DtasLE");
