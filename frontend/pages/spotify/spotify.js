@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://192.168.1.196:5000";
+const API_BASE_URL = "http://192.168.1.196:5001";
 const DEAFULT_PLAYLIST = "4TGxJb0nQLc4bDg0DtasLE";
 
 let currentPlayingUri = null;

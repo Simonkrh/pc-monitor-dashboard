@@ -1,47 +1,87 @@
 let playlistContainer = document.querySelector(".playlist-container");
 
 let isDragging = false;
-let startYSS = 0;
+let startYS = 0;
 let scrollTop = 0;
 
-// Touch Events
+let oldScrollTop = 0;
+let velocity = 0;
+let momentumID = null; // for canceling requestAnimationFrame
+
 playlistContainer.addEventListener("touchstart", (e) => {
-    isDragging = true;
-    startYS = e.touches[0].pageY - playlistContainer.offsetTop;
-    scrollTop = playlistContainer.scrollTop;
+  isDragging = true;
+  cancelMomentumScroll();
+
+  // Store initial positions
+  startYS = e.touches[0].pageY - playlistContainer.offsetTop;
+  scrollTop = playlistContainer.scrollTop;
+  oldScrollTop = scrollTop;
 }, { passive: true });
 
 playlistContainer.addEventListener("touchmove", (e) => {
-    if (!isDragging) return;
-    let y = e.touches[0].pageY - playlistContainer.offsetTop;
-    let move = (y - startYS) * -1.5; 
-    playlistContainer.scrollTop = scrollTop + move;
+  if (!isDragging) return;
+
+  let y = e.touches[0].pageY - playlistContainer.offsetTop;
+  let move = (y - startYS) * -1.5;
+  playlistContainer.scrollTop = scrollTop + move;
+
+  // Calculate velocity as the difference since last frame
+  velocity = playlistContainer.scrollTop - oldScrollTop;
+  oldScrollTop = playlistContainer.scrollTop;
 }, { passive: true });
 
 playlistContainer.addEventListener("touchend", () => {
-    isDragging = false;
+  isDragging = false;
+  startMomentumScroll();
 });
 
 playlistContainer.addEventListener("mousedown", (e) => {
-    isDragging = true;
-    startYS = e.clientY;
-    scrollTop = playlistContainer.scrollTop;
+  isDragging = true;
+  cancelMomentumScroll();
+
+  startYS = e.clientY;
+  scrollTop = playlistContainer.scrollTop;
+  oldScrollTop = scrollTop;
 });
 
 playlistContainer.addEventListener("mousemove", (e) => {
-    if (!isDragging) return;
-    let move = (e.clientY - startYS) * -1.5; 
-    playlistContainer.scrollTop = scrollTop + move;
-    e.preventDefault(); // Prevent unwanted selection
+  if (!isDragging) return;
+
+  let move = (e.clientY - startYS) * -1.5;
+  playlistContainer.scrollTop = scrollTop + move;
+  e.preventDefault(); // Prevent text selection
+
+  // Velocity
+  velocity = playlistContainer.scrollTop - oldScrollTop;
+  oldScrollTop = playlistContainer.scrollTop;
 });
 
 playlistContainer.addEventListener("mouseup", () => {
-    isDragging = false;
-    playlistContainer.style.cursor = "default";
+  isDragging = false;
+  playlistContainer.style.cursor = "default";
+  startMomentumScroll();
 });
 
-// Prevent text selection while dragging
+// Stop dragging if the mouse leaves the container
 playlistContainer.addEventListener("mouseleave", () => {
-    isDragging = false;
-    playlistContainer.style.cursor = "default";
+  isDragging = false;
+  playlistContainer.style.cursor = "default";
+  startMomentumScroll();
 });
+
+function startMomentumScroll() {
+  // If velocity is almost zero, stop
+  if (Math.abs(velocity) < 0.5) return;
+
+  playlistContainer.scrollTop += velocity;
+  velocity *= 0.95; // friction
+
+  momentumID = requestAnimationFrame(startMomentumScroll);
+}
+
+function cancelMomentumScroll() {
+  if (momentumID) {
+    cancelAnimationFrame(momentumID);
+    momentumID = null;
+  }
+}
