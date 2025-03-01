@@ -6,25 +6,7 @@ This project sets up a PC monitoring dashboard using:
 
 - Open Hardware Monitor to collect system stats
 - Glances to collect network stats
-- Flask (server.py) on Raspberry Pi as an API proxy
+- Spotify Integration for controlling and displaying currently playing songs
+- Flask (server.py) on as an API proxy
+- Flask (spotifyserver.py) to handle Spotify API requests
 - Flask (webserver.py) to serve the frontend
-- JavaScript (index.html) to display real-time stats
-
-## Setup & Installation
-
-### Installing Required Packages
-
-- Open Hardware Monitor for resouce utilization API
-
-  https://openhardwaremonitor.org/
-
-- Glances for Network utilization API
-
-  `pip install glances`
-
-  `pip install fastapi uvicorn`
-
-### Spotify Music Player:
-https://codepen.io/correiamendes/pen/RwBLvGa
-
-
