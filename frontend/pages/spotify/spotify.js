@@ -4,6 +4,7 @@ const DEAFULT_PLAYLIST = "4TGxJb0nQLc4bDg0DtasLE";
 let currentPlayingUri = null;
 let currentPlaylistId = null;
 let currentlyLoadedPlaylist  = null;
+let clickBlocked = false;
 
 let lastProgress = 0;
 let lastUpdateTime = 0;
@@ -183,8 +184,13 @@ async function loadPlaylist(playlistId) {
         li.appendChild(img);
         li.appendChild(textDiv);
   
-        li.addEventListener("click", () => {
-          console.log(track.uri);
+        li.addEventListener("click", (e) => {
+          if (clickBlocked) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+
           playTrack(track.uri, playlistId);
         });
   
@@ -353,6 +359,13 @@ function scrollToHighlightedSong() {
   if (highlightedSong) {
     highlightedSong.scrollIntoView({ behavior: "smooth", block: "center" });
   }
+}
+
+function blockClicksFor(ms) {
+  clickBlocked = true;
+  setTimeout(() => {
+    clickBlocked = false;
+  }, ms);
 }
 
 document.addEventListener("DOMContentLoaded", function () {

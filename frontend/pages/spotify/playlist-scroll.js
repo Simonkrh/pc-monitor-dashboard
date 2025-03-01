@@ -1,3 +1,4 @@
+const blockClicksMS = 300;
 let playlistContainer = document.querySelector(".playlist-container");
 
 let isDragging = false;
@@ -77,6 +78,7 @@ function startMomentumScroll() {
   velocity *= 0.95; // friction
 
   momentumID = requestAnimationFrame(startMomentumScroll);
+  blockClicksFor(blockClicksMS);
 }
 
 function cancelMomentumScroll() {
