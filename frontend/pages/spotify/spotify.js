@@ -135,7 +135,6 @@ async function togglePlayPause() {
 async function loadPlaylist(playlistId) {
     try {
       currentlyLoadedPlaylist = playlistId; 
-      currentPlaylistId = playlistId;
 
       const response = await fetch(`${API_BASE_URL}/playlist/${playlistId}`);
       const data = await response.json();
@@ -334,19 +333,20 @@ volumeSlider.addEventListener("input", (event) => {
 
 
 async function goToCurrentPlaylist() {
+  await updateSongInfo(); 
+
   if (!currentPlaylistId) {
     console.warn("No associated playlist for the current song.");
     return;
   }
 
-  if (currentPlaylistId !== currentlyLoadedPlaylist) {
-    await loadPlaylist(currentPlaylistId);
-    setTimeout(scrollToHighlightedSong, 500);
-  } else {
-    scrollToHighlightedSong();
+  if (currentlyLoadedPlaylist !== currentPlaylistId) {
+    console.log(`Loading playlist ${currentPlaylistId}...`);
+    await loadPlaylist(currentPlaylistId); 
   }
-}
 
+  setTimeout(scrollToHighlightedSong, 500); // Scroll after loading
+}
 
 function scrollToHighlightedSong() {
   const highlightedSong = document.querySelector(".playing-highlight");
