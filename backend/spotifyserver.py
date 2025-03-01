@@ -225,11 +225,21 @@ def set_shuffle():
 
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    current_state = requests.get(f"{SPOTIFY_API_BASE_URL}", headers=headers).json()
-    shuffle_state = current_state.get("shuffle_state", False)  #
+    response = requests.get(f"{SPOTIFY_API_BASE_URL}", headers=headers)
+    if response.status_code != 200:
+        return jsonify({"error": "Failed to get shuffle state"}), response.status_code
+
+    player_state = response.json()
+    shuffle_state = player_state.get("shuffle_state", False)
+
+    if shuffle_state == "smart":
+        print("Smart Shuffle is enabled. Disabling it first...")
+        disable_response = requests.put(f"{SPOTIFY_API_BASE_URL}/shuffle?state=false", headers=headers)
+        if disable_response.status_code not in [200, 204]:
+            return jsonify({"error": "Failed to disable Smart Shuffle"}), disable_response.status_code
+        shuffle_state = False  
 
     new_shuffle_state = not shuffle_state
-
     response = requests.put(f"{SPOTIFY_API_BASE_URL}/shuffle?state={str(new_shuffle_state).lower()}", headers=headers)
 
     if response.status_code in [200, 204]:

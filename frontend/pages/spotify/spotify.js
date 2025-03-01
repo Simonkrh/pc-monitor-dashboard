@@ -189,7 +189,9 @@ async function toggleShuffle() {
     const data = await response.json();
     if (data.success) {
       const isShuffle = data.shuffle_state;
-      updateShuffleIcon(isShuffle)
+      updateShuffleIcon(isShuffle);
+    } else {
+      console.warn("Could not toggle shuffle:", data.error);
     }
   } catch (error) {
     console.error("Error toggling shuffle:", error);
@@ -201,6 +203,7 @@ function updateShuffleIcon(isShuffle) {
   shuffleIcon.classList.toggle("active-green", isShuffle);
 }
 
+ 
 async function loadPlaylist(playlistId) {
     try {
       currentlyLoadedPlaylist = playlistId; 
