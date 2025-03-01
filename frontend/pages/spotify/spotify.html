@@ -46,6 +46,9 @@
           <!-- Controls -->
           <div class="controls-container">
             <div class="controls">
+              <div class="repeat" onclick="toggleRepeat()">
+                <i class="fa fa-refresh" id="repeat-icon"></i>
+              </div>
               <div class="prev" onclick="sendCommand('previous')">
                 <i class="fa-solid fa-backward"></i>
               </div>
@@ -54,6 +57,9 @@
               </div>
               <div class="next" onclick="sendCommand('next')">
                 <i class="fa-solid fa-forward"></i>
+              </div>
+              <div class="shuffle" onclick="toggleShuffle()">
+                <i class="fa fa-random" id="shuffle-icon"></i>
               </div>
             </div>
       

@@ -133,6 +133,49 @@ async function togglePlayPause() {
   }
 }
 
+async function toggleRepeat() {
+  const repeatIcon = document.getElementById("repeat-icon");
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/repeat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      const repeatMode = data.mode; 
+      updateRepeatIcon(repeatMode);
+    }
+  } catch (error) {
+    console.error("Error toggling repeat:", error);
+  }
+}
+
+function updateRepeatIcon(mode) {
+  const repeatIcon = document.getElementById("repeat-icon");
+  repeatIcon.classList.toggle("active-green", mode === "context");
+}
+
+async function toggleShuffle() {
+  const shuffleIcon = document.getElementById("shuffle-icon");
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/shuffle`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      const isShuffle = data.shuffle_state; // Boolean
+      shuffleIcon.classList.toggle("active-green", isShuffle);
+    }
+  } catch (error) {
+    console.error("Error toggling shuffle:", error);
+  }
+}
+
 async function loadPlaylist(playlistId) {
     try {
       currentlyLoadedPlaylist = playlistId; 

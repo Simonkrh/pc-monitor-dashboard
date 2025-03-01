@@ -34,9 +34,14 @@ body {
 
 /* Controls */
 .controls i {
-  font-size: 5rem; 
+  font-size: 4rem; 
   color: #E1E1E6;  
   transition: opacity 0.2s ease-in-out;
+}
+
+.shuffle i, .repeat i {
+  font-size: 2rem; 
+  padding-top: 1rem;
 }
 
 .controls i:hover {
@@ -202,6 +207,10 @@ body {
 .playing-highlight {
   background-color: #4CAF50 !important;
   color: white !important;
+}
+
+.active-green {
+  color: #1db954 !important; 
 }
 
 /* Custom scrollbar for playlist*/

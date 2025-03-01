@@ -175,6 +175,50 @@ def play_track():
 
     return jsonify({"error": "Failed to play track", "details": r.json()}), r.status_code
 
+@app.route("/repeat", methods=["POST"])
+def set_repeat():
+    access_token = get_access_token()
+    if not access_token:
+        return jsonify({"error": "Failed to get access token"}), 401
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    response = requests.get(f"{SPOTIFY_API_BASE_URL}", headers=headers)
+    if response.status_code != 200:
+        return jsonify({"error": "Failed to get repeat state"}), response.status_code
+
+    repeat_state = response.json().get("repeat_state", "off") 
+
+    new_repeat_mode = "context" if repeat_state == "off" else "off"
+
+    response = requests.put(f"{SPOTIFY_API_BASE_URL}/repeat?state={new_repeat_mode}", headers=headers)
+
+    if response.status_code in [200, 204]:
+        return jsonify({"success": True, "mode": new_repeat_mode})
+
+    return jsonify({"error": "Failed to set repeat"}), response.status_code
+
+
+@app.route("/shuffle", methods=["POST"])
+def set_shuffle():
+    access_token = get_access_token()
+    if not access_token:
+        return jsonify({"error": "Failed to get access token"}), 401
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    current_state = requests.get(f"{SPOTIFY_API_BASE_URL}", headers=headers).json()
+    shuffle_state = current_state.get("shuffle_state", False)  #
+
+    new_shuffle_state = not shuffle_state
+
+    response = requests.put(f"{SPOTIFY_API_BASE_URL}/shuffle?state={str(new_shuffle_state).lower()}", headers=headers)
+
+    if response.status_code in [200, 204]:
+        return jsonify({"success": True, "shuffle_state": new_shuffle_state})
+
+    return jsonify({"error": "Failed to toggle shuffle"}), response.status_code
+
 @app.route("/set-volume", methods=["PUT"])
 def set_volume():
     access_token = get_access_token()
