@@ -29,7 +29,6 @@ async function sendCommand(command) {
 
     const response = await fetch(`${API_BASE_URL}/${command}`, requestOptions);
     const data = await response.json();
-    console.log(`Command sent: ${command}`, data);
 
     if (command === "pause" || command === "play") {
       setTimeout(updateSongInfo, 1000);
@@ -120,6 +119,23 @@ function updatePlayPauseIcon(isPlaying) {
   icon.classList.toggle("fa-pause", isPlaying);
 }
 
+async function fetchPlayerState() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/player-state`);
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("Error fetching player state:", data.error);
+      return;
+    }
+
+    updateShuffleIcon(data.shuffle_state);
+    updateRepeatIcon(data.repeat_state);
+  } catch (error) {
+    console.error("Error fetching player state:", error);
+  }
+}
+
 async function togglePlayPause() {
   isPlaying = !isPlaying;
   updatePlayPauseIcon(isPlaying);
@@ -154,14 +170,12 @@ async function toggleRepeat() {
 
 function updateRepeatIcon(mode) {
   const repeatIcon = document.getElementById("repeat-icon");
-
   repeatIcon.classList.remove("active-green");
 
   if (mode === "track") {
     repeatIcon.classList.add("active-green"); 
   }
 }
-
 
 async function toggleShuffle() {
   const shuffleIcon = document.getElementById("shuffle-icon");
@@ -175,11 +189,16 @@ async function toggleShuffle() {
     const data = await response.json();
     if (data.success) {
       const isShuffle = data.shuffle_state;
-      shuffleIcon.classList.toggle("active-green", isShuffle);
+      updateShuffleIcon(isShuffle)
     }
   } catch (error) {
     console.error("Error toggling shuffle:", error);
   }
+}
+
+function updateShuffleIcon(isShuffle) {
+  const shuffleIcon = document.getElementById("shuffle-icon");
+  shuffleIcon.classList.toggle("active-green", isShuffle);
 }
 
 async function loadPlaylist(playlistId) {
@@ -420,6 +439,7 @@ document.addEventListener("DOMContentLoaded", function () {
   updateSongInfo();
   loadPlaylist(DEAFULT_PLAYLIST);
   getSpotifyVolume(); 
+  fetchPlayerState(); 
 
   const volumeSlider = document.getElementById("volume-slider");
   if (volumeSlider) {
@@ -444,4 +464,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-setInterval(updateSongInfo, 10000);
+setInterval(() => {
+  updateSongInfo();
+  fetchPlayerState();
+}, 10000);

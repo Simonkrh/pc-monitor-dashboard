@@ -117,6 +117,24 @@ def current_song():
     else:
         return jsonify({"error": "Failed to fetch song info"}), response.status_code
 
+@app.route("/player-state", methods=["GET"])
+def get_player_state():
+    access_token = get_access_token()
+    if not access_token:
+        return jsonify({"error": "Failed to get access token"}), 401
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(f"{SPOTIFY_API_BASE_URL}", headers=headers)
+
+    if response.status_code == 200:
+        data = response.json()
+        return jsonify({
+            "shuffle_state": data.get("shuffle_state", False),
+            "repeat_state": data.get("repeat_state", "off")
+        })
+    
+    return jsonify({"error": "Failed to get player state"}), response.status_code
+
 @app.route("/playlist/<playlist_id>", methods=["GET"])
 def get_playlist(playlist_id):
     """
