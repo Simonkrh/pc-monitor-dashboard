@@ -383,4 +383,4 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-setInterval(updateSongInfo, 5000);
+setInterval(updateSongInfo, 10000);
