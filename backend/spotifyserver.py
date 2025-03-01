@@ -187,9 +187,9 @@ def set_repeat():
     if response.status_code != 200:
         return jsonify({"error": "Failed to get repeat state"}), response.status_code
 
-    repeat_state = response.json().get("repeat_state", "off") 
+    repeat_state = response.json().get("repeat_state", "off")  
 
-    new_repeat_mode = "context" if repeat_state == "off" else "off"
+    new_repeat_mode = "track" if repeat_state == "off" else "off"
 
     response = requests.put(f"{SPOTIFY_API_BASE_URL}/repeat?state={new_repeat_mode}", headers=headers)
 

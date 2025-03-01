@@ -154,8 +154,14 @@ async function toggleRepeat() {
 
 function updateRepeatIcon(mode) {
   const repeatIcon = document.getElementById("repeat-icon");
-  repeatIcon.classList.toggle("active-green", mode === "context");
+
+  repeatIcon.classList.remove("active-green");
+
+  if (mode === "track") {
+    repeatIcon.classList.add("active-green"); 
+  }
 }
+
 
 async function toggleShuffle() {
   const shuffleIcon = document.getElementById("shuffle-icon");
@@ -168,7 +174,7 @@ async function toggleShuffle() {
 
     const data = await response.json();
     if (data.success) {
-      const isShuffle = data.shuffle_state; // Boolean
+      const isShuffle = data.shuffle_state;
       shuffleIcon.classList.toggle("active-green", isShuffle);
     }
   } catch (error) {
@@ -379,7 +385,6 @@ volumeSlider.addEventListener("input", (event) => {
   const volume = event.target.value;
   setSpotifyVolume(volume);
 });
-
 
 async function goToCurrentPlaylist() {
   await updateSongInfo(); 
