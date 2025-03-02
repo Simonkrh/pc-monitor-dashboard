@@ -35,7 +35,10 @@ async function sendCommand(command) {
     }
 
     if (command === "next" || command === "prev") {
-      setTimeout(updateSongInfo, 1000);
+      setTimeout(async () => {
+        await updateSongInfo();
+        scrollToHighlightedSong();
+      }, 1000);
     }
   } catch (error) {
     console.error("Error sending command:", error);
@@ -99,7 +102,15 @@ function updateTrackTime() {
 
   updateTrackProgress(clampedProgress, songDuration);
 
-  trackUpdateRequest = requestAnimationFrame(updateTrackTime);
+  if (clampedProgress >= songDuration - 2000) {
+    setTimeout(() => {
+      updateSongInfo().then(() => {
+        scrollToHighlightedSong();
+      });
+    }, 1500);
+  } else {
+    trackUpdateRequest = requestAnimationFrame(updateTrackTime);
+  }
 }
 
 function updateTrackProgress(currentProgress, totalDuration) {
@@ -448,9 +459,10 @@ function blockClicksFor(ms) {
   }, ms);
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  updateSongInfo();
-  loadPlaylist(DEAFULT_PLAYLIST);
+document.addEventListener("DOMContentLoaded", async function () {
+  await loadPlaylist(DEAFULT_PLAYLIST);
+  await updateSongInfo();
+  scrollToHighlightedSong();
   getSpotifyVolume();
   fetchPlayerState();
 
