@@ -486,6 +486,16 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (musicIcon) {
     musicIcon.addEventListener("click", loadPlaylists);
   }
+
+  document.querySelectorAll(".controls i, .shuffle i, .repeat i, #playlist-icon").forEach(icon => {
+    icon.addEventListener("click", () => {
+      icon.style.transform = "scale(1.2)";
+      setTimeout(() => {
+        icon.style.transform = "scale(1)";
+      }, 150);
+    });
+  });
+
 });
 
 setInterval(() => {
