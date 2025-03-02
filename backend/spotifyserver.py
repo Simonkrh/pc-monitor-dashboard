@@ -15,7 +15,7 @@ SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1/me/player"
 SPOTIFY_API_GENERIC = "https://api.spotify.com/v1"
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app)
 app.secret_key = "supersecretkey"
 
 
@@ -28,27 +28,28 @@ def get_access_token():
     }
     response = requests.post(TOKEN_URL, data=token_data)
     token_info = response.json()
-    
+
     if "access_token" in token_info:
         return token_info["access_token"]
     else:
         print("Error getting access token:", token_info)
         return None
 
+
 def get_active_device():
-    """Returns the ID of an active Spotify device or None if no device is available."""
     access_token = get_access_token()
     if not access_token:
         return None
 
     headers = {"Authorization": f"Bearer {access_token}"}
     response = requests.get(f"{SPOTIFY_API_BASE_URL}/devices", headers=headers)
-    
+
     if response.status_code == 200:
         devices = response.json().get("devices", [])
         if devices:
-            return devices[0]["id"]  
+            return devices[0]["id"]
     return None
+
 
 def send_spotify_command(command):
     access_token = get_access_token()
@@ -57,18 +58,24 @@ def send_spotify_command(command):
 
     headers = {
         "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
 
     device_id = get_active_device()
     if not device_id:
-        return jsonify({"error": "No active Spotify device found"}), 404  
+        return jsonify({"error": "No active Spotify device found"}), 404
 
     if command in ["play", "pause"]:
-        response = requests.put(f"{SPOTIFY_API_BASE_URL}/{command}?device_id={device_id}", headers=headers, json={})
+        response = requests.put(
+            f"{SPOTIFY_API_BASE_URL}/{command}?device_id={device_id}",
+            headers=headers,
+            json={},
+        )
     else:
         endpoint = "previous" if command == "prev" else "next"
-        response = requests.post(f"{SPOTIFY_API_BASE_URL}/{endpoint}?device_id={device_id}", headers=headers)
+        response = requests.post(
+            f"{SPOTIFY_API_BASE_URL}/{endpoint}?device_id={device_id}", headers=headers
+        )
 
     if response.status_code in [200, 202, 204]:
         return jsonify({"success": True})
@@ -76,9 +83,12 @@ def send_spotify_command(command):
     try:
         error_message = response.json()
     except requests.exceptions.JSONDecodeError:
-        error_message = {"error": "Empty response from Spotify", "status_code": response.status_code}
+        error_message = {
+            "error": "Empty response from Spotify",
+            "status_code": response.status_code,
+        }
 
-    print(f"Spotify API Error ({response.status_code}): {error_message}")  
+    print(f"Spotify API Error ({response.status_code}): {error_message}")
     return jsonify(error_message), response.status_code
 
 
@@ -86,17 +96,21 @@ def send_spotify_command(command):
 def play():
     return send_spotify_command("play")
 
+
 @app.route("/pause", methods=["POST"])
 def pause():
     return send_spotify_command("pause")
+
 
 @app.route("/next", methods=["POST"])
 def next_track():
     return send_spotify_command("next")
 
+
 @app.route("/previous", methods=["POST"])
 def prev_track():
     return send_spotify_command("previous")
+
 
 @app.route("/current-song", methods=["GET"])
 def current_song():
@@ -105,17 +119,20 @@ def current_song():
         return jsonify({"error": "Failed to get access token"}), 401
 
     headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(f"{SPOTIFY_API_BASE_URL}/currently-playing", headers=headers)
+    response = requests.get(
+        f"{SPOTIFY_API_BASE_URL}/currently-playing", headers=headers
+    )
 
     if response.status_code == 200:
         data = response.json()
         if not data or "item" not in data:
             return jsonify({"error": "No song currently playing"}), 204
         return jsonify(data)
-    elif response.status_code == 204:  
+    elif response.status_code == 204:
         return jsonify({"error": "No song currently playing"}), 204
     else:
         return jsonify({"error": "Failed to fetch song info"}), response.status_code
+
 
 @app.route("/player-state", methods=["GET"])
 def get_player_state():
@@ -128,31 +145,56 @@ def get_player_state():
 
     if response.status_code == 200:
         data = response.json()
-        return jsonify({
-            "shuffle_state": data.get("shuffle_state", False),
-            "repeat_state": data.get("repeat_state", "off")
-        })
-    
+        return jsonify(
+            {
+                "shuffle_state": data.get("shuffle_state", False),
+                "repeat_state": data.get("repeat_state", "off"),
+            }
+        )
+
     return jsonify({"error": "Failed to get player state"}), response.status_code
+
 
 @app.route("/playlist/<playlist_id>", methods=["GET"])
 def get_playlist(playlist_id):
-    """
-    Fetches the playlist tracks for the given playlist_id.
-    """
     access_token = get_access_token()
     if not access_token:
         return jsonify({"error": "Failed to get access token"}), 401
 
-    url = f"{SPOTIFY_API_GENERIC}/playlists/{playlist_id}"
     headers = {"Authorization": f"Bearer {access_token}"}
-    r = requests.get(url, headers=headers)
+    all_tracks = []
+    offset = 0
+    limit = 100
 
-    if r.status_code != 200:
-        return jsonify({"error": "Failed to fetch playlist info"}), r.status_code
-    
-    playlist_data = r.json()
-    return jsonify(playlist_data)
+    while True:
+        url = f"{SPOTIFY_API_GENERIC}/playlists/{playlist_id}/tracks?limit={limit}&offset={offset}"
+        response = requests.get(url, headers=headers)
+
+        if response.status_code != 200:
+            return jsonify(
+                {"error": "Failed to fetch playlist info"}
+            ), response.status_code
+
+        data = response.json()
+        tracks = data.get("items", [])
+        all_tracks.extend(tracks)
+
+        if len(tracks) < limit:  # No more tracks left to fetch
+            break
+
+        offset += limit  # Move to next batch
+
+    playlist_info_url = f"{SPOTIFY_API_GENERIC}/playlists/{playlist_id}"
+    response = requests.get(playlist_info_url, headers=headers)
+    playlist_info = response.json() if response.status_code == 200 else {}
+
+    return jsonify(
+        {
+            "name": playlist_info.get("name", "Unknown Playlist"),
+            "tracks": {"items": all_tracks},
+        }
+    )
+
 
 @app.route("/play-track", methods=["POST"])
 def play_track():
@@ -173,25 +215,28 @@ def play_track():
 
     headers = {
         "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
 
     payload = {
-        "context_uri": f"spotify:playlist:{playlist_id}", 
-        "offset": {"uri": track_uri},  
-        "position_ms": 0
+        "context_uri": f"spotify:playlist:{playlist_id}",
+        "offset": {"uri": track_uri},
+        "position_ms": 0,
     }
 
     r = requests.put(
         f"{SPOTIFY_API_BASE_URL}/play?device_id={device_id}",
         headers=headers,
-        json=payload
+        json=payload,
     )
 
     if r.status_code in [200, 202, 204]:
         return jsonify({"success": True})
 
-    return jsonify({"error": "Failed to play track", "details": r.json()}), r.status_code
+    return jsonify(
+        {"error": "Failed to play track", "details": r.json()}
+    ), r.status_code
+
 
 @app.route("/repeat", methods=["POST"])
 def set_repeat():
@@ -205,11 +250,13 @@ def set_repeat():
     if response.status_code != 200:
         return jsonify({"error": "Failed to get repeat state"}), response.status_code
 
-    repeat_state = response.json().get("repeat_state", "off")  
+    repeat_state = response.json().get("repeat_state", "off")
 
     new_repeat_mode = "track" if repeat_state == "off" else "off"
 
-    response = requests.put(f"{SPOTIFY_API_BASE_URL}/repeat?state={new_repeat_mode}", headers=headers)
+    response = requests.put(
+        f"{SPOTIFY_API_BASE_URL}/repeat?state={new_repeat_mode}", headers=headers
+    )
 
     if response.status_code in [200, 204]:
         return jsonify({"success": True, "mode": new_repeat_mode})
@@ -234,18 +281,26 @@ def set_shuffle():
 
     if shuffle_state == "smart":
         print("Smart Shuffle is enabled. Disabling it first...")
-        disable_response = requests.put(f"{SPOTIFY_API_BASE_URL}/shuffle?state=false", headers=headers)
+        disable_response = requests.put(
+            f"{SPOTIFY_API_BASE_URL}/shuffle?state=false", headers=headers
+        )
         if disable_response.status_code not in [200, 204]:
-            return jsonify({"error": "Failed to disable Smart Shuffle"}), disable_response.status_code
-        shuffle_state = False  
+            return jsonify(
+                {"error": "Failed to disable Smart Shuffle"}
+            ), disable_response.status_code
+        shuffle_state = False
 
     new_shuffle_state = not shuffle_state
-    response = requests.put(f"{SPOTIFY_API_BASE_URL}/shuffle?state={str(new_shuffle_state).lower()}", headers=headers)
+    response = requests.put(
+        f"{SPOTIFY_API_BASE_URL}/shuffle?state={str(new_shuffle_state).lower()}",
+        headers=headers,
+    )
 
     if response.status_code in [200, 204]:
         return jsonify({"success": True, "shuffle_state": new_shuffle_state})
 
     return jsonify({"error": "Failed to toggle shuffle"}), response.status_code
+
 
 @app.route("/set-volume", methods=["PUT"])
 def set_volume():
@@ -260,12 +315,15 @@ def set_volume():
     headers = {"Authorization": f"Bearer {access_token}"}
     params = {"volume_percent": int(volume)}
 
-    response = requests.put(f"{SPOTIFY_API_BASE_URL}/volume", headers=headers, params=params)
+    response = requests.put(
+        f"{SPOTIFY_API_BASE_URL}/volume", headers=headers, params=params
+    )
 
     if response.status_code in [200, 204]:
         return jsonify({"success": True})
 
     return jsonify({"error": "Failed to change volume"}), response.status_code
+
 
 @app.route("/get-volume", methods=["GET"])
 def get_volume():
@@ -284,6 +342,7 @@ def get_volume():
             return jsonify({"error": "No active device found"}), 404
     else:
         return jsonify({"error": "Failed to retrieve volume"}), response.status_code
+
 
 @app.route("/playlists", methods=["GET"])
 def get_playlists():
@@ -304,9 +363,10 @@ def get_playlists():
         data = response.json()
         playlists.extend(data["items"])
 
-        next_url = data.get("next")  
+        next_url = data.get("next")
 
     return jsonify({"items": playlists})
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)
