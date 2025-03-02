@@ -1,9 +1,9 @@
-const API_BASE_URL = "http://192.168.1.196:5001";
+const API_BASE_URL = "http://192.168.1.50:5001";
 const DEAFULT_PLAYLIST = "4TGxJb0nQLc4bDg0DtasLE";
 
 let currentPlayingUri = null;
 let currentPlaylistId = null;
-let currentlyLoadedPlaylist  = null;
+let currentlyLoadedPlaylist = null;
 let clickBlocked = false;
 
 let lastProgress = 0;
@@ -18,7 +18,7 @@ async function sendCommand(command) {
     let requestOptions = {
       method: "POST",
       headers: {
-        "Content-Type": "application/json" 
+        "Content-Type": "application/json"
       },
     };
 
@@ -47,6 +47,7 @@ async function updateSongInfo() {
     const response = await fetch(`${API_BASE_URL}/current-song`);
     const data = await response.json();
 
+
     if (!data || data.error) {
       document.getElementById("song-title").innerText = "No song playing";
       document.getElementById("artist-name").innerText = "";
@@ -54,6 +55,7 @@ async function updateSongInfo() {
       updatePlayPauseIcon(false);
       isPlaying = false;
       updateTrackProgress(0, 0);
+
       return;
     }
 
@@ -70,15 +72,17 @@ async function updateSongInfo() {
     lastUpdateTime = Date.now();
     isPlaying = data.is_playing;
 
-    currentPlayingUri = data.item.uri; 
-    currentPlaylistId = data.context?.uri?.split(":").pop() || null; 
-    
+    currentPlayingUri = data.item.uri;
+    currentPlaylistId = data.context?.uri?.split(":").pop() || null;
+
     updatePlayPauseIcon(isPlaying);
     updateTrackTime();
 
     highlightPlayingSong();
   } catch (error) {
     console.error("Error fetching song info:", error);
+    document.getElementById("song-title").innerText = "Error fetching song info";
+    document.getElementById("artist-name").innerText = "Could be that no device is found or song not selected";
   }
 }
 
@@ -160,7 +164,7 @@ async function toggleRepeat() {
 
     const data = await response.json();
     if (data.success) {
-      const repeatMode = data.mode; 
+      const repeatMode = data.mode;
       updateRepeatIcon(repeatMode);
     }
   } catch (error) {
@@ -173,7 +177,7 @@ function updateRepeatIcon(mode) {
   repeatIcon.classList.remove("active-green");
 
   if (mode === "track") {
-    repeatIcon.classList.add("active-green"); 
+    repeatIcon.classList.add("active-green");
   }
 }
 
@@ -203,77 +207,77 @@ function updateShuffleIcon(isShuffle) {
   shuffleIcon.classList.toggle("active-green", isShuffle);
 }
 
- 
+
 async function loadPlaylist(playlistId) {
-    try {
-      currentlyLoadedPlaylist = playlistId; 
+  try {
+    currentlyLoadedPlaylist = playlistId;
 
-      const response = await fetch(`${API_BASE_URL}/playlist/${playlistId}`);
-      const data = await response.json();
-  
-        if (data.error) {
-        console.error("Error fetching playlist:", data.error);
-        return;
-        }
-      
-      const playlistTitle = document.getElementById("playlist-title");
-        if (playlistTitle) {
-        playlistTitle.innerText = data.name || "Unknown Playlist";
-      }
-    
-      const playlistUl = document.getElementById("playlist");
-      playlistUl.innerHTML = ""; // clear old items if any
-  
-      data.tracks.items.forEach((item) => {
-        const track = item.track; 
-        if (!track) return; // skip if no track
-  
-        const li = document.createElement("li");
-        li.classList.add("list-group-item", "d-flex", "align-items-center");
-        li.dataset.trackUri = track.uri;
-  
-        const albumImages = track.album.images;
-        const albumCoverUrl = albumImages.length 
-          ? albumImages[albumImages.length - 1].url // smallest image
-          : "default.jpg";
-  
-        // <img> for album cover
-        const img = document.createElement("img");
-        img.src = albumCoverUrl;
-        img.alt = track.name;
-        img.style.width = "40px";
-        img.style.height = "40px";
-        img.style.objectFit = "cover";
-        img.style.marginRight = "10px";
-  
-        // <div> for the text (track name + artists)
-        const textDiv = document.createElement("div");
-        textDiv.innerText = `${track.name} - ${track.artists
-          .map((artist) => artist.name)
-          .join(", ")}`;
-  
-        li.appendChild(img);
-        li.appendChild(textDiv);
-  
-        li.addEventListener("click", (e) => {
-          if (clickBlocked) {
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-          }
+    const response = await fetch(`${API_BASE_URL}/playlist/${playlistId}`);
+    const data = await response.json();
 
-          playTrack(track.uri, playlistId);
-        });
-  
-        playlistUl.appendChild(li);
-
-        highlightPlayingSong();
-      });
-    } catch (error) {
-      console.error("Error loading playlist:", error);
+    if (data.error) {
+      console.error("Error fetching playlist:", data.error);
+      return;
     }
+
+    const playlistTitle = document.getElementById("playlist-title");
+    if (playlistTitle) {
+      playlistTitle.innerText = data.name || "Unknown Playlist";
+    }
+
+    const playlistUl = document.getElementById("playlist");
+    playlistUl.innerHTML = ""; // clear old items if any
+
+    data.tracks.items.forEach((item) => {
+      const track = item.track;
+      if (!track) return; // skip if no track
+
+      const li = document.createElement("li");
+      li.classList.add("list-group-item", "d-flex", "align-items-center");
+      li.dataset.trackUri = track.uri;
+
+      const albumImages = track.album.images;
+      const albumCoverUrl = albumImages.length
+        ? albumImages[albumImages.length - 1].url // smallest image
+        : "default.jpg";
+
+      // <img> for album cover
+      const img = document.createElement("img");
+      img.src = albumCoverUrl;
+      img.alt = track.name;
+      img.style.width = "40px";
+      img.style.height = "40px";
+      img.style.objectFit = "cover";
+      img.style.marginRight = "10px";
+
+      // <div> for the text (track name + artists)
+      const textDiv = document.createElement("div");
+      textDiv.innerText = `${track.name} - ${track.artists
+        .map((artist) => artist.name)
+        .join(", ")}`;
+
+      li.appendChild(img);
+      li.appendChild(textDiv);
+
+      li.addEventListener("click", (e) => {
+        if (clickBlocked) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+
+        playTrack(track.uri, playlistId);
+      });
+
+      playlistUl.appendChild(li);
+
+      highlightPlayingSong();
+    });
+  } catch (error) {
+    console.error("Error loading playlist:", error);
   }
-  
+}
+
 
 async function playTrack(trackUri, trackPlaylistId) {
   try {
@@ -282,16 +286,22 @@ async function playTrack(trackUri, trackPlaylistId) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ uri: trackUri, playlistId: trackPlaylistId}),
+      body: JSON.stringify({ uri: trackUri, playlistId: trackPlaylistId }),
     });
     const data = await response.json();
 
     if (data.error) {
+      if (data.error === "No active Spotify device found") {
+        document.getElementById("song-title").innerText = "No active Spotify device found";
+        document.getElementById("artist-name").innerText = "";
+      }
+
+      console.log(data.error.message)
       console.error("Error playing track:", data.error);
       return;
     }
 
-    currentPlayingUri = trackUri; 
+    currentPlayingUri = trackUri;
     highlightPlayingSong();
 
     setTimeout(updateSongInfo, 1000);
@@ -367,7 +377,7 @@ async function loadPlaylists() {
       textDiv.innerText = playlist.name;
 
       li.addEventListener("click", () => {
-        loadPlaylist(playlist.id); 
+        loadPlaylist(playlist.id);
       });
 
       li.appendChild(img);
@@ -382,10 +392,10 @@ async function loadPlaylists() {
 const volumeSlider = document.getElementById("volume-slider");
 let debounceTimeout;
 async function setSpotifyVolume(volume) {
-  clearTimeout(debounceTimeout); 
+  clearTimeout(debounceTimeout);
 
   debounceTimeout = setTimeout(async () => {
-    const invertedVolume = 100 - volume; 
+    const invertedVolume = 100 - volume;
 
     try {
       const response = await fetch(`${API_BASE_URL}/set-volume?volume=${invertedVolume}`, {
@@ -400,7 +410,7 @@ async function setSpotifyVolume(volume) {
     } catch (error) {
       console.error("Error sending volume command:", error);
     }
-  }, 300); 
+  }, 300);
 }
 
 volumeSlider.addEventListener("input", (event) => {
@@ -409,7 +419,7 @@ volumeSlider.addEventListener("input", (event) => {
 });
 
 async function goToCurrentPlaylist() {
-  await updateSongInfo(); 
+  await updateSongInfo();
 
   if (!currentPlaylistId) {
     console.warn("No associated playlist for the current song.");
@@ -418,7 +428,7 @@ async function goToCurrentPlaylist() {
 
   if (currentlyLoadedPlaylist !== currentPlaylistId) {
     console.log(`Loading playlist ${currentPlaylistId}...`);
-    await loadPlaylist(currentPlaylistId); 
+    await loadPlaylist(currentPlaylistId);
   }
 
   setTimeout(scrollToHighlightedSong, 500); // Scroll after loading
@@ -441,8 +451,8 @@ function blockClicksFor(ms) {
 document.addEventListener("DOMContentLoaded", function () {
   updateSongInfo();
   loadPlaylist(DEAFULT_PLAYLIST);
-  getSpotifyVolume(); 
-  fetchPlayerState(); 
+  getSpotifyVolume();
+  fetchPlayerState();
 
   const volumeSlider = document.getElementById("volume-slider");
   if (volumeSlider) {
