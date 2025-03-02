@@ -307,7 +307,6 @@ async function playTrack(trackUri, trackPlaylistId) {
         document.getElementById("artist-name").innerText = "";
       }
 
-      console.log(data.error.message)
       console.error("Error playing track:", data.error);
       return;
     }

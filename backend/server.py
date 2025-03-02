@@ -4,12 +4,13 @@ from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__, static_folder="static")
 CORS(app)
 
 WINDOWS_PC_IP = "192.168.1.196"
 OHM_API_URL = f"http://{WINDOWS_PC_IP}:8085/data.json"
 NETWORK_API_URL = f"http://{WINDOWS_PC_IP}:61208/api/4/network"
+
 
 def fetch_ohm_data():
     """Fetch data from Open Hardware Monitor"""
@@ -20,6 +21,7 @@ def fetch_ohm_data():
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
 
+
 def fetch_network_data():
     """Fetch network data from the local API."""
     try:
@@ -28,12 +30,23 @@ def fetch_network_data():
         network_data = response.json()
 
         # Find Ethernet interface
-        ethernet = next((iface for iface in network_data if iface.get("interface_name") == "Ethernet"), None)
+        ethernet = next(
+            (
+                iface
+                for iface in network_data
+                if iface.get("interface_name") == "Ethernet"
+            ),
+            None,
+        )
 
         if ethernet:
             return {
-                "download_speed": ethernet.get("bytes_recv_rate_per_sec", 0),  # Bytes per sec
-                "upload_speed": ethernet.get("bytes_sent_rate_per_sec", 0)     # Bytes per sec
+                "download_speed": ethernet.get(
+                    "bytes_recv_rate_per_sec", 0
+                ),  # Bytes per sec
+                "upload_speed": ethernet.get(
+                    "bytes_sent_rate_per_sec", 0
+                ),  # Bytes per sec
             }
         return {"download_speed": 0, "upload_speed": 0}
 
@@ -41,17 +54,16 @@ def fetch_network_data():
         return {"error": str(e)}
 
 
-def extract_sensor_value(data, sensor_name, required_parent_text=None, parent_text=None):
+def extract_sensor_value(
+    data, sensor_name, required_parent_text=None, parent_text=None
+):
     """
     Extract a sensor value from OHM JSON data, ensuring (if required_parent_text
     is given) that the sensor is *directly* inside that parent's text.
     """
     for child in data.get("Children", []):
         val = extract_sensor_value(
-            child, 
-            sensor_name, 
-            required_parent_text, 
-            parent_text=data.get("Text", "")
+            child, sensor_name, required_parent_text, parent_text=data.get("Text", "")
         )
         if val is not None:
             return val
@@ -63,6 +75,7 @@ def extract_sensor_value(data, sensor_name, required_parent_text=None, parent_te
         return data.get("Value", "N/A")
 
     return None
+
 
 def find_node_by_text(node, text):
     """
@@ -76,6 +89,7 @@ def find_node_by_text(node, text):
         if found:
             return found
     return None
+
 
 def get_disk_used_space(data, disk_name):
     disk_node = find_node_by_text(data, disk_name)
@@ -92,7 +106,8 @@ def get_disk_used_space(data, disk_name):
 
     return used_space_node.get("Value", "N/A")
 
-@app.route('/api/stats', methods=['GET'])
+
+@app.route("/api/stats", methods=["GET"])
 def get_stats():
     """Fetch and return system stats from Open Hardware Monitor & Network API"""
     try:
@@ -110,18 +125,17 @@ def get_stats():
             "gpu_temp": extract_sensor_value(data, "GPU Core", "Temperatures"),
             "gpu_power": extract_sensor_value(data, "GPU Power", "Powers"),
             "ram_usage_gb": extract_sensor_value(data, "Used Memory", "Data"),
-
             "disk_d_usage": get_disk_used_space(data, "SSD Sata (D:)"),
             "disk_c_usage": get_disk_used_space(data, "SSD M2 (C:)"),
             "disk_f_usage": get_disk_used_space(data, "SSD M2 (F:)"),
-
             "network_download": network_stats["download_speed"],
-            "network_upload": network_stats["upload_speed"]
+            "network_upload": network_stats["upload_speed"],
         }
 
         return jsonify(stats)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

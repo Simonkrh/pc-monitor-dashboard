@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="/frontend/global/css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
 </head>
+
 <body>
   <div class="container text-center mt-4">
     <!-- Top Row -->
@@ -25,7 +27,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="col-md-6">
         <div class="section-container">
           <div class="gauge" id="gpu-gauge" style="--value: 0deg;">
@@ -55,15 +57,21 @@
         <div class="section-container disk-network-container">
           <div class="disk-stats">
             <p>SSD M2 (C:)</p>
-            <div class="progress"><div id="disk-c-bar" class="progress-bar" role="progressbar"></div></div>
+            <div class="progress">
+              <div id="disk-c-bar" class="progress-bar" role="progressbar"></div>
+            </div>
             <p>SSD M2 (F:)</p>
-            <div class="progress"><div id="disk-f-bar" class="progress-bar" role="progressbar"></div></div>
+            <div class="progress">
+              <div id="disk-f-bar" class="progress-bar" role="progressbar"></div>
+            </div>
             <p>SSD Sata (D:)</p>
-            <div class="progress"><div id="disk-d-bar" class="progress-bar" role="progressbar"></div></div>
+            <div class="progress">
+              <div id="disk-d-bar" class="progress-bar" role="progressbar"></div>
+            </div>
           </div>
 
-           <!-- Network Stats -->
-           <div class="network-stats">
+          <!-- Network Stats -->
+          <div class="network-stats">
             <div class="network-speed-container">
               <p><span>&#8679;</span> <span id="network-upload">0</span></p>
               <p><span>&#8681;</span> <span id="network-download">0</span></p>
@@ -80,11 +88,12 @@
           </div>
         </div>
       </div>
-      </div>
     </div>
-  </div> 
-  
+  </div>
+  </div>
+
   <script src="/frontend/pages/index/index.js"></script>
   <script src="/frontend/global/js/swipe-navigation.js"></script>
 </body>
+
 </html>
