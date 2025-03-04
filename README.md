@@ -28,5 +28,5 @@ The frontend uses a **`config.js`** file to store the server IP.
 Create a `config.js` file inside the **frontend folder** with the following content:
 ```js
 const CONFIG = {
-    SERVER_PC_IP: "",  // Replace with your actual server IP
+    SERVER_PC_IP: ""
 };
