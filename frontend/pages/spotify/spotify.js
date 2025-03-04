@@ -1,6 +1,5 @@
 const serverIP = CONFIG.SERVER_PC_IP;
 const API_BASE_URL = `http://${serverIP}:5001`;
-const DEAFULT_PLAYLIST = CONFIG.DEAFULT_PLAYLIST;
 
 let currentPlayingUri = null;
 let currentPlaylistId = null;
@@ -460,8 +459,14 @@ function blockClicksFor(ms) {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
-  await loadPlaylist(DEAFULT_PLAYLIST);
   await updateSongInfo();
+
+  if (currentPlaylistId) {
+    await loadPlaylist(currentPlaylistId);
+  } else {
+    await loadPlaylists();
+  }
+
   scrollToHighlightedSong();
   getSpotifyVolume();
   fetchPlayerState();
