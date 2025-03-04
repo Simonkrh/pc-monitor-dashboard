@@ -1,4 +1,4 @@
-# PC Monitor Dashboard - Important Notes
+# PC Monitor Dashboard 
 
 ## Project Overview
 
