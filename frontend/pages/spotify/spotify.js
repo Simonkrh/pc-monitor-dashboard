@@ -1,5 +1,6 @@
-const API_BASE_URL = "http://192.168.1.50:5001";
-const DEAFULT_PLAYLIST = "4TGxJb0nQLc4bDg0DtasLE";
+const serverIP = CONFIG.SERVER_PC_IP;
+const API_BASE_URL = `http://${serverIP}:5001`;
+const DEAFULT_PLAYLIST = CONFIG.DEAFULT_PLAYLIST;
 
 let currentPlayingUri = null;
 let currentPlaylistId = null;

@@ -21,3 +21,6 @@ Thumbs.db
 
 # Ignore sh scripts
 *.sh
+
+# Ignore frontend config file
+frontend/config.js

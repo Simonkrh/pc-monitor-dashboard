@@ -1,8 +1,9 @@
+const serverIP = CONFIG.SERVER_PC_IP;
 async function fetchData() {
     const startTime = Date.now();
 
     try {
-        const response = await fetch("http://192.168.1.72:5000/api/stats");
+        const response = await fetch(`http://${serverIP}:5000/api/stats`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
 

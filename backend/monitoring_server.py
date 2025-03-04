@@ -1,15 +1,14 @@
-# API-server som henter data fra Windows-PC ved hjelp av Open Hardware Monitor
-
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
+import os
 
 app = Flask(__name__, static_folder="static")
 CORS(app)
 
-WINDOWS_PC_IP = "192.168.1.196"
-OHM_API_URL = f"http://{WINDOWS_PC_IP}:8085/data.json"
-NETWORK_API_URL = f"http://{WINDOWS_PC_IP}:61208/api/4/network"
+MONITORED_PC_IP = os.getenv("MONITORED_PC_IP")
+OHM_API_URL = f"http://{MONITORED_PC_IP}:8085/data.json"
+NETWORK_API_URL = f"http://{MONITORED_PC_IP}:61208/api/4/network"
 
 
 def fetch_ohm_data():
