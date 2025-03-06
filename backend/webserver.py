@@ -7,20 +7,21 @@ app = Flask(__name__, static_folder="../frontend")
 def index():
     return send_from_directory(app.static_folder + "/pages/index", "index.html")
 
-
 @app.route("/resources")
 def resources():
     return send_from_directory(app.static_folder + "/pages/resources", "resources.html")
-
 
 @app.route("/spotify")
 def spotify():
     return send_from_directory(app.static_folder + "/pages/spotify", "spotify.html")
 
-
 @app.route("/macro")
 def macro():
     return send_from_directory(app.static_folder + "/pages/macro", "macro.html")
+
+@app.route("/upload")
+def upload():
+    return send_from_directory(app.static_folder + "/pages/upload", "upload.html")
 
 
 if __name__ == "__main__":
