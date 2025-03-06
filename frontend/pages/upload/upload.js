@@ -22,27 +22,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     form.addEventListener("submit", async (event) => {
-        event.preventDefault(); 
+        event.preventDefault();
         const formData = new FormData(form);
-
+    
         try {
             const response = await fetch(`http://${serverIP}:5010/upload`, {
                 method: "POST",
                 body: formData
             });
-
+    
             if (response.ok) {
-                alert("File uploaded successfully!");
+                const result = await response.json();
+                alert(result.message); 
                 form.reset();
-                fetchImages(); 
+                fetchImages();
             } else {
                 alert("Upload failed! Please try again.");
             }
         } catch (error) {
-            console.error("Error uploading file:", error);
+            console.error("Error uploading file(s):", error);
             alert("An error occurred while uploading.");
         }
     });
+    
 
     returnBtn.addEventListener("click", () => {
         window.location.href = "/";

@@ -16,11 +16,27 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 def upload_file():
     if "file" not in request.files:
         return "No file part", 400
-    file = request.files["file"]
-    if file.filename == "":
-        return "No selected file", 400
-    file.save(os.path.join(app.config["UPLOAD_FOLDER"], file.filename))
-    return jsonify({"message": "File uploaded successfully!"}), 200
+
+    files = request.files.getlist("file")
+    if not files:
+        return "No selected file(s)", 400
+
+    uploaded_filenames = []
+
+    for file in files:
+        if file.filename == "":
+            continue  # Skip empty uploads
+        save_path = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
+        file.save(save_path)
+        uploaded_filenames.append(file.filename)
+
+    if not uploaded_filenames:
+        return "No valid files uploaded", 400
+
+    return jsonify({
+        "message": "Files uploaded successfully!",
+        "uploaded_files": uploaded_filenames
+    }), 200
 
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
