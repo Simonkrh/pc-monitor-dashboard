@@ -2,11 +2,14 @@ from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 import os
+from wakeonlan import send_magic_packet
 
 app = Flask(__name__, static_folder="static")
 CORS(app)
 
 MONITORED_PC_IP = os.getenv("MONITORED_PC_IP")
+MONITORED_PC_MAC = os.getenv("MONITORED_PC_MAC")
+
 OHM_API_URL = f"http://{MONITORED_PC_IP}:8085/data.json"
 NETWORK_API_URL = f"http://{MONITORED_PC_IP}:61208/api/4/network"
 
@@ -105,6 +108,14 @@ def get_disk_used_space(data, disk_name):
 
     return used_space_node.get("Value", "N/A")
 
+@app.route("/wake", methods=["POST"])
+def wake_pc():
+    """Send a magic packet to wake up the monitored PC."""
+    if MONITORED_PC_MAC:
+        send_magic_packet(MONITORED_PC_MAC)
+        return jsonify({"status": "Magic packet sent!"})
+    else:
+        return jsonify({"error": "MAC address not configured"}), 400
 
 @app.route("/api/stats", methods=["GET"])
 def get_stats():

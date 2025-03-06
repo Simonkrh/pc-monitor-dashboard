@@ -50,6 +50,21 @@ fetch(`http://${serverIP}:5010/images`)
   })
   .catch(err => console.error(err));
 
-document.body.addEventListener("click", () => {
-    window.location.href = "/resources";
+  document.body.addEventListener("dblclick", () => {
+    console.log("Waking up PC...");
+
+    fetch(`http://${serverIP}:5000/wake`, { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.status);
+
+            setTimeout(() => {
+                window.location.href = "/resources";
+            }, 20000); 
+        })
+        .catch(error => {
+            console.error("Failed to send WoL request:", error);
+            window.location.href = "/resources"; // Redirect anyway
+        });
 });
+
