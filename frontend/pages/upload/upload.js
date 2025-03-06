@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const serverIP = CONFIG.SERVER_PC_IP;
     const form = document.getElementById("upload-form");
     const imageListDiv = document.getElementById("image-list");
+    const returnBtn = document.getElementById("return");
 
     async function fetchImages() {
         try {
@@ -41,6 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Error uploading file:", error);
             alert("An error occurred while uploading.");
         }
+    });
+
+    returnBtn.addEventListener("click", () => {
+        window.location.href = "/";
     });
 
     fetchImages();
