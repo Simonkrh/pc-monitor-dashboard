@@ -33,3 +33,9 @@ body::-webkit-scrollbar {
 body.show {
   opacity: 1;
 }
+
+@media (max-width: 1300px) {
+  * {
+      cursor: none;
+  }
+}
