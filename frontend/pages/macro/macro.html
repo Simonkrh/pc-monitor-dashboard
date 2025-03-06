@@ -1,17 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Macro Page</title>
-  <link rel="stylesheet" href="/frontend/global/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macro Control Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3x3 grid */
+            gap: 15px;
+            padding: 20px;
+            background: #333;
+            border-radius: 15px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .grid-button {
+            width: 100px;
+            height: 100px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            transition: transform 0.1s ease-in-out, background 0.2s;
+        }
+
+        .grid-button:hover {
+            background: #555;
+        }
+
+        .grid-button:active {
+            transform: scale(0.9);
+        }
+
+        .grid-button i {
+            font-size: 30px;
+            margin-bottom: 5px;
+        }
+    </style>
+    <script>
+        async function sendMacro(command) {
+            try {
+                await fetch(`http://localhost:5000/${command}`, { method: 'POST' });
+                console.log(`Sent command: ${command}`);
+            } catch (error) {
+                console.error("Error sending macro:", error);
+            }
+        }
+    </script>
 </head>
-
 <body>
-  <h1>Macro Page</h1>
-  <p>Swipe left or right to navigate.</p>
-  <script src="/frontend/global/js/swipe-navigation.js"></script>
-</body>
 
+    <div class="grid-container">
+        <button class="grid-button" onclick="sendMacro('open_app?app=notepad')">
+            <i class="fa-solid fa-file-lines"></i>
+            Notepad
+        </button>
+        <button class="grid-button" onclick="sendMacro('open_app?app=steam')">
+            <i class="fa-brands fa-steam"></i>
+            Steam
+        </button>
+        <button class="grid-button" onclick="sendMacro('press_key?key=enter')">
+            <i class="fa-solid fa-keyboard"></i>
+            Enter
+        </button>
+        <button class="grid-button" onclick="sendMacro('switch_steam_user')">
+            <i class="fa-solid fa-repeat"></i>
+            Switch Steam
+        </button>
+        <button class="grid-button" onclick="sendMacro('press_key?key=space')">
+            <i class="fa-solid fa-space-shuttle"></i>
+            Spacebar
+        </button>
+        <button class="grid-button" onclick="sendMacro('open_app?app=chrome')">
+            <i class="fa-brands fa-chrome"></i>
+            Chrome
+        </button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+
+</body>
 </html>
