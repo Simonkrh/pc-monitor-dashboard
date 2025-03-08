@@ -49,8 +49,8 @@ body {
   .spinner {
     width: 30px;
     height: 30px;
-    border: 9px solid rgba(0, 34, 187, 0.3);
-    border-top: 6px solid rgb(0, 81, 255);
+    border: 9px solid rgba(1, 29, 156, 0.623);
+    border-top: 8px solid rgb(0, 81, 255);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
