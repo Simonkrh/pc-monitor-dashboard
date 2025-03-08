@@ -50,21 +50,80 @@ fetch(`http://${serverIP}:5010/images`)
   })
   .catch(err => console.error(err));
 
-  document.body.addEventListener("dblclick", () => {
-    console.log("Waking up PC...");
+let swipeStartY = 0;
+let swipeEndY = 0;
+const swipeThreshold = 150; 
 
-    fetch(`http://${serverIP}:5000/wake`, { method: "POST" })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data.status);
-
-            setTimeout(() => {
-                window.location.href = "/resources";
-            }, 20000); 
-        })
-        .catch(error => {
-            console.error("Failed to send WoL request:", error);
-            window.location.href = "/resources"; // Redirect anyway
-        });
+document.addEventListener("touchstart", (event) => {
+  swipeStartY = event.touches[0].clientY;
 });
 
+document.addEventListener("touchmove", (event) => {
+  swipeEndY = event.touches[0].clientY;
+});
+
+document.addEventListener("mousedown", (event) => {
+  swipeStartY = event.clientY;
+});
+
+document.addEventListener("mousemove", (event) => {
+  swipeEndY = event.clientY;
+});
+
+document.addEventListener("mouseup", handleSwipe);
+document.addEventListener("touchend", handleSwipe);
+
+function handleSwipe() {
+  if (swipeStartY - swipeEndY > swipeThreshold) {
+    console.log("Swipe up detected - waking PC...");
+    wakeAndRedirect();
+  }
+}
+
+function wakeAndRedirect() {
+  console.log("Sending Wake-on-LAN request...");
+
+  document.getElementById("loading-spinner").style.display = "flex";
+
+  fetch(`http://${serverIP}:5000/wake`, { method: "POST" })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data.status);
+      waitForOpenHardwareMonitor();
+    })
+    .catch(error => {
+      console.error("Failed to send WoL request:", error);
+      window.location.href = "/resources";
+    });
+}
+
+function waitForOpenHardwareMonitor() {
+  let attempts = 0;
+  const maxAttempts = 30; 
+  const checkInterval = 3000; 
+
+  const checkStatus = () => {
+    fetch(`http://${serverIP}:5000/api/stats`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.cpu_usage && data.cpu_temp) {
+          console.log("Open Hardware Monitor is responding!");
+          window.location.href = "/resources";
+        } else {
+          throw new Error("Invalid data received");
+        }
+      })
+      .catch(() => {
+        attempts++;
+        if (attempts < maxAttempts) {
+          console.log(`Waiting for Open Hardware Monitor... (${attempts}/${maxAttempts})`);
+          setTimeout(checkStatus, checkInterval);
+        } else {
+          console.log("Timed out waiting for Open Hardware Monitor, redirecting anyway.");
+          window.location.href = "/resources";
+        }
+      });
+  };
+
+  checkStatus();
+}
