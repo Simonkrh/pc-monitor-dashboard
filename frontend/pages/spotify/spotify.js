@@ -1,5 +1,5 @@
 const serverIP = CONFIG.SERVER_PC_IP;
-const API_BASE_URL = `http://${serverIP}:5000/spotify`;
+const API_BASE_URL = `http://${serverIP}/spotify`;
 
 let currentPlayingUri = null;
 let currentPlaylistId = null;

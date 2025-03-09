@@ -115,7 +115,7 @@ def wake_pc():
     else:
         return jsonify({"error": "MAC address not configured"}), 400
 
-@monitoring.route("/api/stats", methods=["GET"])
+@monitoring.route("/stats", methods=["GET"])
 def get_stats():
     """Fetch and return system stats from Open Hardware Monitor & Network API"""
     try:

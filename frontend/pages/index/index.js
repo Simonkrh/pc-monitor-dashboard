@@ -1,7 +1,7 @@
-const serverIP = CONFIG.SERVER_PC_IP;
+const serverIP = `${CONFIG.SERVER_PC_IP}`;
 let images = [];
 
-fetch(`http://${serverIP}:5000/slideshow/images`)
+fetch(`http://${serverIP}/slideshow/images`)
   .then(response => response.json())
   .then(data => {
     images = data;
@@ -15,7 +15,7 @@ fetch(`http://${serverIP}:5000/slideshow/images`)
       let nextImg = img2;
 
       // Show first image
-      currentImg.src = `http://${serverIP}:5000/slideshow/uploads/${images[index]}`;
+      currentImg.src = `http://${serverIP}/slideshow/uploads/${images[index]}`;
       currentImg.classList.add("slide-center");
       nextImg.classList.add("slide-right");
 
@@ -25,7 +25,7 @@ fetch(`http://${serverIP}:5000/slideshow/images`)
         // Move in the next image from right -> center
         nextImg.classList.remove("slide-center", "slide-left");
         nextImg.classList.add("slide-right");
-        nextImg.src = `http://${serverIP}:5000/slideshow/uploads/${images[index]}`;
+        nextImg.src = `http://${serverIP}/slideshow/uploads/${images[index]}`;
         nextImg.offsetHeight; // Force reflow
         nextImg.classList.remove("slide-right");
         nextImg.classList.add("slide-center");
@@ -85,7 +85,7 @@ function wakeAndRedirect() {
 
   document.getElementById("loading-spinner").style.display = "flex";
 
-  fetch(`http://${serverIP}:5000/monitoring/wake`, { method: "POST" })
+  fetch(`http://${serverIP}/monitoring/wake`, { method: "POST" })
     .then(response => response.json())
     .then(data => {
       console.log(data.status);
@@ -103,7 +103,7 @@ function waitForOpenHardwareMonitor() {
   const checkInterval = 3000; 
 
   const checkStatus = () => {
-    fetch(`http://${serverIP}:5000/monitoring/api/stats`)
+    fetch(`http://${serverIP}/monitoring/api/stats`)
       .then(response => response.json())
       .then(data => {
         if (data.cpu_usage && data.cpu_temp) {

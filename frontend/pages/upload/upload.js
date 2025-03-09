@@ -1,17 +1,18 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const serverIP = CONFIG.SERVER_PC_IP;
+    const SERVER_IP = `http://${CONFIG.SERVER_PC_IP}/slideshow`;  // Store server IP once
+
     const form = document.getElementById("upload-form");
     const imageListDiv = document.getElementById("image-list");
     const returnBtn = document.getElementById("return");
 
     async function fetchImages() {
         try {
-            const response = await fetch(`http://${serverIP}:5000/slideshow/images`);
+            const response = await fetch(`${SERVER_IP}/images`);
             const images = await response.json();
             imageListDiv.innerHTML = ""; 
             images.forEach(image => {
                 const imgElement = document.createElement("img");
-                imgElement.src = `http://${serverIP}:5000/slideshow/uploads/${image}`;
+                imgElement.src = `${SERVER_IP}/uploads/${image}`;
                 imgElement.style.width = "200px";
                 imgElement.style.margin = "10px";
                 imageListDiv.appendChild(imgElement);
@@ -26,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const formData = new FormData(form);
     
         try {
-            const response = await fetch(`http://${serverIP}:5000/slideshow/upload`, {
+            const response = await fetch(`${SERVER_IP}/upload`, {
                 method: "POST",
                 body: formData
             });
@@ -44,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("An error occurred while uploading.");
         }
     });
-    
 
     returnBtn.addEventListener("click", () => {
         window.location.href = "/";

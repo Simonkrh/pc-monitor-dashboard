@@ -3,7 +3,7 @@ async function fetchData() {
     const startTime = Date.now();
 
     try {
-        const response = await fetch(`http://${serverIP}:5000/monitoring/api/stats`);
+        const response = await fetch(`http://${serverIP}/monitoring/stats`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
 
