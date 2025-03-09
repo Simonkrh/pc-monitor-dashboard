@@ -1,6 +1,8 @@
+const SERVER_IP = `http://${CONFIG.SERVER_PC_IP}/monitoring`;  
+
 async function checkPCStatus() {
     try {
-        const response = await fetch("/ping", { method: "GET", cache: "no-store" });
+        const response = await fetch(`${SERVER_IP}/ping`);
         if (!response.ok) {
             throw new Error("PC is offline");
         }
@@ -9,5 +11,3 @@ async function checkPCStatus() {
         window.location.href = "/";
     }
 }
-
-setInterval(checkPCStatus, 10000);
