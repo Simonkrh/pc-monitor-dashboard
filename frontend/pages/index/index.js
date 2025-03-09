@@ -103,7 +103,7 @@ function waitForOpenHardwareMonitor() {
   const checkInterval = 3000; 
 
   const checkStatus = () => {
-    fetch(`http://${serverIP}/monitoring/api/stats`)
+    fetch(`http://${serverIP}/monitoring/stats`)
       .then(response => response.json())
       .then(data => {
         if (data.cpu_usage && data.cpu_temp) {
