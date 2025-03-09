@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify
 import requests
 import os
 from wakeonlan import send_magic_packet
+import subprocess
 
 monitoring = Blueprint("monitoring", __name__)
 
@@ -146,5 +147,21 @@ def get_stats():
 
 @monitoring.route("/ping", methods=["GET"])
 def ping():
-    """A lightweight endpoint to check if the monitored PC is online."""
-    return jsonify({"status": "online"})
+    """Ping the monitored PC to check if it's online."""
+    if not MONITORED_PC_IP:
+        return jsonify({"error": "MONITORED_PC_IP not configured"}), 400
+
+    try:
+        response = subprocess.run(
+            ["ping", "-c", "1", MONITORED_PC_IP],  # "-c 1" sends one packet (Linux/macOS)
+            capture_output=True,
+            text=True,
+        )
+
+        if response.returncode == 0:
+            return jsonify({"status": "online"})
+        else:
+            return jsonify({"status": "offline"}), 503
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
