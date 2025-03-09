@@ -11,3 +11,5 @@ async function checkPCStatus() {
         window.location.href = "/";
     }
 }
+
+setInterval(checkPCStatus, 10000);
