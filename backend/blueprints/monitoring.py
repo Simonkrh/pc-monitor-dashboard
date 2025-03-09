@@ -144,4 +144,7 @@ def get_stats():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
+@monitoring.route("/ping", methods=["GET"])
+def ping():
+    """A lightweight endpoint to check if the monitored PC is online."""
+    return jsonify({"status": "online"})
