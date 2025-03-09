@@ -1,18 +1,15 @@
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
+from flask import Blueprint, request, jsonify, send_from_directory
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__)
-CORS(app)
+slideshow = Blueprint("slideshow", __name__)
 
 UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")  
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-@app.route("/upload", methods=["POST"])
+@slideshow.route("/upload", methods=["POST"])
 def upload_file():
     if "file" not in request.files:
         return "No file part", 400
@@ -26,7 +23,7 @@ def upload_file():
     for file in files:
         if file.filename == "":
             continue  # Skip empty uploads
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
+        save_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(save_path)
         uploaded_filenames.append(file.filename)
 
@@ -38,14 +35,11 @@ def upload_file():
         "uploaded_files": uploaded_filenames
     }), 200
 
-@app.route("/uploads/<filename>")
+@slideshow.route("/uploads/<filename>")
 def uploaded_file(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
-@app.route("/images")
+@slideshow.route("/images")
 def list_images():
     images = [f for f in os.listdir(UPLOAD_FOLDER) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
     return jsonify(images)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5010)

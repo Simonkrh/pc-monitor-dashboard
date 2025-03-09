@@ -6,12 +6,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function fetchImages() {
         try {
-            const response = await fetch(`http://${serverIP}:5010/images`);
+            const response = await fetch(`http://${serverIP}:5000/slideshow/images`);
             const images = await response.json();
             imageListDiv.innerHTML = ""; 
             images.forEach(image => {
                 const imgElement = document.createElement("img");
-                imgElement.src = `http://${serverIP}:5010/uploads/${image}`;
+                imgElement.src = `http://${serverIP}:5000/slideshow/uploads/${image}`;
                 imgElement.style.width = "200px";
                 imgElement.style.margin = "10px";
                 imageListDiv.appendChild(imgElement);
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const formData = new FormData(form);
     
         try {
-            const response = await fetch(`http://${serverIP}:5010/upload`, {
+            const response = await fetch(`http://${serverIP}:5000/slideshow/upload`, {
                 method: "POST",
                 body: formData
             });

@@ -1,11 +1,9 @@
-from flask import Flask, jsonify, send_from_directory
-from flask_cors import CORS
+from flask import Blueprint, jsonify
 import requests
 import os
 from wakeonlan import send_magic_packet
 
-app = Flask(__name__, static_folder="static")
-CORS(app)
+monitoring = Blueprint("monitoring", __name__)
 
 MONITORED_PC_IP = os.getenv("MONITORED_PC_IP")
 MONITORED_PC_MAC = os.getenv("MONITORED_PC_MAC")
@@ -108,7 +106,7 @@ def get_disk_used_space(data, disk_name):
 
     return used_space_node.get("Value", "N/A")
 
-@app.route("/wake", methods=["POST"])
+@monitoring.route("/wake", methods=["POST"])
 def wake_pc():
     """Send a magic packet to wake up the monitored PC."""
     if MONITORED_PC_MAC:
@@ -117,7 +115,7 @@ def wake_pc():
     else:
         return jsonify({"error": "MAC address not configured"}), 400
 
-@app.route("/api/stats", methods=["GET"])
+@monitoring.route("/api/stats", methods=["GET"])
 def get_stats():
     """Fetch and return system stats from Open Hardware Monitor & Network API"""
     try:
@@ -147,5 +145,3 @@ def get_stats():
         return jsonify({"error": str(e)}), 500
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)

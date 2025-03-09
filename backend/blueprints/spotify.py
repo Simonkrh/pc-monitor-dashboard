@@ -1,10 +1,11 @@
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+from flask import Blueprint, jsonify, request
 import requests
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+spotify = Blueprint("spotify", __name__)
 
 CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
@@ -13,10 +14,6 @@ REFRESH_TOKEN = os.getenv("SPOTIFY_REFRESH_TOKEN")
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1/me/player"
 SPOTIFY_API_GENERIC = "https://api.spotify.com/v1"
-
-app = Flask(__name__)
-CORS(app)
-app.secret_key = "supersecretkey"
 
 
 def get_access_token():
@@ -92,27 +89,27 @@ def send_spotify_command(command):
     return jsonify(error_message), response.status_code
 
 
-@app.route("/play", methods=["POST"])
+@spotify.route("/play", methods=["POST"])
 def play():
     return send_spotify_command("play")
 
 
-@app.route("/pause", methods=["POST"])
+@spotify.route("/pause", methods=["POST"])
 def pause():
     return send_spotify_command("pause")
 
 
-@app.route("/next", methods=["POST"])
+@spotify.route("/next", methods=["POST"])
 def next_track():
     return send_spotify_command("next")
 
 
-@app.route("/previous", methods=["POST"])
+@spotify.route("/previous", methods=["POST"])
 def prev_track():
     return send_spotify_command("previous")
 
 
-@app.route("/current-song", methods=["GET"])
+@spotify.route("/current-song", methods=["GET"])
 def current_song():
     access_token = get_access_token()
     if not access_token:
@@ -134,7 +131,7 @@ def current_song():
         return jsonify({"error": "Failed to fetch song info"}), response.status_code
 
 
-@app.route("/player-state", methods=["GET"])
+@spotify.route("/player-state", methods=["GET"])
 def get_player_state():
     access_token = get_access_token()
     if not access_token:
@@ -155,7 +152,7 @@ def get_player_state():
     return jsonify({"error": "Failed to get player state"}), response.status_code
 
 
-@app.route("/playlist/<playlist_id>", methods=["GET"])
+@spotify.route("/playlist/<playlist_id>", methods=["GET"])
 def get_playlist(playlist_id):
     access_token = get_access_token()
     if not access_token:
@@ -195,7 +192,7 @@ def get_playlist(playlist_id):
         }
     )
 
-@app.route("/play-track", methods=["POST"])
+@spotify.route("/play-track", methods=["POST"])
 def play_track():
     access_token = get_access_token()
     if not access_token:
@@ -237,7 +234,7 @@ def play_track():
     ), r.status_code
 
 
-@app.route("/repeat", methods=["POST"])
+@spotify.route("/repeat", methods=["POST"])
 def set_repeat():
     access_token = get_access_token()
     if not access_token:
@@ -263,7 +260,7 @@ def set_repeat():
     return jsonify({"error": "Failed to set repeat"}), response.status_code
 
 
-@app.route("/shuffle", methods=["POST"])
+@spotify.route("/shuffle", methods=["POST"])
 def set_shuffle():
     access_token = get_access_token()
     if not access_token:
@@ -301,7 +298,7 @@ def set_shuffle():
     return jsonify({"error": "Failed to toggle shuffle"}), response.status_code
 
 
-@app.route("/set-volume", methods=["PUT"])
+@spotify.route("/set-volume", methods=["PUT"])
 def set_volume():
     access_token = get_access_token()
     if not access_token:
@@ -324,7 +321,7 @@ def set_volume():
     return jsonify({"error": "Failed to change volume"}), response.status_code
 
 
-@app.route("/get-volume", methods=["GET"])
+@spotify.route("/get-volume", methods=["GET"])
 def get_volume():
     access_token = get_access_token()
     if not access_token:
@@ -343,7 +340,7 @@ def get_volume():
         return jsonify({"error": "Failed to retrieve volume"}), response.status_code
 
 
-@app.route("/playlists", methods=["GET"])
+@spotify.route("/playlists", methods=["GET"])
 def get_playlists():
     access_token = get_access_token()
     if not access_token:
@@ -365,7 +362,3 @@ def get_playlists():
         next_url = data.get("next")
 
     return jsonify({"items": playlists})
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
