@@ -3,6 +3,8 @@ import requests
 import os
 from wakeonlan import send_magic_packet
 import subprocess
+import time
+
 
 monitoring = Blueprint("monitoring", __name__)
 
@@ -147,21 +149,21 @@ def get_stats():
 
 @monitoring.route("/ping", methods=["GET"])
 def ping():
-    """Ping the monitored PC to check if it's online."""
+    """Ping the monitored PC multiple times and retry if necessary."""
     if not MONITORED_PC_IP:
         return jsonify({"error": "MONITORED_PC_IP not configured"}), 400
 
-    try:
+    def check_ping():
         response = subprocess.run(
-            ["ping", "-c", "1", MONITORED_PC_IP],  # "-c 1" sends one packet (Linux/macOS)
-            capture_output=True,
-            text=True,
+            ["ping", "-c", "2", MONITORED_PC_IP], capture_output=True, text=True
         )
+        return "bytes from" in response.stdout
 
-        if response.returncode == 0:
-            return jsonify({"status": "online"})
-        else:
-            return jsonify({"status": "offline"}), 503
+    if check_ping():
+        return jsonify({"status": "online"})
+    
+    time.sleep(1)  # Wait 1 second and try again
+    if check_ping():
+        return jsonify({"status": "online"})
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return jsonify({"status": "offline"}), 503
