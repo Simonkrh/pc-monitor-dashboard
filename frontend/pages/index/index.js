@@ -1,6 +1,36 @@
 const serverIP = `${CONFIG.SERVER_PC_IP}`;
 let images = [];
 
+async function checkPCStatus() {
+  const now = new Date();
+  const hour = now.getHours();
+  let pcIsOn = false;
+
+  try {
+    const response = await fetch(`http://${serverIP}/monitoring/ping`, { method: "GET", cache: "no-store" });
+    if (response.ok) {
+      pcIsOn = true;
+    } else {
+      throw new Error("Server did not respond");
+    }
+  } catch (error) {
+    console.log("Server is unresponsive:", error);
+  }
+
+  if (hour >= 23 && !pcIsOn) {
+    console.log("It's after 11 PM and the PC is off. Dimming the page...");
+    document.body.style.opacity = "0.2"; 
+  }
+
+  else if (hour >= 11 || pcIsOn) {
+    console.log("PC is up or it's past 11 AM. Restoring brightness...");
+    document.body.style.opacity = "1";
+  }
+}
+
+checkPCStatus();
+setInterval(checkPCStatus, 10000);
+
 fetch(`http://${serverIP}/slideshow/images`)
   .then(response => response.json())
   .then(data => {

@@ -5,7 +5,6 @@ from wakeonlan import send_magic_packet
 import subprocess
 import time
 
-
 monitoring = Blueprint("monitoring", __name__)
 
 MONITORED_PC_IP = os.getenv("MONITORED_PC_IP")
@@ -149,7 +148,7 @@ def get_stats():
 
 @monitoring.route("/ping", methods=["GET"])
 def ping():
-    """Ping the monitored PC multiple times and retry if necessary."""
+    """Ping the monitored PC."""
     if not MONITORED_PC_IP:
         return jsonify({"error": "MONITORED_PC_IP not configured"}), 400
 
