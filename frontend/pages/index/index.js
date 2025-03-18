@@ -8,8 +8,10 @@ async function checkPCStatus() {
 
   try {
     const response = await fetch(`http://${serverIP}/monitoring/ping`, { method: "GET", cache: "no-store" });
+
     if (response.ok) {
-      pcIsOn = true;
+      const data = await response.json();
+      pcIsOn = data.status !== "offline";
     } else {
       throw new Error("Server did not respond");
     }
@@ -17,19 +19,21 @@ async function checkPCStatus() {
     console.log("Server is unresponsive:", error);
   }
 
+  // Dim the page if it's after 23:00 and PC is off
   if (hour >= 23 && !pcIsOn) {
-    console.log("It's after 11 PM and the PC is off. Dimming the page...");
+    console.log("It's after 23:00 and the PC is off. Dimming the page...");
     document.body.style.filter = "brightness(25%)";
   }
-
+  // Restore brightness if PC is on OR it's after 11:00 
   else if (hour >= 11 || pcIsOn) {
-    console.log("PC is up or it's past 11 AM. Restoring brightness...");
+    console.log("PC is up or it's past 11:00. Restoring brightness...");
     document.body.style.filter = "brightness(100%)";
   }
 }
 
 checkPCStatus();
-setInterval(checkPCStatus, 10000);
+setInterval(checkPCStatus, 60000);
+
 
 fetch(`http://${serverIP}/slideshow/images`)
   .then(response => response.json())

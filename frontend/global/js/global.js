@@ -1,15 +1,20 @@
-const SERVER_IP = `http://${CONFIG.SERVER_PC_IP}/monitoring`;  
+const SERVER_IP = `http://${CONFIG.SERVER_PC_IP}/monitoring`;
 
 async function checkPCStatus() {
     try {
-        const response = await fetch(`${SERVER_IP}/ping`);
-        if (!response.ok) {
-            throw new Error("PC is offline");
+        const response = await fetch(`${SERVER_IP}/ping`, { method: "GET", cache: "no-store" });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.status === "offline") {
+                window.location.href = "/";
+            }
+        } else {
+            console.warn("Received a non-OK response from /ping, but not redirecting.");
         }
     } catch (error) {
-        console.error("Monitored PC is offline. Redirecting...");
-        window.location.href = "/";
+        console.error("Error checking PC status:", error);
     }
 }
 
-setInterval(checkPCStatus, 10000);
+setInterval(checkPCStatus, 20000);
