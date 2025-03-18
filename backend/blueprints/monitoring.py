@@ -4,6 +4,8 @@ import os
 from wakeonlan import send_magic_packet
 import subprocess
 import time
+import threading
+import re
 
 monitoring = Blueprint("monitoring", __name__)
 
@@ -12,6 +14,25 @@ MONITORED_PC_MAC = os.getenv("MONITORED_PC_MAC")
 
 OHM_API_URL = f"http://{MONITORED_PC_IP}:8085/data.json"
 NETWORK_API_URL = f"http://{MONITORED_PC_IP}:61208/api/4/network"
+
+socketio = None
+
+def sanitize_ohm_value(value_str):
+    """
+    Convert strings like '15,0 %', '67,4 °C', '83,2 %' to float (e.g. 15.0, 67.4, 83.2).
+    If invalid or 'N/A', returns 0.0 by default.
+    """
+    if not value_str or "N/A" in value_str:
+        return 0.0
+
+    cleaned = re.sub(r"[^\d.,-]+", "", value_str)
+
+    cleaned = cleaned.replace(",", ".")
+
+    try:
+        return float(cleaned)
+    except ValueError:
+        return 0.0
 
 
 def fetch_ohm_data():
@@ -43,12 +64,8 @@ def fetch_network_data():
 
         if ethernet:
             return {
-                "download_speed": ethernet.get(
-                    "bytes_recv_rate_per_sec", 0
-                ),  # Bytes per sec
-                "upload_speed": ethernet.get(
-                    "bytes_sent_rate_per_sec", 0
-                ),  # Bytes per sec
+                "download_speed": ethernet.get("bytes_recv_rate_per_sec", 0),
+                "upload_speed": ethernet.get("bytes_sent_rate_per_sec", 0),
             }
         return {"download_speed": 0, "upload_speed": 0}
 
@@ -56,13 +73,8 @@ def fetch_network_data():
         return {"error": str(e)}
 
 
-def extract_sensor_value(
-    data, sensor_name, required_parent_text=None, parent_text=None
-):
-    """
-    Extract a sensor value from OHM JSON data, ensuring (if required_parent_text
-    is given) that the sensor is *directly* inside that parent's text.
-    """
+def extract_sensor_value(data, sensor_name, required_parent_text=None, parent_text=None):
+    """Extract a raw sensor string (like '15,0 %') from the OHM JSON."""
     for child in data.get("Children", []):
         val = extract_sensor_value(
             child, sensor_name, required_parent_text, parent_text=data.get("Text", "")
@@ -78,35 +90,49 @@ def extract_sensor_value(
 
     return None
 
-
 def find_node_by_text(node, text):
-    """
-    Recursively search for the first node whose "Text" matches 'text'.
-    Returns the node if found, otherwise None.
-    """
+    """Recursively find a node by its 'Text' field."""
     if node.get("Text") == text:
         return node
+
     for child in node.get("Children", []):
         found = find_node_by_text(child, text)
         if found:
             return found
+
     return None
 
 
 def get_disk_used_space(data, disk_name):
+    """
+    Recursively find a disk node named `disk_name` anywhere in `data`,
+    then locate 'Load' -> 'Used Space'.
+    """
     disk_node = find_node_by_text(data, disk_name)
     if not disk_node:
+        print(f"[ERROR] Disk '{disk_name}' not found in JSON.")
         return "N/A"
 
-    load_node = find_node_by_text(disk_node, "Load")
+    load_node = next(
+        (child for child in disk_node.get("Children", []) if child.get("Text") == "Load"),
+        None
+    )
     if not load_node:
+        print(f"[ERROR] 'Load' node missing for {disk_name}.")
         return "N/A"
 
-    used_space_node = find_node_by_text(load_node, "Used Space")
+    used_space_node = next(
+        (child for child in load_node.get("Children", []) if child.get("Text") == "Used Space"),
+        None
+    )
     if not used_space_node:
+        print(f"[ERROR] 'Used Space' node missing for {disk_name}.")
         return "N/A"
 
-    return used_space_node.get("Value", "N/A")
+    raw_value = used_space_node.get("Value", "N/A")
+    return raw_value
+
+
 
 @monitoring.route("/wake", methods=["POST"])
 def wake_pc():
@@ -117,34 +143,6 @@ def wake_pc():
     else:
         return jsonify({"error": "MAC address not configured"}), 400
 
-@monitoring.route("/stats", methods=["GET"])
-def get_stats():
-    """Fetch and return system stats from Open Hardware Monitor & Network API"""
-    try:
-        data = fetch_ohm_data()
-        network_stats = fetch_network_data()
-
-        if "error" in data:
-            return jsonify({"error": data["error"]}), 500
-
-        stats = {
-            "cpu_usage": extract_sensor_value(data, "CPU Total", "Load"),
-            "cpu_temp": extract_sensor_value(data, "CPU Package", "Temperatures"),
-            "cpu_power": extract_sensor_value(data, "CPU Package", "Powers"),
-            "gpu_usage": extract_sensor_value(data, "GPU Core", "Load"),
-            "gpu_temp": extract_sensor_value(data, "GPU Core", "Temperatures"),
-            "gpu_power": extract_sensor_value(data, "GPU Power", "Powers"),
-            "ram_usage_gb": extract_sensor_value(data, "Used Memory", "Data"),
-            "disk_d_usage": get_disk_used_space(data, "SSD Sata (D:)"),
-            "disk_c_usage": get_disk_used_space(data, "SSD M2 (C:)"),
-            "disk_f_usage": get_disk_used_space(data, "SSD M2 (F:)"),
-            "network_download": network_stats["download_speed"],
-            "network_upload": network_stats["upload_speed"],
-        }
-
-        return jsonify(stats)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 @monitoring.route("/ping", methods=["GET"])
 def ping():
@@ -165,4 +163,86 @@ def ping():
     if check_ping():
         return jsonify({"status": "online"}), 200
 
-    return jsonify({"status": "offline"}), 200  # ❗ Changed from 503 → 200
+    return jsonify({"status": "offline"}), 200
+
+@monitoring.route("/stats", methods=["GET"])
+def get_stats():
+    """Return minimal info so the frontend can confirm Open Hardware Monitor is alive."""
+    ohm_data = fetch_ohm_data()
+    if "error" in ohm_data:
+        return jsonify({"error": ohm_data["error"]}), 500
+
+    # Just extract a couple of sensors to prove OHM is up
+    cpu_usage_str = extract_sensor_value(ohm_data, "CPU Total", "Load")
+    cpu_temp_str = extract_sensor_value(ohm_data, "CPU Package", "Temperatures")
+
+    if not cpu_usage_str or not cpu_temp_str or "N/A" in (cpu_usage_str, cpu_temp_str):
+        return jsonify({"error": "Open Hardware Monitor returned incomplete data"}), 503
+
+    return jsonify({
+        "cpu_usage": cpu_usage_str,  
+        "cpu_temp": cpu_temp_str    
+    }), 200
+
+
+def background_task():
+    """
+    Continuously fetch data and send updates via WebSockets.
+    We sanitize each sensor value so the frontend gets numeric floats.
+    """
+    while True:
+        if not socketio:
+            time.sleep(1)
+            continue
+
+        ohm_data = fetch_ohm_data()
+        network_data = fetch_network_data()
+
+        # If there's an error from OHM, skip this cycle
+        if "error" in ohm_data:
+            continue
+
+        # Extract raw strings
+        raw_cpu_usage = extract_sensor_value(ohm_data, "CPU Total", "Load")
+        raw_cpu_temp = extract_sensor_value(ohm_data, "CPU Package", "Temperatures")
+        raw_cpu_power = extract_sensor_value(ohm_data, "CPU Package", "Powers")
+        raw_gpu_usage = extract_sensor_value(ohm_data, "GPU Core", "Load")
+        raw_gpu_temp = extract_sensor_value(ohm_data, "GPU Core", "Temperatures")
+        raw_gpu_power = extract_sensor_value(ohm_data, "GPU Power", "Powers")
+        raw_ram_usage = extract_sensor_value(ohm_data, "Used Memory", "Data")
+        raw_disk_c_usage = get_disk_used_space(ohm_data, "SSD M2 (C:)")
+        raw_disk_d_usage = get_disk_used_space(ohm_data, "SSD Sata (D:)")
+        raw_disk_f_usage = get_disk_used_space(ohm_data, "SSD M2 (F:)")
+
+        # Sanitize to floats
+        stats = {
+            "cpu_usage": sanitize_ohm_value(raw_cpu_usage),       
+            "cpu_temp": sanitize_ohm_value(raw_cpu_temp),        
+            "cpu_power": sanitize_ohm_value(raw_cpu_power),      
+            "gpu_usage": sanitize_ohm_value(raw_gpu_usage),      
+            "gpu_temp": sanitize_ohm_value(raw_gpu_temp),        
+            "gpu_power": sanitize_ohm_value(raw_gpu_power),      
+            "ram_usage_gb": sanitize_ohm_value(raw_ram_usage),    
+            "disk_c_usage": sanitize_ohm_value(raw_disk_c_usage), 
+            "disk_d_usage": sanitize_ohm_value(raw_disk_d_usage),
+            "disk_f_usage": sanitize_ohm_value(raw_disk_f_usage),
+            "network_download": network_data["download_speed"],
+            "network_upload": network_data["upload_speed"],
+        }
+
+        socketio.emit("update_stats", stats)
+        time.sleep(0.5)  
+
+
+def setup_socketio(sio):
+    """Attach WebSocket event handlers."""
+    global socketio
+    socketio = sio
+
+    @socketio.on("connect")
+    def handle_connect():
+        """Handle WebSocket connection."""
+        print("Client connected")
+
+    thread = threading.Thread(target=background_task, daemon=True)
+    thread.start()
