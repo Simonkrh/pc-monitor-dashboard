@@ -148,7 +148,7 @@ def get_stats():
 
 @monitoring.route("/ping", methods=["GET"])
 def ping():
-    """Ping the monitored PC."""
+    """Ping the monitored PC and return online/offline status."""
     if not MONITORED_PC_IP:
         return jsonify({"error": "MONITORED_PC_IP not configured"}), 400
 
@@ -159,10 +159,10 @@ def ping():
         return "bytes from" in response.stdout
 
     if check_ping():
-        return jsonify({"status": "online"})
-    
+        return jsonify({"status": "online"}), 200
+
     time.sleep(1)  # Wait 1 second and try again
     if check_ping():
-        return jsonify({"status": "online"})
+        return jsonify({"status": "online"}), 200
 
-    return jsonify({"status": "offline"}), 503
+    return jsonify({"status": "offline"}), 200  # ❗ Changed from 503 → 200
