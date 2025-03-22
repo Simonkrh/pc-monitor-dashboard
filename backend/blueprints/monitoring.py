@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify
+from dotenv import load_dotenv
 import requests
 import os
 from wakeonlan import send_magic_packet
@@ -8,6 +9,8 @@ import threading
 import re
 
 monitoring = Blueprint("monitoring", __name__)
+
+load_dotenv()
 
 MONITORED_PC_IP = os.getenv("MONITORED_PC_IP")
 MONITORED_PC_MAC = os.getenv("MONITORED_PC_MAC")
@@ -188,50 +191,67 @@ def get_stats():
 def background_task():
     """
     Continuously fetch data and send updates via WebSockets.
-    We sanitize each sensor value so the frontend gets numeric floats.
     """
     while True:
-        if not socketio:
+        try:
+            if not socketio:
+                time.sleep(1)
+                continue
+
+            # Fetch from APIs
+            ohm_data = fetch_ohm_data()
+            network_data = fetch_network_data()
+
+            # Skip OHM data if error
+            if "error" in ohm_data:
+                print("[WARNING] OHM fetch failed:", ohm_data["error"])
+                continue
+
+            # If network API failed, set defaults
+            if "error" in network_data:
+                print("[WARNING] Network fetch failed:", network_data["error"])
+                network_data = {
+                    "download_speed": 0,
+                    "upload_speed": 0,
+                    "error": True
+                }
+
+            # Extract raw sensor values
+            raw_cpu_usage = extract_sensor_value(ohm_data, "CPU Total", "Load")
+            raw_cpu_temp = extract_sensor_value(ohm_data, "CPU Package", "Temperatures")
+            raw_cpu_power = extract_sensor_value(ohm_data, "CPU Package", "Powers")
+            raw_gpu_usage = extract_sensor_value(ohm_data, "GPU Core", "Load")
+            raw_gpu_temp = extract_sensor_value(ohm_data, "GPU Core", "Temperatures")
+            raw_gpu_power = extract_sensor_value(ohm_data, "GPU Power", "Powers")
+            raw_ram_usage = extract_sensor_value(ohm_data, "Used Memory", "Data")
+            raw_disk_c_usage = get_disk_used_space(ohm_data, "SSD M2 (C:)")
+            raw_disk_d_usage = get_disk_used_space(ohm_data, "SSD Sata (D:)")
+            raw_disk_f_usage = get_disk_used_space(ohm_data, "SSD M2 (F:)")
+
+            # Sanitize values for frontend
+            stats = {
+                "cpu_usage": sanitize_ohm_value(raw_cpu_usage),       
+                "cpu_temp": sanitize_ohm_value(raw_cpu_temp),        
+                "cpu_power": sanitize_ohm_value(raw_cpu_power),      
+                "gpu_usage": sanitize_ohm_value(raw_gpu_usage),      
+                "gpu_temp": sanitize_ohm_value(raw_gpu_temp),        
+                "gpu_power": sanitize_ohm_value(raw_gpu_power),      
+                "ram_usage_gb": sanitize_ohm_value(raw_ram_usage),    
+                "disk_c_usage": sanitize_ohm_value(raw_disk_c_usage), 
+                "disk_d_usage": sanitize_ohm_value(raw_disk_d_usage),
+                "disk_f_usage": sanitize_ohm_value(raw_disk_f_usage),
+                "network_download": network_data.get("download_speed", 0),
+                "network_upload": network_data.get("upload_speed", 0),
+                "network_status": "offline" if "error" in network_data else "online"
+            }
+
+            socketio.emit("update_stats", stats)
+            time.sleep(0.5)
+
+        except Exception as e:
+            print("[ERROR] Unexpected exception in background_task:", str(e))
             time.sleep(1)
-            continue
 
-        ohm_data = fetch_ohm_data()
-        network_data = fetch_network_data()
-
-        # If there's an error from OHM, skip this cycle
-        if "error" in ohm_data:
-            continue
-
-        # Extract raw strings
-        raw_cpu_usage = extract_sensor_value(ohm_data, "CPU Total", "Load")
-        raw_cpu_temp = extract_sensor_value(ohm_data, "CPU Package", "Temperatures")
-        raw_cpu_power = extract_sensor_value(ohm_data, "CPU Package", "Powers")
-        raw_gpu_usage = extract_sensor_value(ohm_data, "GPU Core", "Load")
-        raw_gpu_temp = extract_sensor_value(ohm_data, "GPU Core", "Temperatures")
-        raw_gpu_power = extract_sensor_value(ohm_data, "GPU Power", "Powers")
-        raw_ram_usage = extract_sensor_value(ohm_data, "Used Memory", "Data")
-        raw_disk_c_usage = get_disk_used_space(ohm_data, "SSD M2 (C:)")
-        raw_disk_d_usage = get_disk_used_space(ohm_data, "SSD Sata (D:)")
-        raw_disk_f_usage = get_disk_used_space(ohm_data, "SSD M2 (F:)")
-
-        # Sanitize to floats
-        stats = {
-            "cpu_usage": sanitize_ohm_value(raw_cpu_usage),       
-            "cpu_temp": sanitize_ohm_value(raw_cpu_temp),        
-            "cpu_power": sanitize_ohm_value(raw_cpu_power),      
-            "gpu_usage": sanitize_ohm_value(raw_gpu_usage),      
-            "gpu_temp": sanitize_ohm_value(raw_gpu_temp),        
-            "gpu_power": sanitize_ohm_value(raw_gpu_power),      
-            "ram_usage_gb": sanitize_ohm_value(raw_ram_usage),    
-            "disk_c_usage": sanitize_ohm_value(raw_disk_c_usage), 
-            "disk_d_usage": sanitize_ohm_value(raw_disk_d_usage),
-            "disk_f_usage": sanitize_ohm_value(raw_disk_f_usage),
-            "network_download": network_data["download_speed"],
-            "network_upload": network_data["upload_speed"],
-        }
-
-        socketio.emit("update_stats", stats)
-        time.sleep(0.5)  
 
 
 def setup_socketio(sio):
@@ -241,8 +261,10 @@ def setup_socketio(sio):
 
     @socketio.on("connect")
     def handle_connect():
-        """Handle WebSocket connection."""
         print("Client connected")
 
-    thread = threading.Thread(target=background_task, daemon=True)
-    thread.start()
+    # Prevent multiple threads if already started
+    if not hasattr(setup_socketio, "thread_started"):
+        thread = threading.Thread(target=background_task, daemon=True)
+        thread.start()
+        setup_socketio.thread_started = True
