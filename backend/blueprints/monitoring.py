@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify
 from dotenv import load_dotenv
 import requests
 import os
+import platform
 from wakeonlan import send_magic_packet
 import subprocess
 import time
@@ -154,10 +155,16 @@ def ping():
         return jsonify({"error": "MONITORED_PC_IP not configured"}), 400
 
     def check_ping():
-        response = subprocess.run(
-            ["ping", "-c", "2", MONITORED_PC_IP], capture_output=True, text=True
-        )
-        return "bytes from" in response.stdout
+        param = "-n" if platform.system().lower() == "windows" else "-c"
+        try:
+            response = subprocess.run(
+                ["ping", param, "2", "192.168.1.72"],
+                capture_output=True, text=True
+            )
+            return "ttl=" in response.stdout.lower()  
+        except Exception as e:
+            print("[ERROR] Ping failed:", e)
+            return False
 
     if check_ping():
         return jsonify({"status": "online"}), 200

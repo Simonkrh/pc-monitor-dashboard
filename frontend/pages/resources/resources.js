@@ -2,8 +2,6 @@ const serverIP = CONFIG.SERVER_PC_IP;
 const socket = io(`http://${serverIP}`); 
 
 socket.on("update_stats", (data) => {
-    console.log("Received update:", data);
-
     // CPU
     document.getElementById("cpu_temp").innerText = `CPU Temp: ${data.cpu_temp || "N/A"}°`;
     document.getElementById("cpu_power").innerText = `CPU Power: ${data.cpu_power || "N/A"}`;
