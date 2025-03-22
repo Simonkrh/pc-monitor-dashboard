@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Command Center</title>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/frontend/pages/dashboard/dashboard.css">
   <link rel="stylesheet" href="/frontend/global/css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 </head>
+
 <body class="bg-dark text-white">
 
   <div class="container-fluid vh-100 d-flex flex-column">
-    
+
     <!-- TOP ROW: The main buttons -->
     <div class="row flex-grow-1 d-flex align-items-center justify-content-center">
       <div class="col-12 d-flex flex-wrap justify-content-center">
@@ -50,8 +52,8 @@
           <i class="fa-solid fa-backward"></i> Previous
         </button>
         <button class="btn btn-primary me-3">
-            <i class="fa-solid fa-pause"></i> Pause
-          </button>
+          <i class="fa-solid fa-pause"></i> Pause
+        </button>
         <button class="btn btn-primary">
           <i class="fa-solid fa-forward"></i> Next
         </button>
@@ -61,7 +63,7 @@
     <!-- BOTTOM ROW: Volume controls -->
     <div class="row">
       <div class="col-12 text-center">
-        
+
         <!-- Icons visible by default -->
         <div id="volume-icons" class="d-inline-flex">
           <button class="btn btn-secondary me-2" onclick="showVolumeSlider()">
@@ -96,4 +98,5 @@
 
 
 </body>
+
 </html>

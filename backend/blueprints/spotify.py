@@ -192,6 +192,7 @@ def get_playlist(playlist_id):
         }
     )
 
+
 @spotify.route("/play-track", methods=["POST"])
 def play_track():
     access_token = get_access_token()

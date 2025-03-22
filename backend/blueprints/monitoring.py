@@ -1,4 +1,5 @@
 import eventlet
+
 eventlet.monkey_patch()
 from flask import Blueprint, jsonify
 from dotenv import load_dotenv
@@ -28,10 +29,7 @@ socketio = None
 
 last_stats = {}
 
-last_good_network_data = {
-    "download_speed": 0,
-    "upload_speed": 0
-}
+last_good_network_data = {"download_speed": 0, "upload_speed": 0}
 
 
 def sanitize_ohm_value(value_str):
@@ -51,7 +49,10 @@ def sanitize_ohm_value(value_str):
     except ValueError:
         return 0.0
 
+
 http = urllib3.PoolManager()
+
+
 def fetch_ohm_data():
     """Fetch data from Open Hardware Monitor"""
     try:
@@ -60,6 +61,7 @@ def fetch_ohm_data():
     except Exception as e:
         return {"error": str(e)}
 
+
 def fetch_network_data():
     """Fetch network data from the local API."""
     try:
@@ -67,8 +69,12 @@ def fetch_network_data():
         network_data = json.loads(response.data.decode("utf-8"))
 
         ethernet = next(
-            (iface for iface in network_data if iface.get("interface_name") == "Ethernet"),
-            None
+            (
+                iface
+                for iface in network_data
+                if iface.get("interface_name") == "Ethernet"
+            ),
+            None,
         )
 
         if ethernet:
@@ -81,7 +87,10 @@ def fetch_network_data():
     except Exception as e:
         return {"error": str(e)}
 
-def extract_sensor_value(data, sensor_name, required_parent_text=None, parent_text=None):
+
+def extract_sensor_value(
+    data, sensor_name, required_parent_text=None, parent_text=None
+):
     """Extract a raw sensor string (like '15,0 %') from the OHM JSON."""
     for child in data.get("Children", []):
         val = extract_sensor_value(
@@ -97,6 +106,7 @@ def extract_sensor_value(data, sensor_name, required_parent_text=None, parent_te
         return data.get("Value", "N/A")
 
     return None
+
 
 def find_node_by_text(node, text):
     """Recursively find a node by its 'Text' field."""
@@ -122,16 +132,24 @@ def get_disk_used_space(data, disk_name):
         return "N/A"
 
     load_node = next(
-        (child for child in disk_node.get("Children", []) if child.get("Text") == "Load"),
-        None
+        (
+            child
+            for child in disk_node.get("Children", [])
+            if child.get("Text") == "Load"
+        ),
+        None,
     )
     if not load_node:
         print(f"[ERROR] 'Load' node missing for {disk_name}.")
         return "N/A"
 
     used_space_node = next(
-        (child for child in load_node.get("Children", []) if child.get("Text") == "Used Space"),
-        None
+        (
+            child
+            for child in load_node.get("Children", [])
+            if child.get("Text") == "Used Space"
+        ),
+        None,
     )
     if not used_space_node:
         print(f"[ERROR] 'Used Space' node missing for {disk_name}.")
@@ -139,7 +157,6 @@ def get_disk_used_space(data, disk_name):
 
     raw_value = used_space_node.get("Value", "N/A")
     return raw_value
-
 
 
 @monitoring.route("/wake", methods=["POST"])
@@ -162,10 +179,9 @@ def ping():
         param = "-n" if platform.system().lower() == "windows" else "-c"
         try:
             response = subprocess.run(
-                ["ping", param, "2", "192.168.1.72"],
-                capture_output=True, text=True
+                ["ping", param, "2", "192.168.1.72"], capture_output=True, text=True
             )
-            return "ttl=" in response.stdout.lower()  
+            return "ttl=" in response.stdout.lower()
         except Exception as e:
             print("[ERROR] Ping failed:", e)
             return False
@@ -173,11 +189,12 @@ def ping():
     if check_ping():
         return jsonify({"status": "online"}), 200
 
-    time.sleep(1) 
+    time.sleep(1)
     if check_ping():
         return jsonify({"status": "online"}), 200
 
     return jsonify({"status": "offline"}), 200
+
 
 @monitoring.route("/stats", methods=["GET"])
 def get_stats():
@@ -193,12 +210,7 @@ def get_stats():
     if not cpu_usage_str or not cpu_temp_str or "N/A" in (cpu_usage_str, cpu_temp_str):
         return jsonify({"error": "Open Hardware Monitor returned incomplete data"}), 503
 
-    return jsonify({
-        "cpu_usage": cpu_usage_str,  
-        "cpu_temp": cpu_temp_str    
-    }), 200
-
-
+    return jsonify({"cpu_usage": cpu_usage_str, "cpu_temp": cpu_temp_str}), 200
 
 
 def background_task():
@@ -206,10 +218,7 @@ def background_task():
     Continuously fetch data and send updates via WebSockets.
     """
     global last_stats
-    last_good_network_data = {
-        "download_speed": 0,
-        "upload_speed": 0
-    }
+    last_good_network_data = {"download_speed": 0, "upload_speed": 0}
 
     loop_counter = 0
 
@@ -221,7 +230,7 @@ def background_task():
 
             loop_counter += 1
 
-            # Always fetch OHM 
+            # Always fetch OHM
             ohm_data = fetch_ohm_data()
             if "error" in ohm_data:
                 print("[WARNING] OHM fetch failed:", ohm_data["error"])
@@ -231,26 +240,20 @@ def background_task():
             # Fetch Glances only every Nth loop
             if loop_counter % FETCH_NETWORK_EVERY_N_LOOPS == 0:
                 try:
-                    network_data = fetch_network_data()  
+                    network_data = fetch_network_data()
                     if "error" in network_data:
                         raise Exception(network_data["error"])
 
                     last_good_network_data = {
                         "download_speed": network_data.get("download_speed", 0),
-                        "upload_speed": network_data.get("upload_speed", 0)
+                        "upload_speed": network_data.get("upload_speed", 0),
                     }
 
                 except Exception as e:
                     print("[WARNING] Network fetch failed:", str(e))
-                    network_data = {
-                        **last_good_network_data,
-                        "error": True
-                    }
+                    network_data = {**last_good_network_data, "error": True}
             else:
-                network_data = {
-                    **last_good_network_data,
-                    "cached": True
-                }
+                network_data = {**last_good_network_data, "cached": True}
 
             # Extract + sanitize values
             raw_cpu_usage = extract_sensor_value(ohm_data, "CPU Total", "Load")
@@ -277,17 +280,15 @@ def background_task():
                 "disk_f_usage": sanitize_ohm_value(raw_disk_f_usage),
                 "network_download": network_data.get("download_speed", 0),
                 "network_upload": network_data.get("upload_speed", 0),
-                "network_status": "offline" if "error" in network_data else "online"
+                "network_status": "offline" if "error" in network_data else "online",
             }
 
             socketio.emit("update_stats", stats)
-
             time.sleep(UPDATE_INTERVAL)
 
         except Exception as e:
             print("[ERROR] Unexpected exception in background_task:", str(e))
-            time.sleep(1) 
-
+            time.sleep(1)
 
 
 def setup_socketio(sio):

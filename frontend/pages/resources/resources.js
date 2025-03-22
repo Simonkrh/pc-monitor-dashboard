@@ -2,9 +2,9 @@ const serverIP = CONFIG.SERVER_PC_IP;
 const socket = io(`http://${serverIP}`, {
     reconnection: true,
     reconnectionAttempts: 9999,
-    reconnectionDelay: 1000,         
-    reconnectionDelayMax: 5000,     
-    timeout: 20000                  
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000
 });
 
 

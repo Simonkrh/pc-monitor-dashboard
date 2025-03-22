@@ -37,6 +37,6 @@ body.show {
 
 @media (max-width: 1300px) {
   * {
-      cursor: none;
+    cursor: none;
   }
 }

@@ -6,8 +6,9 @@ load_dotenv()
 
 slideshow = Blueprint("slideshow", __name__)
 
-UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")  
+UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 
 @slideshow.route("/upload", methods=["POST"])
 def upload_file():
@@ -30,16 +31,24 @@ def upload_file():
     if not uploaded_filenames:
         return "No valid files uploaded", 400
 
-    return jsonify({
-        "message": "Files uploaded successfully!",
-        "uploaded_files": uploaded_filenames
-    }), 200
+    return jsonify(
+        {
+            "message": "Files uploaded successfully!",
+            "uploaded_files": uploaded_filenames,
+        }
+    ), 200
+
 
 @slideshow.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
+
 @slideshow.route("/images")
 def list_images():
-    images = [f for f in os.listdir(UPLOAD_FOLDER) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
+    images = [
+        f
+        for f in os.listdir(UPLOAD_FOLDER)
+        if f.lower().endswith((".png", ".jpg", ".jpeg", ".gif"))
+    ]
     return jsonify(images)

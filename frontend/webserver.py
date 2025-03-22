@@ -10,12 +10,13 @@ def index():
 
 @app.route("/resources")
 def resources():
-    return send_from_directory(app.static_folder + "/pages/index", "index.html")
+    return send_from_directory(app.static_folder + "/pages/resources", "resources.html")
 
 
 @app.route("/spotify")
 def spotify():
     return send_from_directory(app.static_folder + "/pages/spotify", "spotify.html")
+
 
 @app.route("/dashboard")
 def dashboard():

@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const response = await fetch(`${SERVER_IP}/images`);
             const images = await response.json();
-            imageListDiv.innerHTML = ""; 
+            imageListDiv.innerHTML = "";
             images.forEach(image => {
                 const imgElement = document.createElement("img");
                 imgElement.src = `${SERVER_IP}/uploads/${image}`;
@@ -25,16 +25,16 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const formData = new FormData(form);
-    
+
         try {
             const response = await fetch(`${SERVER_IP}/upload`, {
                 method: "POST",
                 body: formData
             });
-    
+
             if (response.ok) {
                 const result = await response.json();
-                alert(result.message); 
+                alert(result.message);
                 form.reset();
                 fetchImages();
             } else {

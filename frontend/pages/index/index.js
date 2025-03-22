@@ -75,9 +75,9 @@ fetch(`http://${serverIP}/slideshow/images`)
           currentImg.classList.add("slide-right");
           currentImg.offsetHeight; // Force reflow
           currentImg.style.transition = "";
-          
+
           [currentImg, nextImg] = [nextImg, currentImg];
-        }, 2000); 
+        }, 2000);
 
       }, 7000);
     }
@@ -86,7 +86,7 @@ fetch(`http://${serverIP}/slideshow/images`)
 
 let swipeStartY = 0;
 let swipeEndY = 0;
-const swipeThreshold = 150; 
+const swipeThreshold = 150;
 
 document.addEventListener("touchstart", (event) => {
   swipeStartY = event.touches[0].clientY;
@@ -133,8 +133,8 @@ function wakeAndRedirect() {
 
 function waitForOpenHardwareMonitor() {
   let attempts = 0;
-  const maxAttempts = 30; 
-  const checkInterval = 3000; 
+  const maxAttempts = 30;
+  const checkInterval = 3000;
 
   const checkStatus = () => {
     fetch(`http://${serverIP}/monitoring/stats`)
