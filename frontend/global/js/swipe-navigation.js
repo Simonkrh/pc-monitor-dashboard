@@ -5,7 +5,7 @@ let moveY = 0;
 const threshold = 300; // Minimum swipe distance
 
 // Define the order of the pages
-const pages = ["/resources", "/spotify", "/macro"];
+const pages = ["/resources", "/spotify", "/dashboard"];
 let currentPage = window.location.pathname;
 let currentIndex = pages.findIndex((page) => currentPage.includes(page.split('/').pop()));
 

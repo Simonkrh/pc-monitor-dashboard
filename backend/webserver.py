@@ -17,10 +17,9 @@ def resources():
 def spotify():
     return send_from_directory(app.static_folder + "/pages/spotify", "spotify.html")
 
-
-@app.route("/macro")
-def macro():
-    return send_from_directory(app.static_folder + "/pages/macro", "macro.html")
+@app.route("/dashboard")
+def dashboard():
+    return send_from_directory(app.static_folder + "/pages/dashboard", "dashboard.html")
 
 
 if __name__ == "__main__":
