@@ -3,6 +3,7 @@ body {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+
   opacity: 0;
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-out;
 }
@@ -32,4 +33,10 @@ body::-webkit-scrollbar {
 
 body.show {
   opacity: 1;
+}
+
+@media (max-width: 1300px) {
+  * {
+      cursor: none;
+  }
 }

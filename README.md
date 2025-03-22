@@ -21,6 +21,8 @@ SPOTIFY_REFRESH_TOKEN=""
 
 MONITORED_PC_IP=""  # The PC being monitored (OHM & Glances)
 SERVER_PC_IP=""      # The PC running the backend servers
+
+UPLOAD_FOLDER = "" # The folder where images are uploaded to (for slideshow)
 ```
 
 ### Configuring `config.js`
