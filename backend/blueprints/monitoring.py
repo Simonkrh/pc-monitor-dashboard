@@ -178,10 +178,13 @@ def ping():
     def check_ping():
         param = "-n" if platform.system().lower() == "windows" else "-c"
         try:
-            response = subprocess.run(
-                ["ping", param, "2", "192.168.1.72"], capture_output=True, text=True
+            result = subprocess.run(
+                ["ping", param, "2", MONITORED_PC_IP],
+                capture_output=True,
+                text=True,
+                timeout=3,
             )
-            return "ttl=" in response.stdout.lower()
+            return "ttl=" in result.stdout.lower()
         except Exception as e:
             print("[ERROR] Ping failed:", e)
             return False
