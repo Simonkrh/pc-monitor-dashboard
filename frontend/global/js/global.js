@@ -18,4 +18,4 @@ async function checkPCStatus() {
     }
 }
 
-setInterval(checkPCStatus, 5000);
+setInterval(checkPCStatus, 30000);
