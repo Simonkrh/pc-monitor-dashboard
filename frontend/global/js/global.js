@@ -1,6 +1,7 @@
 const SERVER_IP = `http://${CONFIG.SERVER_PC_IP}/monitoring`;
 
 async function checkPCStatus() {
+    console.log("Pinging")
     try {
         const response = await fetch(`${SERVER_IP}/ping`, { method: "GET", cache: "no-store" });
 
@@ -17,4 +18,4 @@ async function checkPCStatus() {
     }
 }
 
-setInterval(checkPCStatus, 30000);
+setInterval(checkPCStatus, 5000);
