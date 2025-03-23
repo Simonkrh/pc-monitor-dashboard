@@ -1,4 +1,4 @@
-const serverIP = `${CONFIG.SERVER_PC_IP}:${CONFIG.SERVER_PORT || 5000}`;
+const serverIP = `${CONFIG.SERVER_PC_IP}`;
 const socket = io(`http://${serverIP}`, {
     reconnection: true,
     reconnectionAttempts: 9999,

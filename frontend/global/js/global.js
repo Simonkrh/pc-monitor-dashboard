@@ -1,9 +1,9 @@
-const serverIP = `${CONFIG.SERVER_PC_IP}:${CONFIG.SERVER_PORT || 5000}/monitoring`;
+const SERVER_IP = `http://${CONFIG.SERVER_PC_IP}/monitoring`;
 
 async function checkPCStatus() {
     console.log("Pinging")
     try {
-        const response = await fetch(`${serverIP}/ping`, { method: "GET", cache: "no-store" });
+        const response = await fetch(`${SERVER_IP}/ping`, { method: "GET", cache: "no-store" });
 
         if (response.ok) {
             const data = await response.json();

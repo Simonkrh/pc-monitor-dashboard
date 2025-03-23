@@ -1,4 +1,4 @@
-const serverIP = `${CONFIG.SERVER_PC_IP}:${CONFIG.MACRO_SERVER_PORT || 5001}`;
+const serverIP = `${CONFIG.MACRO_PC_IP}`;
 
 async function sendMacro(command) {
     let url = "";
