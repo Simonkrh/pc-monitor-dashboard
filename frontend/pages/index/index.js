@@ -1,4 +1,4 @@
-const serverIP = `${CONFIG.SERVER_PC_IP}`;
+const serverIP = `${CONFIG.SERVER_PC_IP}:${CONFIG.SERVER_PORT || 5000}`;
 let images = [];
 
 async function checkPCStatus() {

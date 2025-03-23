@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const SERVER_IP = `http://${CONFIG.SERVER_PC_IP}/slideshow`;  // Store server IP once
+    const serverIP = `${CONFIG.SERVER_PC_IP}:${CONFIG.SERVER_PORT || 5000}/slideshow`;
 
     const form = document.getElementById("upload-form");
     const imageListDiv = document.getElementById("image-list");
@@ -7,12 +7,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function fetchImages() {
         try {
-            const response = await fetch(`${SERVER_IP}/images`);
+            const response = await fetch(`${serverIP}/images`);
             const images = await response.json();
             imageListDiv.innerHTML = "";
             images.forEach(image => {
                 const imgElement = document.createElement("img");
-                imgElement.src = `${SERVER_IP}/uploads/${image}`;
+                imgElement.src = `${serverIP}/uploads/${image}`;
                 imgElement.style.width = "200px";
                 imgElement.style.margin = "10px";
                 imageListDiv.appendChild(imgElement);
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const formData = new FormData(form);
 
         try {
-            const response = await fetch(`${SERVER_IP}/upload`, {
+            const response = await fetch(`${serverIP}/upload`, {
                 method: "POST",
                 body: formData
             });

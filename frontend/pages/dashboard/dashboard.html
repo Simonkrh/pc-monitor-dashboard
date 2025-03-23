@@ -18,32 +18,31 @@
 
     <!-- TOP ROW: Macro buttons -->
     <div class="row flex-grow-1 d-flex align-items-center justify-content-center">
-      <div class="col-12 d-flex flex-wrap justify-content-center gap-3" style="max-width: 660px;">
-
+      <div class="col-12 d-grid" style="max-width: 800px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; justify-content: center;">
         <!-- Row 1 -->
-        <button class="macro-btn" onclick="sendMacro('open_app?app=notepad')">
-          <img src="/frontend/assets/images/macro-icons/SikonCS.jpg" class="macro-icon"
-            onerror="this.style.display='none';">
-        </button>
-
-        <button class="macro-btn" onclick="sendMacro('open_app?app=notepad')">
+        <button class="macro-btn" onclick="sendMacro('switch_account:76561198197834043')">
           <img src="/frontend/assets/images/macro-icons/SikonMain.jpg" class="macro-icon"
             onerror="this.style.display='none';">
         </button>
 
-        <button class="macro-btn" onclick="sendMacro('open_app?app=steam')">
+        <button class="macro-btn" onclick="sendMacro('switch_account:76561198234445456')">
+          <img src="/frontend/assets/images/macro-icons/SikonCS.jpg" class="macro-icon"
+            onerror="this.style.display='none';">
+        </button>
+        
+        <button class="macro-btn" onclick="sendMacro('switch_account:76561198335258974')">
+          <img src="/frontend/assets/images/macro-icons/S1mple.jpg" class="macro-icon" onerror="this.style.display='none';">
+        </button>
+
+        <button class="macro-btn" onclick="sendMacro('open_app:C:\\Users\\Simon Horsgaard\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Steam\\Steam.lnk')">
           <img src="/frontend/assets/images/macro-icons/Steam.jpg" class="macro-icon"
             onerror="this.style.display='none';">
         </button>
-
-        <button class="macro-btn" onclick="sendMacro('open_app?app=steam')">
-          <img src="/frontend/assets/images/macro-icons/Spotify.jpg" class="macro-icon"
-            onerror="this.style.display='none';">
+        
+        <button class="macro-btn" onclick="sendMacro('open_app:C:\\Users\\Simon Horsgaard\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Spotify.exe.lnk')">
+          <img src="/frontend/assets/images/macro-icons/Spotify.jpg" class="macro-icon" onerror="this.style.display='none';">
         </button>
-
-        <button class="macro-btn" onclick="sendMacro('')">
-          <img src="" class="macro-icon" onerror="this.style.display='none';">
-        </button>
+        
 
         <button class="macro-btn" onclick="sendMacro('')">
           <img src="" class="macro-icon" onerror="this.style.display='none';">
@@ -115,7 +114,7 @@
           <div id="volume-slider" class="d-none align-items-center justify-content-center">
             <input type="range" class="form-range w-50" min="0" max="100" />
             <button class="btn btn-secondary ms-2" onclick="hideVolumeSlider()">
-              <i class="fa-solid fa-arrow-left"></i> Back
+              <i class="fa-solid fa-arrow-left"></i>
             </button>
           </div>
 

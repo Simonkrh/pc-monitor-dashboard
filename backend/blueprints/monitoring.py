@@ -1,5 +1,4 @@
 import eventlet
-
 eventlet.monkey_patch()
 from flask import Blueprint, jsonify
 from dotenv import load_dotenv
@@ -65,7 +64,7 @@ def fetch_ohm_data():
 def fetch_network_data():
     """Fetch network data from the local API."""
     try:
-        response = http.request("GET", NETWORK_API_URL, timeout=1.0)
+        response = http.request("GET", NETWORK_API_URL, timeout=2.0)
         network_data = json.loads(response.data.decode("utf-8"))
 
         ethernet = next(
