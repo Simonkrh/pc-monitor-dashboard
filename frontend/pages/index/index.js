@@ -21,12 +21,12 @@ async function checkPCStatus() {
 
   // Dim the page if it's after 23:00 and PC is off
   if ((hour >= 23 || hour < 11) && !pcIsOn) {
-    console.log("It's after 23:00 and the PC is off. Dimming the page...");
+    # console.log("It's after 23:00 and the PC is off. Dimming the page...");
     document.body.style.filter = "brightness(25%)";
   }
   // Restore brightness if PC is on OR it's after 11:00 
   else {
-    console.log("PC is up or it's past 11:00. Restoring brightness...");
+    # console.log("PC is up or it's past 11:00. Restoring brightness...");
     document.body.style.filter = "brightness(100%)";
   }
 }
