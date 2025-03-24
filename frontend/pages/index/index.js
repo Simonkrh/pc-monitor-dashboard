@@ -34,15 +34,23 @@ async function checkPCStatus() {
 checkPCStatus();
 setInterval(checkPCStatus, 30000);
 
+function shuffleArray(array) {
+  const shuffled = array.slice(); 
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 fetch(`http://${serverIP}/slideshow/media`)
   .then((response) => response.json())
   .then((data) => {
-    mediaFiles = data;
+    mediaFiles = shuffleArray(data);
     if (mediaFiles.length > 0) {
       startSlideshow();
     }
-  })
+  })  
   .catch((err) => console.error(err));
 
 function startSlideshow() {
@@ -65,7 +73,11 @@ function startSlideshow() {
   }
 
   function transitionToNext() {
-    index = (index + 1) % mediaFiles.length;
+    index = index + 1;
+    if (index >= mediaFiles.length) {
+      mediaFiles = shuffleArray(mediaFiles); 
+      index = 0;
+    }
 
     nextSlide.classList.remove("slide-center", "slide-left");
     nextSlide.classList.add("slide-right");
