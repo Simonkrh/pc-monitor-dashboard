@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const serverIP = `${CONFIG.SERVER_PC_IP}:${CONFIG.SERVER_PORT || 5000}/slideshow`;
+    const serverIP = `http://${CONFIG.SERVER_PC_IP}/slideshow`;
 
     const form = document.getElementById("upload-form");
     const imageListDiv = document.getElementById("image-list");
@@ -7,18 +7,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function fetchImages() {
         try {
-            const response = await fetch(`${serverIP}/images`);
-            const images = await response.json();
+            const response = await fetch(`${serverIP}/media`);
+            const text = await response.text();
+            console.log("Raw response from /media:", text);
+
+            let images;
+            try {
+            images = JSON.parse(text);
+            } catch (e) {
+            console.error("Failed to parse JSON!", e);
+            return;
+            }
             imageListDiv.innerHTML = "";
-            images.forEach(image => {
-                const imgElement = document.createElement("img");
-                imgElement.src = `${serverIP}/uploads/${image}`;
-                imgElement.style.width = "200px";
-                imgElement.style.margin = "10px";
-                imageListDiv.appendChild(imgElement);
-            });
+            images.forEach(file => {
+                const ext = file.split('.').pop().toLowerCase();
+                const fileUrl = `${serverIP}/uploads/${file}`;
+            
+                let mediaElement;
+            
+                if (["mp4", "webm", "ogg"].includes(ext)) {
+                    mediaElement = document.createElement("video");
+                    mediaElement.src = fileUrl;
+                    mediaElement.controls = true;
+                    mediaElement.muted = true;
+                } else {
+                    mediaElement = document.createElement("img");
+                    mediaElement.src = fileUrl;
+                }
+            
+                mediaElement.style.width = "200px";
+                mediaElement.style.margin = "10px";
+                imageListDiv.appendChild(mediaElement);
+            });            
         } catch (error) {
-            console.error("Error fetching images:", error);
+            console.error("Error fetching media:", error);
         }
     }
 

@@ -35,54 +35,93 @@ checkPCStatus();
 setInterval(checkPCStatus, 30000);
 
 
-fetch(`http://${serverIP}/slideshow/images`)
-  .then(response => response.json())
-  .then(data => {
-    images = data;
-    if (images.length > 0) {
-      let index = Math.floor(Math.random() * images.length);
-
-      const img1 = document.getElementById("image1");
-      const img2 = document.getElementById("image2");
-
-      let currentImg = img1;
-      let nextImg = img2;
-
-      // Show first image
-      currentImg.src = `http://${serverIP}/slideshow/uploads/${images[index]}`;
-      currentImg.classList.add("slide-center");
-      nextImg.classList.add("slide-right");
-
-      setInterval(() => {
-        index = (index + 1) % images.length;
-
-        // Move in the next image from right -> center
-        nextImg.classList.remove("slide-center", "slide-left");
-        nextImg.classList.add("slide-right");
-        nextImg.src = `http://${serverIP}/slideshow/uploads/${images[index]}`;
-        nextImg.offsetHeight; // Force reflow
-        nextImg.classList.remove("slide-right");
-        nextImg.classList.add("slide-center");
-
-        // Move the old image center -> left
-        currentImg.classList.remove("slide-center");
-        currentImg.classList.add("slide-left");
-
-        setTimeout(() => {
-          // Snap old image instantly from left -> right (offscreen)
-          currentImg.style.transition = "none";
-          currentImg.classList.remove("slide-left", "slide-center");
-          currentImg.classList.add("slide-right");
-          currentImg.offsetHeight; // Force reflow
-          currentImg.style.transition = "";
-
-          [currentImg, nextImg] = [nextImg, currentImg];
-        }, 2000);
-
-      }, 7000);
+fetch(`http://${serverIP}/slideshow/media`)
+  .then((response) => response.json())
+  .then((data) => {
+    mediaFiles = data;
+    if (mediaFiles.length > 0) {
+      startSlideshow();
     }
   })
-  .catch(err => console.error(err));
+  .catch((err) => console.error(err));
+
+function startSlideshow() {
+  let index = Math.floor(Math.random() * mediaFiles.length);
+
+  const slide1 = document.getElementById("slide1");
+  const slide2 = document.getElementById("slide2");
+
+  let currentSlide = slide1;
+  let nextSlide = slide2;
+
+  displayMedia(mediaFiles[index], currentSlide);
+  scheduleNextSlide();
+
+  function scheduleNextSlide() {
+    const currentMedia = currentSlide.querySelector("img, video");
+    if (currentMedia && currentMedia.tagName.toLowerCase() === "img") {
+      setTimeout(() => transitionToNext(), 7000);
+    }
+  }
+
+  function transitionToNext() {
+    index = (index + 1) % mediaFiles.length;
+
+    nextSlide.classList.remove("slide-center", "slide-left");
+    nextSlide.classList.add("slide-right");
+    
+    displayMedia(mediaFiles[index], nextSlide);
+
+    nextSlide.offsetHeight; 
+
+    // Slide nextSlide in from right -> center
+    nextSlide.classList.remove("slide-right");
+    nextSlide.classList.add("slide-center");
+
+    // Slide currentSlide from center -> left
+    currentSlide.classList.remove("slide-center");
+    currentSlide.classList.add("slide-left");
+
+    setTimeout(() => {
+      currentSlide.style.transition = "none";
+      currentSlide.classList.remove("slide-left", "slide-center", "slide-right");
+      currentSlide.classList.add("slide-right");
+      currentSlide.innerHTML = ""; 
+      currentSlide.offsetHeight;    
+      currentSlide.style.transition = "";
+
+      // Swap references
+      [currentSlide, nextSlide] = [nextSlide, currentSlide];
+
+      scheduleNextSlide();
+    }, 2000); 
+  }
+
+  function displayMedia(fileName, container) {
+    container.innerHTML = "";
+
+    const lower = fileName.toLowerCase();
+    const isVideo = lower.endsWith(".mp4") || lower.endsWith(".webm");
+
+    if (isVideo) {
+      const video = document.createElement("video");
+      video.src = `http://${serverIP}/slideshow/uploads/${fileName}`;
+      video.autoplay = true;
+      video.playsInline = true; 
+  
+      video.addEventListener("ended", () => {
+        transitionToNext();
+      });
+
+      container.appendChild(video);
+    } else {
+      const img = document.createElement("img");
+      img.src = `http://${serverIP}/slideshow/uploads/${fileName}`;
+      container.appendChild(img);
+    }
+  }
+}
+
 
 let swipeStartY = 0;
 let swipeEndY = 0;

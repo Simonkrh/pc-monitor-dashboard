@@ -44,11 +44,11 @@ def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
 
-@slideshow.route("/images")
-def list_images():
-    images = [
-        f
-        for f in os.listdir(UPLOAD_FOLDER)
-        if f.lower().endswith((".png", ".jpg", ".jpeg", ".gif"))
+@slideshow.route("/media")
+def list_media():
+    valid_extensions = (".png", ".jpg", ".jpeg", ".gif", ".mp4", ".webm")
+    media_files = [
+        f for f in os.listdir(UPLOAD_FOLDER)
+        if f.lower().endswith(valid_extensions)
     ]
-    return jsonify(images)
+    return jsonify(media_files)
