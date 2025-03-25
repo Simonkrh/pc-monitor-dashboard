@@ -9,22 +9,32 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const response = await fetch(`${serverIP}/media`);
             const text = await response.text();
-            console.log("Raw response from /media:", text);
-
+    
             let images;
             try {
-            images = JSON.parse(text);
+                images = JSON.parse(text);
             } catch (e) {
-            console.error("Failed to parse JSON!", e);
-            return;
+                console.error("Failed to parse JSON!", e);
+                return;
             }
+    
             imageListDiv.innerHTML = "";
+    
             images.forEach(file => {
                 const ext = file.split('.').pop().toLowerCase();
                 const fileUrl = `${serverIP}/uploads/${file}`;
-            
+    
+                const container = document.createElement("div");
+                container.style.display = "inline-block";
+                container.style.margin = "10px";
+                container.style.textAlign = "center";
+    
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = file;
+                checkbox.className = "media-checkbox";
+    
                 let mediaElement;
-            
                 if (["mp4", "webm", "ogg"].includes(ext)) {
                     mediaElement = document.createElement("video");
                     mediaElement.src = fileUrl;
@@ -34,15 +44,48 @@ document.addEventListener("DOMContentLoaded", () => {
                     mediaElement = document.createElement("img");
                     mediaElement.src = fileUrl;
                 }
-            
+    
                 mediaElement.style.width = "200px";
-                mediaElement.style.margin = "10px";
-                imageListDiv.appendChild(mediaElement);
-            });            
+    
+                const label = document.createElement("div");
+                label.textContent = file;
+                label.style.marginTop = "5px";
+    
+                container.appendChild(checkbox);
+                container.appendChild(mediaElement);
+                container.appendChild(label);
+    
+                imageListDiv.appendChild(container);
+            });
         } catch (error) {
             console.error("Error fetching media:", error);
         }
     }
+    
+    document.getElementById("delete-selected").addEventListener("click", async () => {
+        const checkboxes = document.querySelectorAll(".media-checkbox:checked");
+        if (checkboxes.length === 0) {
+            alert("No files selected!");
+            return;
+        }
+    
+        const confirmed = confirm(`Are you sure you want to delete ${checkboxes.length} file(s)?`);
+        if (!confirmed) return;
+    
+        const filenames = Array.from(checkboxes).map(cb => cb.value);
+    
+        const res = await fetch(`${serverIP}/delete-multiple`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ files: filenames })
+        });
+    
+        if (res.ok) {
+            fetchImages();
+        } else {
+            alert("Failed to delete selected files.");
+        }
+    });    
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -69,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const result = await res.json();
         
             if (result.duplicate) {
-                statusText.textContent = `Duplicate skipped: ${file.name}`;
+                statusText.textContent = `Duplicate skipped: ${file.name} (${i + 1}/${files.length})`;
                 continue; // skip this file
             }
         

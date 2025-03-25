@@ -107,3 +107,54 @@ def list_media():
         if f.lower().endswith(valid_extensions)
     ]
     return jsonify(media_files)
+
+@slideshow.route("/delete/<filename>", methods=["DELETE"])
+def delete_file(filename):
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    if not os.path.exists(file_path):
+        return jsonify({"error": "File not found"}), 404
+
+    hash_cache = load_hash_cache()
+
+    # Remove the file from disk
+    try:
+        os.remove(file_path)
+    except Exception as e:
+        return jsonify({"error": f"Failed to delete file: {str(e)}"}), 500
+
+    # Remove the file's hash from the hash cache
+    new_cache = {k: v for k, v in hash_cache.items() if v != filename}
+    save_hash_cache(new_cache)
+
+    return jsonify({"message": "File deleted"}), 200
+
+@slideshow.route("/delete-multiple", methods=["POST"])
+def delete_multiple_files():
+    data = request.get_json()
+    files_to_delete = data.get("files", [])
+
+    if not isinstance(files_to_delete, list):
+        return jsonify({"error": "Invalid data"}), 400
+
+    hash_cache = load_hash_cache()
+    updated_cache = {
+        k: v for k, v in hash_cache.items()
+        if v not in files_to_delete
+    }
+
+    errors = []
+    for filename in files_to_delete:
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            errors.append(f"{filename}: {str(e)}")
+
+    save_hash_cache(updated_cache)
+
+    if errors:
+        return jsonify({"error": "Some files could not be deleted", "details": errors}), 500
+
+    return jsonify({"message": "Files deleted"}), 200
+
