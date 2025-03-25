@@ -119,6 +119,7 @@ function startSlideshow() {
       const video = document.createElement("video");
       video.src = `http://${serverIP}/slideshow/uploads/${fileName}`;
       video.autoplay = true;
+      video.muted = true;
       video.playsInline = true; 
   
       video.addEventListener("ended", () => {
