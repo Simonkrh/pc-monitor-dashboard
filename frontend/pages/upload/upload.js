@@ -46,27 +46,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const formData = new FormData(form);
-
-        try {
-            const response = await fetch(`${serverIP}/upload`, {
-                method: "POST",
-                body: formData
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                alert(result.message);
-                form.reset();
-                fetchImages();
-            } else {
-                alert("Upload failed! Please try again.");
-            }
-        } catch (error) {
-            console.error("Error uploading file(s):", error);
-            alert("An error occurred while uploading.");
+    
+        const files = form.querySelector('input[type="file"]').files;
+        if (files.length === 0) {
+            alert("No files selected!");
+            return;
         }
+    
+        const statusText = document.getElementById("upload-text");
+        const progressBar = document.getElementById("upload-progress");
+    
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const formData = new FormData();
+            formData.append("file", file);
+    
+            await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", `${serverIP}/upload`);
+    
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percent = (e.loaded / e.total) * 100;
+                        progressBar.value = percent;
+                        statusText.textContent = `Uploading ${file.name} (${i + 1}/${files.length})... ${Math.round(percent)}%`;
+                    }
+                };
+    
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        resolve();
+                    } else {
+                        reject(new Error("Upload failed"));
+                    }
+                };
+    
+                xhr.onerror = () => reject(new Error("Upload error"));
+                xhr.send(formData);
+            });
+        }
+    
+        statusText.textContent = "All files uploaded!";
+        progressBar.value = 100;
+        form.reset();
+        fetchImages();
     });
+    
 
     returnBtn.addEventListener("click", () => {
         window.location.href = "/";
