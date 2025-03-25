@@ -1,0 +1,27 @@
+.media-container {
+display: inline-block;
+margin: 10px;
+text-align: center;
+border: 2px solid transparent;
+padding: 5px;
+cursor: pointer;
+transition: 0.2s;
+}
+
+.media-container:hover {
+border-color: #ccc;
+}
+
+.media-container.selected {
+border-color:#4e9ef3;
+background-color: rgba(255, 0, 0, 0.05);
+}
+
+.media-preview {
+width: 200px;
+}
+
+.media-label {
+margin-top: 5px;
+}
+

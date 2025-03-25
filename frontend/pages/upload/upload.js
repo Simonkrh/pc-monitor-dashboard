@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const response = await fetch(`${serverIP}/media`);
             const text = await response.text();
-    
             let images;
             try {
                 images = JSON.parse(text);
@@ -25,14 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 const fileUrl = `${serverIP}/uploads/${file}`;
     
                 const container = document.createElement("div");
-                container.style.display = "inline-block";
-                container.style.margin = "10px";
-                container.style.textAlign = "center";
-    
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.value = file;
-                checkbox.className = "media-checkbox";
+                container.className = "media-container";
+                container.dataset.filename = file;
     
                 let mediaElement;
                 if (["mp4", "webm", "ogg"].includes(ext)) {
@@ -45,34 +38,39 @@ document.addEventListener("DOMContentLoaded", () => {
                     mediaElement.src = fileUrl;
                 }
     
-                mediaElement.style.width = "200px";
+                mediaElement.className = "media-preview";
     
                 const label = document.createElement("div");
                 label.textContent = file;
-                label.style.marginTop = "5px";
+                label.className = "media-label";
     
-                container.appendChild(checkbox);
                 container.appendChild(mediaElement);
                 container.appendChild(label);
     
+                // Toggle selection on click
+                container.addEventListener("click", () => {
+                    container.classList.toggle("selected");
+                });
+    
                 imageListDiv.appendChild(container);
             });
+    
         } catch (error) {
             console.error("Error fetching media:", error);
         }
     }
     
     document.getElementById("delete-selected").addEventListener("click", async () => {
-        const checkboxes = document.querySelectorAll(".media-checkbox:checked");
-        if (checkboxes.length === 0) {
+        const selectedContainers = document.querySelectorAll(".media-container.selected");
+        if (selectedContainers.length === 0) {
             alert("No files selected!");
             return;
         }
     
-        const confirmed = confirm(`Are you sure you want to delete ${checkboxes.length} file(s)?`);
+        const confirmed = confirm(`Are you sure you want to delete ${selectedContainers.length} file(s)?`);
         if (!confirmed) return;
     
-        const filenames = Array.from(checkboxes).map(cb => cb.value);
+        const filenames = Array.from(selectedContainers).map(div => div.dataset.filename);
     
         const res = await fetch(`${serverIP}/delete-multiple`, {
             method: "POST",
