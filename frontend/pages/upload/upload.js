@@ -96,7 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
     
         const statusText = document.getElementById("upload-text");
         const progressBar = document.getElementById("upload-progress");
-    
+        
+        let duplicateCount = 0;
+
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const hash = await calculateFileHash(file);
@@ -110,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const result = await res.json();
         
             if (result.duplicate) {
+                duplicateCount++;
                 statusText.textContent = `Duplicate skipped: ${file.name} (${i + 1}/${files.length})`;
                 continue; // skip this file
             }
@@ -136,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
     
-        statusText.textContent = "All files uploaded!";
+        statusText.textContent = `All files uploaded!${duplicateCount > 0 ? ` (${duplicateCount} duplicate${duplicateCount > 1 ? "s" : ""} skipped)` : ""}`;
         progressBar.value = 100;
         form.reset();
         fetchImages();
