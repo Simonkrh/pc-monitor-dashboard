@@ -58,13 +58,29 @@ document.addEventListener("DOMContentLoaded", () => {
     
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
+            const hash = await calculateFileHash(file);
+        
+            // Check with backend if file is duplicate
+            const res = await fetch(`${serverIP}/check-hash`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ hash }),
+            });
+            const result = await res.json();
+        
+            if (result.duplicate) {
+                statusText.textContent = `Duplicate skipped: ${file.name}`;
+                continue; // skip this file
+            }
+        
+            // Upload if the file is not a duplicate
             const formData = new FormData();
             formData.append("file", file);
-    
+        
             await new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
                 xhr.open("POST", `${serverIP}/upload`);
-    
+        
                 xhr.upload.onprogress = (e) => {
                     if (e.lengthComputable) {
                         const percent = (e.loaded / e.total) * 100;
@@ -72,15 +88,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         statusText.textContent = `Uploading ${file.name} (${i + 1}/${files.length})... ${Math.round(percent)}%`;
                     }
                 };
-    
-                xhr.onload = () => {
-                    if (xhr.status === 200) {
-                        resolve();
-                    } else {
-                        reject(new Error("Upload failed"));
-                    }
-                };
-    
+        
+                xhr.onload = () => xhr.status === 200 ? resolve() : reject(new Error("Upload failed"));
                 xhr.onerror = () => reject(new Error("Upload error"));
                 xhr.send(formData);
             });
@@ -92,7 +101,14 @@ document.addEventListener("DOMContentLoaded", () => {
         fetchImages();
     });
     
-
+    async function calculateFileHash(file) {
+        const buffer = await file.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+        return hashHex;
+    }
+    
     returnBtn.addEventListener("click", () => {
         window.location.href = "/";
     });

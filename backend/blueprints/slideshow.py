@@ -80,6 +80,19 @@ def upload_file():
         "duplicates": duplicate_filenames
     }), 200
 
+@slideshow.route("/check-hash", methods=["POST"])
+def check_hash():
+    data = request.get_json()
+    file_hash = data.get("hash")
+
+    if not file_hash:
+        return jsonify({"error": "No hash provided"}), 400
+
+    hash_cache = load_hash_cache()
+
+    if file_hash in hash_cache:
+        return jsonify({"duplicate": True}), 200
+    return jsonify({"duplicate": False}), 200
 
 @slideshow.route("/uploads/<filename>")
 def uploaded_file(filename):
