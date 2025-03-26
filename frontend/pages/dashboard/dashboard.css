@@ -8,6 +8,15 @@ body {
   background-color: transparent;
   padding: 0;
   margin: 10px;
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.05s ease-in-out;
+  border: 1px solid rgb(61, 61, 61);
+}
+
+.macro-btn:active {
+  transform: scale(1.1); 
 }
 
 .macro-icon {
