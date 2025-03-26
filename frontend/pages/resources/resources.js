@@ -11,13 +11,13 @@ const socket = io(`http://${serverIP}`, {
 socket.on("update_stats", (data) => {
     // CPU
     document.getElementById("cpu_temp").innerText = `CPU Temp: ${data.cpu_temp || "N/A"}°`;
-    document.getElementById("cpu_power").innerText = `CPU Power: ${data.cpu_power || "N/A"}`;
+    document.getElementById("cpu_power").innerText = `CPU Power: ${data.cpu_power || "N/A"}W`;
     document.getElementById("cpu-gauge-text").textContent = Math.round(data.cpu_usage);
     document.getElementById("cpu-gauge").style.setProperty("--value", `${(data.cpu_usage / 100) * 360}deg`);
 
     // GPU
     document.getElementById("gpu_temp").innerText = `GPU Temp: ${data.gpu_temp || "N/A"}°`;
-    document.getElementById("gpu_power").innerText = `GPU Power: ${data.gpu_power || "N/A"}`;
+    document.getElementById("gpu_power").innerText = `GPU Power: ${data.gpu_power || "N/A"}W`;
     document.getElementById("gpu-gauge-text").textContent = Math.round(data.gpu_usage);
     document.getElementById("gpu-gauge").style.setProperty("--value", `${(data.gpu_usage / 100) * 360}deg`);
 
