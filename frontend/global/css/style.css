@@ -31,6 +31,32 @@ body::-webkit-scrollbar {
   transform: translateX(100%);
 }
 
+.swipe-down {
+  animation: swipeDown 0.3s ease-out forwards;
+}
+
+.swipe-up {
+  animation: swipeUp 0.3s ease-out forwards;
+}
+
+@keyframes swipeDown {
+  from {
+    transform: translateY(0%);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes swipeUp {
+  from {
+    transform: translateY(0%);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+
 body.show {
   opacity: 1;
 }

@@ -27,6 +27,10 @@ def dashboard():
 def upload():
     return send_from_directory(app.static_folder + "/pages/upload", "upload.html")
 
+@app.route("/settings")
+def settings():
+    return send_from_directory(app.static_folder + "/pages/settings", "settings.html")
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)

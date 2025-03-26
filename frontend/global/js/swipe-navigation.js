@@ -52,10 +52,12 @@ document.addEventListener("touchend", () => {
 // Mouse Events (for swiping with a mouse)
 document.addEventListener("mousedown", (event) => {
   startX = event.clientX;
+  startY = event.clientY;
 });
 
 document.addEventListener("mousemove", (event) => {
   moveX = event.clientX;
+  moveY = event.clientY;
 });
 
 document.addEventListener("mouseup", () => {
@@ -67,19 +69,45 @@ function handleSwipe() {
   const diffX = moveX - startX;
   const diffY = moveY - startY;
 
-  // Ignore taps (when the movement is too small)
-  if (Math.abs(diffX) < threshold || Math.abs(diffY) > threshold / 2) return;
+  const absDiffX = Math.abs(diffX);
+  const absDiffY = Math.abs(diffY);
 
-  if (diffX < 0) {
-    navigateToPage("next"); // Swipe Left
-  } else {
-    navigateToPage("prev"); // Swipe Right
+  // Ignore taps (movement too small)
+  if (absDiffX < threshold && absDiffY < threshold) return;
+
+  // Horizontal swipe
+  if (absDiffX > absDiffY && absDiffX > threshold) {
+    if (diffX < 0) {
+      navigateHorizontally("next"); // Swipe Left
+    } else {
+      navigateHorizontally("prev"); // Swipe Right
+    }
+  }
+
+  // Vertical swipe
+  else if (absDiffY > absDiffX && absDiffY > threshold) {
+    const isSettingsPage = window.location.pathname.includes("/settings");
+
+    if (diffY > 0 && !isSettingsPage) {
+      // Swipe Down -> go to settings
+      document.body.classList.add("swipe-down");
+      setTimeout(() => {
+        window.location.href = "/settings";
+      }, 300);
+    } else if (diffY < 0 && isSettingsPage) {
+      // Swipe Up -> go to previous page
+      document.body.classList.add("swipe-up");
+      const previousPage = document.referrer || pages[currentIndex] || "/dashboard";
+      setTimeout(() => {
+        window.location.href = previousPage;
+      }, 300);
+    }
   }
 }
 
 
 // Swipe Transition + Fade-in Effect on New Page
-function navigateToPage(direction) {
+function navigateHorizontally(direction) {
   if (direction === "next") {
     document.body.classList.add("swipe-left");
     currentIndex = (currentIndex + 1) % pages.length;
