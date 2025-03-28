@@ -65,18 +65,3 @@ socket.on("disconnect", () => {
     console.warn("WebSocket disconnected. Attempting to reconnect...");
 });
 
-function updateTimeAndDate() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString("en-GB", { hour12: false });
-    const dateString = now.toLocaleDateString("en-GB", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    });
-
-    document.getElementById("current-time").textContent = timeString;
-    document.getElementById("current-date").textContent = dateString;
-}
-setInterval(updateTimeAndDate, 1000);
-updateTimeAndDate();

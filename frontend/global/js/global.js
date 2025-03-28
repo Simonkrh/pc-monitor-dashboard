@@ -53,3 +53,22 @@ async function checkPCStatus() {
 }
 
 setInterval(checkPCStatus, 30000); 
+
+
+function updateTimeAndDate() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString("en-GB", { hour12: false });
+    const dateString = now.toLocaleDateString("en-GB", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+
+    document.getElementById("current-time").textContent = timeString;
+    document.getElementById("current-date").textContent = dateString;
+}
+
+if (document.getElementById("current-time") || document.getElementById("current-date")) {
+    setInterval(updateTimeAndDate, 1000);
+}
