@@ -97,8 +97,8 @@ function updateTrackTime() {
   const currentProgress = lastProgress + elapsedTime;
   const clampedProgress = Math.min(currentProgress, songDuration);
 
-  document.getElementById("current-time").innerText = formatTime(clampedProgress);
-  document.getElementById("total-time").innerText = formatTime(songDuration);
+  document.getElementById("current-track-time").innerText = formatTime(clampedProgress);
+  document.getElementById("total-track-time").innerText = formatTime(songDuration);
 
   updateTrackProgress(clampedProgress, songDuration);
 
