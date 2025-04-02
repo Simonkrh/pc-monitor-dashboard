@@ -72,3 +72,8 @@ function updateTimeAndDate() {
 if (document.getElementById("current-time") || document.getElementById("current-date")) {
     setInterval(updateTimeAndDate, 1000);
 }
+
+document.addEventListener('dragstart', (e) => {
+    e.preventDefault();
+  });
+  

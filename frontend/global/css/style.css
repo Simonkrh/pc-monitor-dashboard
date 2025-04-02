@@ -81,4 +81,10 @@ body.show {
   summary {
     cursor: none !important;
   }
+
+  img {
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }  
 }
+
