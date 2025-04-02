@@ -62,7 +62,23 @@ body.show {
 }
 
 @media (max-width: 1300px) {
-  * {
-    cursor: none;
+  html, body, *, *::before, *::after {
+    cursor: none !important;
+  }
+
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  a,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="range"],
+  [type="checkbox"],
+  [type="radio"],
+  summary {
+    cursor: none !important;
   }
 }

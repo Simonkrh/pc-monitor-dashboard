@@ -59,14 +59,12 @@ playlistContainer.addEventListener("mousemove", (e) => {
 
 playlistContainer.addEventListener("mouseup", () => {
   isDragging = false;
-  playlistContainer.style.cursor = "default";
   startMomentumScroll();
 });
 
 // Stop dragging if the mouse leaves the container
 playlistContainer.addEventListener("mouseleave", () => {
   isDragging = false;
-  playlistContainer.style.cursor = "default";
   startMomentumScroll();
 });
 
