@@ -48,11 +48,11 @@
         </button>
 
         <!-- Row 2 -->
-        <button class="macro-btn" onclick="sendMacro('open_app:C:\Users\Simon Horsgaard\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Steam\Counter-Strike 2.url')">
+        <button class="macro-btn" onclick="sendMacro('open_app:C:\\Users\\Simon Horsgaard\\AppData\\Roaming\\Microsoft\\Windows\\\Start Menu\\Programs\\Steam\\Counter-Strike 2.url')">
           <img src="/frontend/assets/images/macro-icons/CS.jpg" class="macro-icon" onerror="this.style.display='none';">
         </button>    
 
-        <button class="macro-btn" onclick="sendMacro('open_app:C:\Users\Simon Horsgaard\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Steam\Rocket League.url')">
+        <button class="macro-btn" onclick="sendMacro('open_app:C:\\Users\\Simon Horsgaard\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Steam\\Rocket League.url')">
           <img src="/frontend/assets/images/macro-icons/RL.png" class="macro-icon" onerror="this.style.display='none';">
         </button>    
 
@@ -74,53 +74,25 @@
 
       </div>
     </div>
-
-
-    <!-- MIDDLE ROW: Prev / Pause / Next -->
-    <div class="row">
-      <div class="col-12 text-center mb-3 media-container">
-        <div class="media-keys">
-          <div class="prev" onclick="sendCommand('previous')">
-            <i class="fa-solid fa-backward"></i>
-          </div>
-          <div class="play" onclick="togglePlayPause()">
-            <i id="play-pause-icon" class="fa-solid fa-play"></i>
-          </div>
-          <div class="next" onclick="sendCommand('next')">
-            <i class="fa-solid fa-forward"></i>
-          </div>
-        </div>
-      </div>
-
       <!-- BOTTOM ROW: Volume controls -->
       <div class="row">
         <div class="col-12 text-center">
-
-          <!-- Icons visible by default -->
-          <div id="volume-icons" class="d-inline-flex">
-            <button class="btn btn-secondary me-2" onclick="showVolumeSlider()">
-              <i class="fa-solid fa-volume-down fa-lg"></i>
+          <div id="audio-session-controls" class="d-flex justify-content-center flex-wrap gap-3"></div>
+      
+          <div id="volume-slider-view" class="d-none flex-column align-items-center">
+            <div class="d-flex align-items-center gap-3 mb-2">
+              <img id="volume-session-icon" src="" alt="App Icon" width="48" height="48" style="border-radius: 10px;">
+              <input id="volume-slider" type="range" class="form-range" min="0" max="100" style="width: 200px;" />
+            </div>
+            <button class="btn btn-secondary mt-2" onclick="returnToIcons()">
+              <i class="fa-solid fa-arrow-left"></i> Back
             </button>
-            <button class="btn btn-secondary me-2" onclick="showVolumeSlider()">
-              <i class="fa-solid fa-volume-up fa-lg"></i>
-            </button>
-            <button class="btn btn-secondary" onclick="showVolumeSlider()">
-              <i class="fa-solid fa-volume-off fa-lg"></i>
-            </button>
-          </div>
-
-          <!-- Slider hidden by default -->
-          <div id="volume-slider" class="d-none align-items-center justify-content-center">
-            <input type="range" class="form-range w-50" min="0" max="100" />
-            <button class="btn btn-secondary ms-2" onclick="hideVolumeSlider()">
-              <i class="fa-solid fa-arrow-left"></i>
-            </button>
-          </div>
-
+          </div>          
         </div>
       </div>
-
     </div>
+
+    
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
     <script src="/frontend/config.js"></script>
