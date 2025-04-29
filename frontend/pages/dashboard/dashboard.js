@@ -58,15 +58,18 @@ async function fetchAudioSessions() {
     button.appendChild(img);
 
     button.onclick = () => {
-        currentSessionName = session.name;
-        
-        document.getElementById('volume-slider').value = session.volume;
-        document.getElementById('volume-session-icon').src = `data:image/png;base64,${session.icon}`;
-        document.getElementById('volume-session-icon').style.transform= 'scaleY(-1)';
-
-        container.classList.add('d-none');
-        sliderView.classList.remove('d-none');
-    };
+      currentSessionName = session.name;
+      
+      const slider = document.getElementById('volume-slider');
+      slider.value = session.volume;
+      slider.style.setProperty('--volume-fill', `${session.volume}%`); 
+  
+      document.getElementById('volume-session-icon').src = `data:image/png;base64,${session.icon}`;
+      document.getElementById('volume-session-icon').style.transform = 'scaleY(-1)';
+  
+      container.classList.add('d-none');
+      sliderView.classList.remove('d-none');
+  };
 
     container.appendChild(button);
   });
@@ -90,3 +93,16 @@ function returnToIcons() {
 }
 
 window.addEventListener('DOMContentLoaded', fetchAudioSessions);
+
+document.getElementById('volume-slider').addEventListener('input', function () {
+  if (!currentSessionName) return;
+  const volume = this.value;
+
+  this.style.setProperty('--volume-fill', `${volume}%`); 
+
+  fetch(`http://${serverIP}/set_app_volume`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ app_name: currentSessionName, volume: volume })
+  });
+});
