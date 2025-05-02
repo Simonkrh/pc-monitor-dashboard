@@ -49,6 +49,11 @@ body {
   transition: transform 0.2s ease-in-out;
 }
 
+#volume-session-icon {
+  width: 55px;
+  height: 55px;
+}
+
 /* Slider */
 #volume-slider {
   -webkit-appearance: none;

@@ -53,7 +53,7 @@ async function fetchAudioSessions() {
     img.className = 'macro-icon'; 
     img.alt = session.name;
     img.title = session.name;
-    img.style.transform = 'scaleY(-1)';
+    img.style.transform = 'scaleY(-1)'; // Because they are originally upside down
 
     button.appendChild(img);
 
@@ -65,7 +65,7 @@ async function fetchAudioSessions() {
       slider.style.setProperty('--volume-fill', `${session.volume}%`); 
   
       document.getElementById('volume-session-icon').src = `data:image/png;base64,${session.icon}`;
-      document.getElementById('volume-session-icon').style.transform = 'scaleY(-1)';
+      document.getElementById('volume-session-icon').style.transform = 'scaleY(-1)'; // Because they are originally upside down
   
       container.classList.add('d-none');
       sliderView.classList.remove('d-none');
