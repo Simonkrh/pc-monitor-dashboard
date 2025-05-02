@@ -30,50 +30,71 @@ async function sendMacro(command) {
 
 // Volume
 let currentSessionName = null;
+const sessionButtons = new Map();
 
 async function fetchAudioSessions() {
   const container = document.getElementById('audio-session-controls');
   const sliderView = document.getElementById('volume-slider-view');
-  const slider = document.getElementById('volume-slider');
-  const sessionLabel = document.getElementById('volume-session-name');
-
-  container.innerHTML = '';
-  sliderView.classList.add('d-none');
-  container.classList.remove('d-none');
 
   const response = await fetch(`http://${serverIP}/audio_sessions`);
   const sessions = await response.json();
 
+  const seenSessions = new Set();
+
   sessions.forEach(session => {
-    const button = document.createElement('button');
-    button.className = 'macro-btn'; 
+    seenSessions.add(session.name);
 
-    const img = document.createElement('img');
-    img.src = `data:image/png;base64,${session.icon}`;
-    img.className = 'macro-icon'; 
-    img.alt = session.name;
-    img.title = session.name;
-    img.style.transform = 'scaleY(-1)'; // Because they are originally upside down
+    if (!sessionButtons.has(session.name)) {
+      // Create button if not exists
+      const button = document.createElement('button');
+      button.className = 'macro-btn';
 
-    button.appendChild(img);
+      const img = document.createElement('img');
+      img.src = `data:image/png;base64,${session.icon}`;
+      img.className = 'macro-icon';
+      img.alt = session.name;
+      img.title = session.name;
+      img.style.transform = 'scaleY(-1)'; // Because they are originally upside down
 
-    button.onclick = () => {
-      currentSessionName = session.name;
-      
-      const slider = document.getElementById('volume-slider');
-      slider.value = session.volume;
-      slider.style.setProperty('--volume-fill', `${session.volume}%`); 
-  
-      document.getElementById('volume-session-icon').src = `data:image/png;base64,${session.icon}`;
-      document.getElementById('volume-session-icon').style.transform = 'scaleY(-1)'; // Because they are originally upside down
-  
-      container.classList.add('d-none');
-      sliderView.classList.remove('d-none');
-  };
+      button.appendChild(img);
+      container.appendChild(button);
 
-    container.appendChild(button);
+      button.onclick = () => {
+        currentSessionName = session.name;
+
+        const slider = document.getElementById('volume-slider');
+        slider.value = session.volume;
+        slider.style.setProperty('--volume-fill', `${session.volume}%`);
+
+        document.getElementById('volume-session-icon').src = img.src;
+        document.getElementById('volume-session-icon').style.transform = 'scaleY(-1)'; // Because they are originally upside down
+
+        container.classList.add('d-none');
+        sliderView.classList.remove('d-none');
+      };
+
+      sessionButtons.set(session.name, { button, img });
+    } else {
+      // Update icon or info if needed
+      const { img } = sessionButtons.get(session.name);
+      const newSrc = `data:image/png;base64,${session.icon}`;
+      if (img.src !== newSrc) img.src = newSrc;
+    }
   });
+
+  // Remove buttons for sessions that no longer exist
+  for (const name of sessionButtons.keys()) {
+    if (!seenSessions.has(name)) {
+      const { button } = sessionButtons.get(name);
+      container.removeChild(button);
+      sessionButtons.delete(name);
+    }
+  }
+
+  sliderView.classList.add('d-none');
+  container.classList.remove('d-none');
 }
+
 
 document.getElementById('volume-slider').addEventListener('input', async function () {
   if (!currentSessionName) return;
@@ -92,7 +113,10 @@ function returnToIcons() {
   document.getElementById('audio-session-controls').classList.remove('d-none');
 }
 
-window.addEventListener('DOMContentLoaded', fetchAudioSessions);
+window.addEventListener('DOMContentLoaded', () => {
+  fetchAudioSessions(); 
+  setInterval(fetchAudioSessions, 5000); 
+});
 
 document.getElementById('volume-slider').addEventListener('input', function () {
   if (!currentSessionName) return;
