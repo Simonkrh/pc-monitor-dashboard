@@ -2,6 +2,25 @@ body {
   color: #fff;
 }
 
+.container-fluid {
+  margin-top: -40px
+}
+
+#audio-controls-wrapper {
+  position: relative;
+  height: 140px; 
+  overflow: hidden;
+}
+
+#audio-session-controls,
+#volume-slider-view {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+/* Macro buttons */
 .macro-btn {
   width: 100px;
   height: 100px;
@@ -91,7 +110,6 @@ body {
 }
 
 #volume-slider-view {
-  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center; 
@@ -102,10 +120,11 @@ body {
 /* Back button */
 .back-btn {
   background-color: transparent !important;
-  border: 2px solid rgba(61, 61, 61, 0.644);
+  border: 3px solid rgba(61, 61, 61, 0.644);
   border-radius: 10px;
   color: #fff;
   padding: 10px 24px;
+  margin-bottom: 20px;
   font-size: 1.1rem;
   font-weight: bold;
 }

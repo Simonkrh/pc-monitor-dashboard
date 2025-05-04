@@ -77,18 +77,19 @@
       <!-- BOTTOM ROW: Volume controls -->
       <div class="row">
         <div class="col-12 text-center">
-          <div id="audio-session-controls" class="d-flex justify-content-center flex-wrap gap-3"></div>
-      
-          <div id="volume-slider-view" class="d-none flex-column align-items-center">
-            <div class="d-flex align-items-center gap-3 mb-2">
-              <img id="volume-session-icon" src="" alt="App Icon">
-              <input id="volume-slider" type="range" min="0" max="100" />
+          <div id="audio-controls-wrapper" style="min-height: 120px;">
+            <div id="audio-session-controls" class="d-flex justify-content-center flex-wrap gap-3"></div>
+          
+            <div id="volume-slider-view" class="d-none flex-column align-items-center">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <img id="volume-session-icon" src="" alt="App Icon">
+                <input id="volume-slider" type="range" min="0" max="100" />
+              </div>
+              <button class="btn btn-secondary mt-2 back-btn" onclick="returnToIcons()">
+                <i class="fa-solid fa-arrow-left"></i> Back
+              </button>
             </div>
-            <button class="btn btn-secondary mt-2 back-btn" onclick="returnToIcons()">
-              <i class="fa-solid fa-arrow-left"></i> Back
-            </button>
           </div>          
-        </div>
       </div>
     </div>
 
