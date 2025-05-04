@@ -98,3 +98,14 @@ body {
   justify-content: center; 
   text-align: center;
 }
+
+/* Back button */
+.back-btn {
+  background-color: transparent !important;
+  border: 2px solid rgba(61, 61, 61, 0.644);
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 24px;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
