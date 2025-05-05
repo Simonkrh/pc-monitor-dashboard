@@ -2,25 +2,28 @@ body {
   color: #fff;
 }
 
-.container-fluid {
-  margin-top: -40px
-}
-
-#audio-controls-wrapper {
-  position: relative;
-  height: 140px; 
-  overflow: hidden;
-}
-
-#audio-session-controls,
-#volume-slider-view {
+#top-clock {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  z-index: 10;
+}
+
+#current-time {
+  font-size: 2rem;
+}
+
+#current-date {
+  font-size: 1.2rem;
 }
 
 /* Macro buttons */
+.top-section {
+  margin-bottom: -6rem;
+}
+
 .macro-btn {
   width: 100px;
   height: 100px;
@@ -86,7 +89,20 @@ body {
   position: relative;
 }
 
-/* Track */
+/* Audio controls */
+#audio-controls-wrapper {
+  position: relative;
+  height: 140px; 
+  overflow: hidden;
+}
+
+#audio-session-controls,
+#volume-slider-view {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
 #volume-slider::-webkit-slider-runnable-track {
   height: 30px;
   background: linear-gradient(to right, #ffffff var(--volume-fill, 50%), #696969 var(--volume-fill, 50%));

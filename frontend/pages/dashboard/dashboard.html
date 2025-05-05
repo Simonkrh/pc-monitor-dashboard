@@ -13,11 +13,16 @@
 </head>
 
 <body>
-
   <div class="container-fluid vh-100 d-flex flex-column">
 
-    <!-- TOP ROW: Macro buttons -->
-    <div class="row flex-grow-1 d-flex align-items-center justify-content-center">
+    <div id="top-clock" class="text-center py-2">
+      <div id="current-time"></div>
+      <div id="current-date"></div>
+    </div>
+
+    
+    <!-- Top section -->
+    <div class="row flex-grow-1 d-flex align-items-center justify-content-center top-section">
       <div class="col-12 d-grid" style="max-width: 800px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; justify-content: center;">
         <!-- Row 1 -->
         <button class="macro-btn" onclick="sendMacro('switch_account:76561198197834043')">
@@ -74,10 +79,10 @@
 
       </div>
     </div>
-      <!-- BOTTOM ROW: Volume controls -->
+      <!-- Bottom section -->
       <div class="row">
         <div class="col-12 text-center">
-          <div id="audio-controls-wrapper" style="min-height: 120px;">
+          <div id="audio-controls-wrapper">
             <div id="audio-session-controls" class="d-flex justify-content-center flex-wrap gap-3"></div>
           
             <div id="volume-slider-view" class="d-none flex-column align-items-center">
@@ -98,8 +103,5 @@
     <script src="/frontend/pages/dashboard/dashboard.js"></script>
     <script src="/frontend/global/js/swipe-navigation.js"></script>
     <script src="/frontend/global/js/global.js"></script>
-
-
 </body>
-
 </html>
