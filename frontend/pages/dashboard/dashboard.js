@@ -50,11 +50,11 @@ function updateSessionIcon(src) {
 }
 
 /* Fetch and render audio sessions */
-async function fetchAudioSessions() {
+async function fetchAudioSessionsMetadata() {
   const container = document.getElementById('audio-session-controls');
   const sliderView = document.getElementById('volume-slider-view');
 
-  const response = await fetch(`http://${serverIP}/audio_sessions`);
+  const response = await fetch(`http://${serverIP}/audio_sessions_metadata`);
   const sessions = await response.json();
 
   const seenSessions = new Set();
@@ -63,7 +63,6 @@ async function fetchAudioSessions() {
     seenSessions.add(session.name);
 
     if (!sessionButtons.has(session.name)) {
-      // Create button if not exists
       const button = document.createElement('button');
       button.className = 'macro-btn';
 
@@ -72,27 +71,21 @@ async function fetchAudioSessions() {
       img.className = 'macro-icon';
       img.alt = session.name;
       img.title = session.name;
-      img.style.transform = 'scaleY(-1)'; // Because they are originally upside down
+      img.style.transform = 'scaleY(-1)';
 
       button.appendChild(img);
       container.appendChild(button);
 
       button.onclick = () => {
         currentSessionName = session.name;
-        updateSlider(session.volume);
+        updateSlider(0); // Placeholder, will be updated by volume fetch
         updateSessionIcon(img.src);
 
         container.classList.add('d-none');
-        sliderView.classList.remove('d-none');
+        document.getElementById('volume-slider-view').classList.remove('d-none');
       };
 
-      sessionButtons.set(session.name, { button, img, volume: session.volume });
-    } else {
-      // Update icon if changed
-      const entry = sessionButtons.get(session.name);
-      const newSrc = `data:image/png;base64,${session.icon}`;
-      if (entry.img.src !== newSrc) entry.img.src = newSrc;
-      entry.volume = session.volume;
+      sessionButtons.set(session.name, { button, img, volume: 0 });
     }
   });
 
@@ -119,6 +112,36 @@ async function fetchAudioSessions() {
   }
 }
 
+async function fetchAudioSessionVolumes() {
+  const response = await fetch(`http://${serverIP}/audio_sessions_volume`);
+  const volumes = await response.json();
+
+  let shouldFetchMetadata = false;
+
+  volumes.forEach(session => {
+    if (sessionButtons.has(session.name)) {
+      const entry = sessionButtons.get(session.name);
+      entry.volume = session.volume;
+
+      if (currentSessionName === session.name) {
+        updateSlider(session.volume);
+      }
+    } else {
+      // Found a new session we don’t have a button for
+      shouldFetchMetadata = true;
+    }
+  });
+
+  // If current session no longer exists, return to icon view
+  if (currentSessionName && !volumes.some(s => s.name === currentSessionName)) {
+    returnToIcons();
+  }
+
+  if (shouldFetchMetadata) {
+    fetchAudioSessionsMetadata();
+  }
+}
+
 document.getElementById('volume-slider').addEventListener('input', function () {
   if (!currentSessionName) return;
   const volume = this.value;
@@ -134,8 +157,10 @@ function returnToIcons() {
 }
 
 deviceReady = () => {
-  fetchAudioSessions();
-  setInterval(fetchAudioSessions, 5000); 
+  fetchAudioSessionsMetadata(); 
+  fetchAudioSessionVolumes(); 
+
+  setInterval(fetchAudioSessionVolumes, 5000);
 };
 
 window.addEventListener('DOMContentLoaded', deviceReady);
