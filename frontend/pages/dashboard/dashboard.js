@@ -72,13 +72,12 @@ async function fetchAudioSessionsMetadata() {
       img.alt = session.name;
       img.title = session.name;
       img.style.transform = 'scaleY(-1)';
-
       button.appendChild(img);
       container.appendChild(button);
 
       button.onclick = () => {
         currentSessionName = session.name;
-        updateSlider(0); // Placeholder, will be updated by volume fetch
+        updateSlider(session.volume); 
         updateSessionIcon(img.src);
 
         container.classList.add('d-none');
