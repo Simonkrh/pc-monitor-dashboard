@@ -45,7 +45,19 @@ async function fetchAudioSessionsMetadata() {
             img.title = session.name;
             img.style.transform = 'scaleY(-1)';
             button.appendChild(img);
-            container.appendChild(button);
+            
+            const buttonLabel = document.createElement('label');
+            buttonLabel.textContent = session.name;
+            
+            const wrapper = document.createElement('div');
+            wrapper.style.display = 'flex';
+            wrapper.style.flexDirection = 'column';
+            wrapper.style.alignItems = 'center';
+
+            wrapper.appendChild(button);
+            wrapper.appendChild(buttonLabel);
+
+            container.appendChild(wrapper);
 
             if (hiddenSessions.includes(session.pid)) {
                 button.classList.toggle('red-background');
