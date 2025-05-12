@@ -6,18 +6,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Settings</title>
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">  
   <link rel="stylesheet" href="/frontend/global/css/style.css" />
   <link rel="stylesheet" href="/frontend/pages/settings/settings.css" />
 </head>
 
 <body>
   <h1>Settings</h1>
+  
+  <div class="container mt-4">
+    <div class="row">
+      <!-- Navigation Section -->
+      <div class="col-md-6 mb-4">
+        <h2>Navigation</h2>
+        <div class="d-flex flex-column gap-2 align-items-start">
+          <button id="slideshowButton">Slideshow</button>
+          <button id="uploadButton">Upload Page</button>
+          <button id="">Create Macro</button>
+        </div>
+      </div>
 
+      <!-- Other Section -->
+      <div class="col-md-6 mb-4">
+        <h2>Other</h2>
+        <div class="d-flex flex-column gap-2 align-items-start">
+          <button id="">Log</button>
+        </div>
+      </div>
+    </div>
 
+    <!-- Toggle Audio Sessions Section -->
+    <div class="row sessions-section">
+      <div class="col-12">
+        <h2>Toggle Audio Sessions</h2>
+        <div id="audio-session-controls" class="d-flex flex-wrap gap-3"></div>
+      </div>
+    </div>
+  </div>
+  
   <script src="/frontend/config.js"></script>
   <script src="/frontend//global/js/global.js"></script>
   <script src="/frontend//global/js/swipe-navigation.js"></script>
-  <script src="/frontend/pages/settings/settings.css"></script>
+  <script src="/frontend/pages/settings/settings.js"></script>
 </body>
 
 </html>

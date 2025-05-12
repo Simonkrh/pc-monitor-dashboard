@@ -1,0 +1,38 @@
+body {
+    margin: 20px;
+}
+
+.main-section {
+    padding-left: 10px;
+}
+
+.sessions-section {
+    margin-top: 20px;
+}
+
+#audio-session-controls {
+    margin-top: 20px;
+}
+
+h2 {
+    color: #d3d3d3
+}
+
+button {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: #4e9ef3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+button:hover {
+    background-color: #357fd8;  
+}
+
+.red-background {
+    background-color: rgb(255, 95, 95) !important;
+}

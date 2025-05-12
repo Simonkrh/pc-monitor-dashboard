@@ -1,18 +1,17 @@
-const serverIP = `${CONFIG.MACRO_PC_IP}`;
+const macroServerIP = `${CONFIG.MACRO_PC_IP}`;
 
 let currentSessionName = null;
 const sessionButtons = new Map();
 
 
 async function postToServer(endpoint, payload) {
-  const url = `http://${serverIP}/${endpoint}`;
+  const url = `http://${macroServerIP}/${endpoint}`;
   try {
     await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    console.log(`Sent command to ${url}`, payload);
   } catch (error) {
     console.error(`Error sending to ${endpoint}:`, error);
   }
@@ -53,16 +52,22 @@ function updateSessionIcon(src) {
 async function fetchAudioSessionsMetadata() {
   const container = document.getElementById('audio-session-controls');
   const sliderView = document.getElementById('volume-slider-view');
-
-  const response = await fetch(`http://${serverIP}/audio_sessions_metadata`);
-  const sessions = await response.json();
-
   const seenSessions = new Set();
+
+  let sessions = [];
+
+  try {
+    const response = await fetch(`http://${macroServerIP}/audio_sessions_metadata`);
+    sessions = await response.json();
+  } catch (error) {
+    console.error("Failed to fetch sessions:", error);
+    return;
+  }
 
   sessions.forEach(session => {
     seenSessions.add(session.name);
 
-    if (!sessionButtons.has(session.name)) {
+    if (!sessionButtons.has(session.name) && !isSessionHidden(session.pid)) {
       const button = document.createElement('button');
       button.className = 'macro-btn';
 
@@ -111,8 +116,19 @@ async function fetchAudioSessionsMetadata() {
   }
 }
 
+function isSessionHidden(id) {
+  let isSessionHidden = false;
+  const ids = JSON.parse(localStorage.getItem('hiddenSessionIds'));
+  
+  if (ids != null && ids.includes(id)) {
+    isSessionHidden = true;
+  }
+  
+  return isSessionHidden;
+}
+
 async function fetchAudioSessionVolumes() {
-  const response = await fetch(`http://${serverIP}/audio_sessions_volume`);
+  const response = await fetch(`http://${macroServerIP}/audio_sessions_volume`);
   const volumes = await response.json();
 
   let shouldFetchMetadata = false;
@@ -126,7 +142,6 @@ async function fetchAudioSessionVolumes() {
         updateSlider(session.volume);
       }
     } else {
-      // Found a new session we don’t have a button for
       shouldFetchMetadata = true;
     }
   });
