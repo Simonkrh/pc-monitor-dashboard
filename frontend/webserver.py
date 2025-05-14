@@ -27,6 +27,11 @@ def dashboard():
 def upload():
     return send_from_directory(app.static_folder + "/pages/upload", "upload.html")
 
+@app.route("/createMacro")
+def createMacro():
+    return send_from_directory(app.static_folder + "/pages/createMacro", "createMacro.html")
+
+
 @app.route("/settings")
 def settings():
     return send_from_directory(app.static_folder + "/pages/settings", "settings.html")

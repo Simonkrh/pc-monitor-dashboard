@@ -252,7 +252,7 @@ def background_task():
                     }
 
                 except Exception as e:
-                    print("[WARNING] Network fetch failed:", str(e))
+                    print("[WARNING] Glances fetch failed:", str(e))
                     network_data = {**last_good_network_data, "error": True}
             else:
                 network_data = {**last_good_network_data, "cached": True}

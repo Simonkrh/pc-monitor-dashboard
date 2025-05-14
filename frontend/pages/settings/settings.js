@@ -5,6 +5,8 @@ const sessionButtons = new Map();
 document.addEventListener("DOMContentLoaded", () => {
     const slideshowBtn = document.getElementById("slideshowButton");
     const uploadBtn = document.getElementById("uploadButton");
+    const createMacroBtn = document.getElementById("createMacroButton");
+    
     
     slideshowBtn.addEventListener("click", () => {
         window.location.href = "/";
@@ -12,6 +14,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     uploadBtn.addEventListener("click", () => {
         window.location.href = "/upload";
+    });
+
+    createMacroBtn.addEventListener("click", () => {
+        window.location.href = "/createMacro";
     });
 
     fetchAudioSessionsMetadata()

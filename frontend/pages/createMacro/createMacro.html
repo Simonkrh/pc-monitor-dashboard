@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Macro</title>
+
+  <link rel="stylesheet" href="/frontend/pages/createMacro/createMacro.css" />
+</head>
+
+<body>
+  <h1>Create Macro</h1>
+
+  <form id="upload-form">
+    <!-- Upload icon -->
+    <label for="icon-upload">Upload Icon:</label>
+    <input type="file" id="icon-upload" accept="image/*" />
+
+    <!-- Select EXE path -->
+    <label for="exe-path">Select Executable:</label>
+    <input type="file" id="exe-path" accept=".exe" />
+  </form>
+
+  <div id="upload-status"></div>
+  
+  <button onclick="window.history.back()">Back</button>
+
+  <script src="/frontend/config.js"></script>
+  <script src="/frontend/pages/createMacro/createMacro.js"></script>
+</body>
+
+</html>
