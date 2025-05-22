@@ -23,7 +23,6 @@ body {
   padding: 6px 10px;
   cursor: pointer;
   font-size: 14px;
-  flex: 1 1 auto;
 }
 
 input[type="submit"],
@@ -46,3 +45,8 @@ button:hover {
 #upload-status {
   margin: 10px 0 30px;
 }
+
+.submit-wrapper {
+  margin-left: auto;
+}
+
