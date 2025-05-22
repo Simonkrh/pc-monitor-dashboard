@@ -10,7 +10,7 @@ body {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
+
     margin-bottom: 20px;
     background-color: #404049;
     padding: 16px 20px;
@@ -19,6 +19,12 @@ body {
 }
   
 /* File input */
+#upload-form label {
+  margin-left: 20px;
+  margin-right: 5px;
+  font-weight: 500;
+}
+
 #upload-form input[type="file"] {
   padding: 6px 10px;
   cursor: pointer;
@@ -49,4 +55,40 @@ button:hover {
 .submit-wrapper {
   margin-left: auto;
 }
+
+/* Macro buttons */
+#macro-grid-container {
+  display: grid;
+  justify-content: center;
+  align-content: center;
+  margin: 40px auto;
+  gap: 10px;
+}
+.macro-btn {
+  width: 100px;
+  height: 100px;
+  background-color: transparent;
+  padding: 0;
+  margin: 10px;
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.05s ease-in-out;
+  border: 2px solid rgba(61, 61, 61, 0.644);
+}
+
+.macro-btn:active {
+  transform: scale(1.1); 
+}
+
+.macro-icon {
+  width: 100px;
+  height: 100px;
+}
+
+.selected-macro {
+  border-color: #4e9ef3;
+  box-shadow: 0 0 5px #4e9ef3;
+}
+
 

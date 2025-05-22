@@ -32,6 +32,9 @@
     <label for="macro-value" id="macro-value-label">Executable Path:</label>
     <input type="text" id="macro-value" placeholder="C:\\Path\\To\\Spotify.exe" required />
 
+    <!-- Selected Position -->
+    <label id="selected-position-label">Selected Position: None</label>
+
     <div class="submit-wrapper">
       <button type="submit" id="submit-button">Submit</button>
     </div>
@@ -39,6 +42,8 @@
 
   <div id="upload-status"></div>
   
+  <div class="col-12 d-grid" id="macro-grid-container" style="max-width: 800px; gap: 10px; justify-content: center;"></div>
+
   <button onclick="window.history.back()">Back</button>
 
   <script src="/frontend/config.js"></script>

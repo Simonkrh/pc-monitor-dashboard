@@ -3,7 +3,7 @@ const macroServerIP = `${CONFIG.MACRO_PC_IP}`;
 let currentSessionName = null;
 const sessionButtons = new Map();
 
-async function fetchDashboardConfig() {
+async function fetchMacros() {
   try {
     const response = await fetch(`http://${macroServerIP}/macros`);
     const config = await response.json();
@@ -17,17 +17,24 @@ async function fetchDashboardConfig() {
 function renderMacroGrid(grid, macros) {
   const container = document.getElementById('macro-grid-container');
   container.style.gridTemplateColumns = `repeat(${grid.columns}, 1fr)`;
-  container.innerHTML = ''; // Clear any existing buttons
+  container.innerHTML = '';
 
   const totalSlots = grid.columns * grid.rows;
+
+  // Build a position map so we can place macros in the correct slots
+  const macroMap = {};
+  macros.forEach(macro => {
+    if (typeof macro.position === 'number') {
+      macroMap[macro.position] = macro;
+    }
+  });
 
   for (let i = 0; i < totalSlots; i++) {
     const button = document.createElement('button');
     button.className = 'macro-btn';
 
-    // If there's a macro for this slot
-    if (i < macros.length) {
-      const macro = macros[i];
+    if (macroMap[i]) {
+      const macro = macroMap[i];
       button.onclick = () => sendMacro(macro.macro);
 
       const img = document.createElement('img');
@@ -37,7 +44,6 @@ function renderMacroGrid(grid, macros) {
 
       button.appendChild(img);
     } else {
-      // Just show an empty button with no image
       button.classList.add('empty-macro');
     }
 
@@ -212,7 +218,7 @@ function returnToIcons() {
 }
 
 deviceReady = () => {
-  fetchDashboardConfig()
+  fetchMacros()
   fetchAudioSessionsMetadata(); 
   fetchAudioSessionVolumes(); 
 
