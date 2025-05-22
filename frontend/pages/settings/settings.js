@@ -65,13 +65,14 @@ async function fetchAudioSessionsMetadata() {
 
             container.appendChild(wrapper);
 
-            if (hiddenSessions.includes(session.pid)) {
+            if (hiddenSessions.includes(session.name)) {
                 button.classList.toggle('red-background');
             }
 
             button.onclick = () => {
+                console.log(session)
                 button.classList.toggle('red-background');
-                toggleIdToLocalStorage(session.pid)
+                toggleIdToLocalStorage(session.name)
             };
 
 

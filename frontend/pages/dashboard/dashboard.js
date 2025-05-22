@@ -67,7 +67,7 @@ async function fetchAudioSessionsMetadata() {
   sessions.forEach(session => {
     seenSessions.add(session.name);
 
-    if (!sessionButtons.has(session.name) && !isSessionHidden(session.pid)) {
+    if (!sessionButtons.has(session.name) && !isSessionHidden(session.name)) {
       const button = document.createElement('button');
       button.className = 'macro-btn';
 
