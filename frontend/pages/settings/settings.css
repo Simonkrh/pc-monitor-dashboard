@@ -29,6 +29,13 @@ button {
     transition: background-color 0.2s ease;
 }
 
+.button-row {
+  display: flex;
+  flex-direction: row; 
+  gap: 10px; 
+  align-items: center;
+}
+
 button:hover {
     background-color: #357fd8;  
 }

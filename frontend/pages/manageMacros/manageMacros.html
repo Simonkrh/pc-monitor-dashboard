@@ -16,6 +16,7 @@
     <button type="button" data-mode="create" class="mode-btn active">Create Macro</button>
     <button type="button" data-mode="move" class="mode-btn">Move Macro</button>
     <button type="button" data-mode="delete" class="mode-btn">Delete Macro</button>
+    <button type="button" data-mode="resize" class="mode-btn">Resize Grid</button>
   </div>
   <div id="mode-forms">
     <form class="form" id="upload-form" data-mode="create"> 
@@ -60,6 +61,18 @@
         <button type="submit" id="delete-submit-button">Submit</button>
       </div>
     </form>
+
+   <form class="form" id="resize-form" data-mode="resize" style="display: none;">
+    <div class="form-section">
+      <label for="resize-columns">Columns:</label>
+      <input type="number" id="resize-columns" min="1" required>
+
+      <label for="resize-rows">Rows:</label>
+      <input type="number" id="resize-rows" min="1" required>
+
+      <button type="submit" id="resize-submit-button">Submit</button>
+    </div>
+  </form>
   </div>
   <div id="upload-status"></div>
   

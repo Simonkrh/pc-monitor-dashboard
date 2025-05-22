@@ -173,12 +173,102 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.getElementById('resize-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const uploadStatus = document.getElementById('upload-status');
+
+    const columns = parseInt(document.getElementById('resize-columns').value, 10);
+    const rows = parseInt(document.getElementById('resize-rows').value, 10);
+
+    if (isNaN(columns) || isNaN(rows) || columns < 1 || rows < 1) {
+      uploadStatus.textContent = 'Grid size must be at least 1x1.';
+      return;
+    }
+
+    try {
+      // Fetch current macros to validate against new size
+      const response = await fetch(`http://${macroServerIP}/macros`);
+      const data = await response.json();
+
+      const maxSlots = columns * rows;
+      const tooManyMacros = data.macros.some(m => m.position >= maxSlots);
+
+      if (tooManyMacros) {
+        uploadStatus.textContent = `Resize would remove some macros. Move or delete them first.`;
+        return;
+      }
+
+      // Submit new grid size
+      const res = await fetch(`http://${macroServerIP}/resize_grid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ columns, rows })
+      });
+
+      if (res.ok) {
+        uploadStatus.textContent = 'Grid resized successfully.';
+        fetchMacros();
+      } else {
+        uploadStatus.textContent = 'Failed to resize grid.';
+      }
+    } catch (err) {
+      console.error(err);
+      uploadStatus.textContent = 'Error resizing grid.';
+    }
+  });
+
+  document.getElementById('resize-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const uploadStatus = document.getElementById('upload-status');
+
+    const columns = parseInt(document.getElementById('resize-columns').value, 10);
+    const rows = parseInt(document.getElementById('resize-rows').value, 10);
+
+    if (isNaN(columns) || isNaN(rows) || columns < 1 || rows < 1) {
+      uploadStatus.textContent = 'Grid size must be at least 1x1.';
+      return;
+    }
+
+    try {
+      // Fetch current macros to validate against new size
+      const response = await fetch(`http://${macroServerIP}/macros`);
+      const data = await response.json();
+
+      const maxSlots = columns * rows;
+      const tooManyMacros = data.macros.some(m => m.position >= maxSlots);
+
+      if (tooManyMacros) {
+        uploadStatus.textContent = `Resize would remove some macros. Move or delete them first.`;
+        return;
+      }
+
+      // Submit new grid size
+      const res = await fetch(`http://${macroServerIP}/resize_grid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ columns, rows })
+      });
+
+      if (res.ok) {
+        uploadStatus.textContent = 'Grid resized successfully.';
+        fetchMacros();
+      } else {
+        uploadStatus.textContent = 'Failed to resize grid.';
+      }
+    } catch (err) {
+      console.error(err);
+      uploadStatus.textContent = 'Error resizing grid.';
+    }
+  });
 });
 
 async function fetchMacros() {
   try {
     const response = await fetch(`http://${macroServerIP}/macros`);
     const config = await response.json();
+
+    document.getElementById('resize-columns').value = config.grid.columns;
+    document.getElementById('resize-rows').value = config.grid.rows;
 
     renderMacroGrid(config.grid, config.macros);
   } catch (err) {
@@ -289,7 +379,6 @@ function highlightDeleteSelection(position) {
     }
   });
 }
-
 
 function updateMoveFormLabel() {
   const label = document.getElementById('move-position-label');
