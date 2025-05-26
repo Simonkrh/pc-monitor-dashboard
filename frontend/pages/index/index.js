@@ -75,43 +75,44 @@ function startSlideshow() {
   function transitionToNext() {
     index = index + 1;
     if (index >= mediaFiles.length) {
-      mediaFiles = shuffleArray(mediaFiles); 
+      mediaFiles = shuffleArray(mediaFiles);
       index = 0;
     }
 
     nextSlide.classList.remove("slide-center", "slide-left");
     nextSlide.classList.add("slide-right");
-    
-    displayMedia(mediaFiles[index], nextSlide);
 
-    nextSlide.offsetHeight; 
+    // Wait for the media to load before doing the transition
+    displayMedia(mediaFiles[index], nextSlide, () => {
+      nextSlide.offsetHeight; 
 
-    // Slide nextSlide in from right -> center
-    nextSlide.classList.remove("slide-right");
-    nextSlide.classList.add("slide-center");
+      // Slide nextSlide in from right -> center
+      nextSlide.classList.remove("slide-right");
+      nextSlide.classList.add("slide-center");
 
-    // Slide currentSlide from center -> left
-    currentSlide.classList.remove("slide-center");
-    currentSlide.classList.add("slide-left");
+      // Slide currentSlide from center -> left
+      currentSlide.classList.remove("slide-center");
+      currentSlide.classList.add("slide-left");
 
-    setTimeout(() => {
-      currentSlide.style.transition = "none";
-      currentSlide.classList.remove("slide-left", "slide-center", "slide-right");
-      currentSlide.classList.add("slide-right");
-      currentSlide.innerHTML = ""; 
-      currentSlide.offsetHeight;    
-      currentSlide.style.transition = "";
+      // After animation completes (2s), reset and swap slides
+      setTimeout(() => {
+        currentSlide.style.transition = "none";
+        currentSlide.classList.remove("slide-left", "slide-center", "slide-right");
+        currentSlide.classList.add("slide-right");
+        currentSlide.innerHTML = ""; 
+        currentSlide.offsetHeight; 
+        currentSlide.style.transition = "";
 
-      // Swap references
-      [currentSlide, nextSlide] = [nextSlide, currentSlide];
+        // Swap slides
+        [currentSlide, nextSlide] = [nextSlide, currentSlide];
 
-      scheduleNextSlide();
-    }, 2000); 
+        scheduleNextSlide();
+      }, 2000);
+    });
   }
 
-  function displayMedia(fileName, container) {
+  function displayMedia(fileName, container, onLoaded) {
     container.innerHTML = "";
-
     const lower = fileName.toLowerCase();
     const isVideo = lower.endsWith(".mp4") || lower.endsWith(".webm");
 
@@ -120,17 +121,26 @@ function startSlideshow() {
       video.src = `http://${serverIP}/slideshow/uploads/${fileName}`;
       video.autoplay = true;
       video.muted = true;
-      video.playsInline = true; 
-  
+      video.playsInline = true;
+
+      video.onloadeddata = () => {
+        container.appendChild(video);
+        if (onLoaded) onLoaded();
+      };
+
+      video.onerror = () => console.error(`Failed to load video: ${fileName}`);
+
       video.addEventListener("ended", () => {
         transitionToNext();
       });
-
-      container.appendChild(video);
     } else {
       const img = document.createElement("img");
       img.src = `http://${serverIP}/slideshow/uploads/${fileName}`;
-      container.appendChild(img);
+      img.onload = () => {
+        container.appendChild(img);
+        if (onLoaded) onLoaded();
+      };
+      img.onerror = () => console.error(`Failed to load image: ${fileName}`);
     }
   }
 }
