@@ -126,25 +126,60 @@ function startSlideshow() {
       video.autoplay = true;
       video.muted = true;
       video.playsInline = true;
+      video.loop = false;
+
+      container.appendChild(video);
+
+      let hasStarted = false;
+      video.onplaying = () => {
+        hasStarted = true;
+        if (fallbackTimeout) clearTimeout(fallbackTimeout);
+      };
+
+      let fallbackTimeout = null;
+
+      video.onloadedmetadata = () => {
+        fallbackTimeout = setTimeout(() => {
+          if (!hasStarted) {
+            console.warn(`Video "${fileName}" didn't start playing — skipping...`);
+            transitionToNext();
+          }
+        }, 5000);
+      };
 
       video.onloadeddata = () => {
-        container.appendChild(video);
         if (onLoaded) onLoaded();
       };
 
-      video.onerror = () => console.error(`Failed to load video: ${fileName}`);
+      video.onerror = () => {
+        console.error(`Failed to load video: ${fileName}`);
+        if (fallbackTimeout) clearTimeout(fallbackTimeout);
+        transitionToNext(); 
+      };
 
       video.addEventListener("ended", () => {
+        if (fallbackTimeout) clearTimeout(fallbackTimeout);
         transitionToNext();
       });
+
+      video.play().catch(err => {
+        console.error("Autoplay failed:", err);
+        if (fallbackTimeout) clearTimeout(fallbackTimeout);
+        transitionToNext();
+      });
+
     } else {
       const img = document.createElement("img");
       img.src = `http://${serverIP}/slideshow/uploads/${fileName}`;
+      container.appendChild(img);
+
       img.onload = () => {
-        container.appendChild(img);
         if (onLoaded) onLoaded();
       };
-      img.onerror = () => console.error(`Failed to load image: ${fileName}`);
+      img.onerror = () => {
+        console.error(`Failed to load image: ${fileName}`);
+        transitionToNext();
+      };
     }
   }
 }
