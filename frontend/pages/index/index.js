@@ -62,14 +62,18 @@ function startSlideshow() {
   let currentSlide = slide1;
   let nextSlide = slide2;
 
-  displayMedia(mediaFiles[index], currentSlide);
-  scheduleNextSlide();
+  displayMedia(mediaFiles[index], currentSlide, () => {
+    scheduleNextSlide(); // Only schedule once image or video is visible
+  });
 
   function scheduleNextSlide() {
     const currentMedia = currentSlide.querySelector("img, video");
-    if (currentMedia && currentMedia.tagName.toLowerCase() === "img") {
+    if (!currentMedia) return;
+
+    if (currentMedia.tagName.toLowerCase() === "img") {
       setTimeout(() => transitionToNext(), 7000);
     }
+    // Videos already handle `ended` event
   }
 
   function transitionToNext() {
