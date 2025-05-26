@@ -16,12 +16,13 @@ async function fetchMacros() {
 
 function renderMacroGrid(grid, macros) {
   const container = document.getElementById('macro-grid-container');
-  container.style.gridTemplateColumns = `repeat(${grid.columns}, 1fr)`;
+
+  container.style.setProperty('--grid-columns', grid.columns);
+  container.style.setProperty('--grid-rows', grid.rows);
+
   container.innerHTML = '';
 
   const totalSlots = grid.columns * grid.rows;
-
-  // Build a position map so we can place macros in the correct slots
   const macroMap = {};
   macros.forEach(macro => {
     if (typeof macro.position === 'number') {
