@@ -1,10 +1,28 @@
 const SERVER_IP = `http://${CONFIG.SERVER_PC_IP}/monitoring`;
 
 let offlineCounter = 0;
+let lastSuccessfulPing = Date.now();
+let isChecking = false;
+
+async function fetchWithTimeout(resource, options = {}, timeout = 5000) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+        const response = await fetch(resource, {
+            ...options,
+            signal: controller.signal
+        });
+        return response;
+    } finally {
+        clearTimeout(id);
+    }
+}
 
 async function checkPCStatus() {
+    if (isChecking) return;
+    isChecking = true;
     try {
-        const statsRes = await fetch(`${SERVER_IP}/stats`, { method: "GET", cache: "no-store" });
+        const statsRes = await fetchWithTimeout(`${SERVER_IP}/stats`, { method: "GET", cache: "no-store" }, 8000);
 
         if (statsRes.ok) {
             const data = await statsRes.json();
@@ -15,6 +33,7 @@ async function checkPCStatus() {
             }
 
             offlineCounter = 0;
+            lastSuccessfulPing = Date.now();
             return;
         } else {
             console.warn("[checkPCStatus] /stats responded with non-OK status");
@@ -24,7 +43,7 @@ async function checkPCStatus() {
         console.warn("[checkPCStatus] /stats failed, trying /ping...", statsErr);
 
         try {
-            const pingRes = await fetch(`${SERVER_IP}/ping`, { method: "GET", cache: "no-store" });
+            const pingRes = await fetchWithTimeout(`${SERVER_IP}/ping`, { method: "GET", cache: "no-store" }, 8000);
 
             if (pingRes.ok) {
                 const data = await pingRes.json();
@@ -33,6 +52,7 @@ async function checkPCStatus() {
                     console.warn(`[checkPCStatus] /ping says offline. Offline count = ${offlineCounter}`);
                 } else {
                     offlineCounter = 0;
+                    lastSuccessfulPing = Date.now();
                     return;
                 }
             } else {
@@ -43,12 +63,14 @@ async function checkPCStatus() {
             console.error("[checkPCStatus] Error calling /ping:", pingErr);
             offlineCounter++;
         }
-
-        // If 2+ failures in a row, redirect
-        if (offlineCounter >= 2) {
+        
+        const timeSinceLastSuccess = Date.now() - lastSuccessfulPing;
+        if (offlineCounter >= 3 && timeSinceLastSuccess > 90000) {
             console.warn("[checkPCStatus] PC seems down. Redirecting to /.");
             window.location.href = "/";
         }
+    } finally {
+        isChecking = false;
     }
 }
 
