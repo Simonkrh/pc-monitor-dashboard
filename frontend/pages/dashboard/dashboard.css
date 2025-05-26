@@ -21,6 +21,9 @@
 }
 
 .macro-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100px;
   height: 100px;
   background-color: transparent;
@@ -38,9 +41,11 @@
 }
 
 .macro-icon {
-  width: 100px;
-  height: 100px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
+
 
 /* Volume */
 #audio-session-controls {

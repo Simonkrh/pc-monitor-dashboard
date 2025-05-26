@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     macroValueLabel.textContent = macroType.value === 'switch_account'
       ? 'Steam ID:' : 'Executable Path:';
     macroValueInput.placeholder = macroType.value === 'switch_account'
-      ? 'e.g. 76561198197834043' : 'C:\\Path\\To\\App.exe';
+      ? 'e.g. 76561198197834043' : 'C:\Path\To\App.exe';
   });
 
   form.addEventListener('submit', async (e) => {
@@ -54,7 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const label = document.getElementById('macro-label').value.trim();
     const iconFile = document.getElementById('icon-upload').files[0];
     const macroTypeValue = macroType.value;
-    const macroValue = macroValueInput.value.trim();
+    let macroValue = macroValueInput.value.trim();
+
 
     if (!label || !iconFile || !macroValue) {
       uploadStatus.textContent = 'All fields are required.';
