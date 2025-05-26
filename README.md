@@ -37,6 +37,7 @@ const CONFIG = {
 ## How to Use 
 1. **Start Open Hardware Monitor** Launch `OpenHardwareMonitor.exe` on the PC you want to monitor (must match `MONITORED_PC_IP`). Then go to **Options > Remote Web Server > Run** to start the OHM web server
 2. **Start Glances** On the same monitored PC, run: ```bash glances -w ```
-3. **Start the backend server**: On the dashboard pc, run: ```bash python backend/app.py ``` 
-4. **Start the frontend web server**: On the same machine: ```bash python frontend/webserver.py ``` 
-5. **Start the [Macro Server](https://github.com/Simonkrh/pc-macro-server)**: - This is required for macro buttons and volume control to function. Run it on the PC where macros should be triggered
+3. **Install requirments**: On the dashboard pc, run ```pip install -r requirements.txt```
+4. **Start the backend server**: On the same pc, run: ```bash python backend/app.py ``` 
+5. **Start the frontend web server**: On the same pc, run: ```bash python frontend/webserver.py ``` 
+6. **Start the [Macro Server](https://github.com/Simonkrh/pc-macro-server)**: This is required for macro buttons and volume control to function. Run it on the PC where macros should be triggered
