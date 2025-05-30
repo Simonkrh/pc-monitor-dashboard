@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     fetchAudioSessionsMetadata()
+    setupDefaultPageButtons();
 });
 
 async function fetchAudioSessionsMetadata() {
@@ -101,4 +102,40 @@ function toggleIdToLocalStorage(id) {
     }
 
     localStorage.setItem('hiddenSessionIds', JSON.stringify(updated));
+}
+
+function setupDefaultPageButtons() {
+    const buttons = {
+        dashboard: document.getElementById("defaultDashboard"),
+        spotify: document.getElementById("defaultSpotify"),
+        resources: document.getElementById("defaultResources")
+    };
+
+    const defaultPage = localStorage.getItem("defaultPage") || "/dashboard";
+    highlightSelected(defaultPage);
+
+    buttons.dashboard.addEventListener("click", () => {
+        localStorage.setItem("defaultPage", "/dashboard");
+        highlightSelected("/dashboard");
+    });
+
+    buttons.spotify.addEventListener("click", () => {
+        localStorage.setItem("defaultPage", "/spotify");
+        highlightSelected("/spotify");
+    });
+
+    buttons.resources.addEventListener("click", () => {
+        localStorage.setItem("defaultPage", "/resources");
+        highlightSelected("/resources");
+    });
+
+    function highlightSelected(selected) {
+    Object.entries(buttons).forEach(([key, btn]) => {
+        btn.classList.remove("btn-default-selected");
+        if (`/${key}` === selected) {
+            btn.classList.add("btn-default-selected");
+        }
+    });
+}
+
 }

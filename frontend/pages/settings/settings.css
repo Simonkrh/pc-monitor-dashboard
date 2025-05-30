@@ -43,3 +43,7 @@ button:hover {
 .red-background {
     background-color: rgb(255, 95, 95) !important;
 }
+
+.btn-default-selected {
+  background-color: rgb(40, 170, 80) !important; 
+}
