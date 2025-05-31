@@ -10,7 +10,24 @@ This project sets up a PC monitoring dashboard using:
 - **[Glances](https://github.com/nicolargo/glances/releases/tag/v4.3.0.8)** to collect network stats
 - **[Macro Server](https://github.com/Simonkrh/pc-macro-server)** to launch applications, switch accounts with [TcNo Account Switcher](https://github.com/TCNOco/TcNo-Acc-Switcher/releases/tag/2024-08-30_01), and volume control
 - **[Spotify Integration](https://developer.spotify.com/documentation/web-api)** to display and control songs and playlists
-  
+
+### Showcase
+<div align="center">
+  <img src="images/Dashboard.png" alt="Pager View 1" width="45%" style="margin: 0 1%"/>
+  <img src="images/Resources.png" alt="Pager View 2" width="45%" style="margin: 0 1%"/>
+</div>
+
+<div align="center">
+  <em>Main dashboard and resource page.</em>
+</div>
+
+<br/>
+
+<p align="center">
+  <img src="images/Spotify.png" alt="Pager View 3" width="400"/><br/>
+  <em>Spotify page.</em>
+</p>
+
 ## Configs
 ### Set Up the Required .env File
 Create a `.env` file in the **root folder** with the following structure:
