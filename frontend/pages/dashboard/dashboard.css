@@ -25,11 +25,11 @@
 
 
 .top-section {
-  flex-grow:     1;
-  display:       flex;
+  flex-grow: 1;
+  display: flex;
   justify-content: center;
-  align-items:     center;
-  padding:        1rem;
+  align-items: center;
+  padding: 1rem;
 }
 
 .macro-btn {

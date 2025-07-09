@@ -47,3 +47,7 @@ button:hover {
 .btn-default-selected {
   background-color: rgb(40, 170, 80) !important; 
 }
+
+.btn-primary {
+  background-color: rgb(40, 170, 80) !important; 
+}
