@@ -39,8 +39,9 @@ socket.on("update_stats", (data) => {
     }
 
     updateDiskBar("disk-c-bar", data.disk_c_usage);
-    updateDiskBar("disk-f-bar", data.disk_f_usage);
     updateDiskBar("disk-d-bar", data.disk_d_usage);
+    updateDiskBar("disk-e-bar", data.disk_e_usage);
+    updateDiskBar("disk-f-bar", data.disk_f_usage);
 
     // Network Speed Conversion (Auto-switch between KB/s & Mbps)
     function formatSpeed(speedKBs) {
