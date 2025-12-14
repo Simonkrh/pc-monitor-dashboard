@@ -42,20 +42,6 @@ socket.on("update_stats", (data) => {
     updateDiskBar("disk-d-bar", data.disk_d_usage);
     updateDiskBar("disk-e-bar", data.disk_e_usage);
     updateDiskBar("disk-f-bar", data.disk_f_usage);
-
-    // Network Speed Conversion (Auto-switch between KB/s & Mbps)
-    function formatSpeed(speedKBs) {
-        const speedMbps = (speedKBs * 8) / 1024; // Convert KB/s to Mbps
-        return speedMbps >= 1
-            ? `${speedMbps.toFixed(1)} Mbps`
-            : `${speedKBs.toFixed(1)} KB/s`;
-    }
-
-    const downloadSpeedKBs = (parseFloat(data.network_download) || 0) / 1024;
-    const uploadSpeedKBs = (parseFloat(data.network_upload) || 0) / 1024;
-
-    document.getElementById("network-download").textContent = formatSpeed(downloadSpeedKBs);
-    document.getElementById("network-upload").textContent = formatSpeed(uploadSpeedKBs);
 });
 
 socket.on("connect_error", (error) => {
