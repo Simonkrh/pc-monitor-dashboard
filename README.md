@@ -31,15 +31,29 @@ This project sets up a PC monitoring dashboard using:
 ### Set Up the Required .env File
 Create a `.env` file in the **root folder** with the following structure:
 ```
-MONITORED_PC_IP=""  # The PC being monitored (OHM) - in my case, the Gaming PC
-SERVER_PC_IP=""      # The PC running the backend server - in my case, the Raspberry Pi
+# IP address of the PC being monitored (running Open Hardware Monitor)
+MONITORED_PC_IP="xxx.xxx.xxx.xxx"
 
-# From "https://developer.spotify.com/"
-SPOTIFY_CLIENT_ID="" 
-SPOTIFY_CLIENT_SECRET=""
-SPOTIFY_REFRESH_TOKEN=""
+# MAC address of the monitored PC (used for Wake-on-LAN)
+MONITORED_PC_MAC="AA:BB:CC:DD:EE:FF"
 
-UPLOAD_FOLDER="" # The folder where images are uploaded to (for slideshow)
+# IP address of the machine running this backend server
+# For example the Raspberry Pi
+SERVER_PC_IP="xxx.xxx.xxx.xxx"
+
+# Spotify API credentials
+# Get these from https://developer.spotify.com/dashboard
+
+SPOTIFY_CLIENT_ID="your_spotify_client_id_here"
+SPOTIFY_CLIENT_SECRET="your_spotify_client_secret_here"
+SPOTIFY_REFRESH_TOKEN="your_spotify_refresh_token_here"
+
+# Absolute path to where uploaded images are stored (for slideshow)
+UPLOAD_FOLDER="/absolute/path/to/upload/folder"
+
+# Comma-separated list of Open Hardware Monitor disk names
+# Must match the OHM name field exactly
+MONITORED_DISKS="SSD M2 (C:),SSD M2 (D:),SSD Sata (E:),HDD (F:)"
 ```
 
 ### Configuring `config.js`
