@@ -7,6 +7,37 @@ const socket = io(`http://${serverIP}`, {
     timeout: 20000
 });
 
+// Disks
+function renderDisks(disks) {
+    const container = document.getElementById("disk-stats");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (!disks || Object.keys(disks).length === 0) {
+        container.innerHTML = "<p>No disks configured</p>";
+        return;
+    }
+
+    for (const [name, value] of Object.entries(disks)) {
+        const percent = Math.max(0, Math.min(100, Number(value) || 0));
+
+        const label = document.createElement("p");
+        label.textContent = name;
+
+        const progress = document.createElement("div");
+        progress.className = "progress";
+
+        const bar = document.createElement("div");
+        bar.className = "progress-bar";
+        bar.style.width = `${percent}%`;
+        bar.textContent = `${percent.toFixed(1)}%`;
+
+        progress.appendChild(bar);
+        container.appendChild(label);
+        container.appendChild(progress);
+    }
+}
 
 socket.on("update_stats", (data) => {
     // CPU
@@ -28,20 +59,7 @@ socket.on("update_stats", (data) => {
     document.getElementById("ram-gauge").style.setProperty("--value", `${(ramPercent / 100) * 360}deg`);
     document.getElementById("ram-gauge-text").textContent = Math.round(ramPercent);
 
-    // Disks
-    function updateDiskBar(diskId, value) {
-        const diskElement = document.getElementById(diskId);
-        if (diskElement) {
-            const percent = parseFloat(value) || 0;
-            diskElement.style.width = percent + "%";
-            diskElement.textContent = percent.toFixed(1) + "%";
-        }
-    }
-
-    updateDiskBar("disk-c-bar", data.disk_c_usage);
-    updateDiskBar("disk-d-bar", data.disk_d_usage);
-    updateDiskBar("disk-e-bar", data.disk_e_usage);
-    updateDiskBar("disk-f-bar", data.disk_f_usage);
+    renderDisks(data.disks);
 });
 
 socket.on("connect_error", (error) => {
