@@ -2,6 +2,7 @@ const macroServerIP = `${CONFIG.MACRO_PC_IP}`;
 
 let currentSessionName = null;
 const sessionButtons = new Map();
+let volumePollTimer = null;
 
 async function fetchMacros() {
   try {
@@ -128,16 +129,21 @@ async function fetchAudioSessionsMetadata() {
       button.appendChild(img);
       container.appendChild(button);
 
-      button.onclick = () => {
+      button.onclick = async () => {
         currentSessionName = session.name;
-        updateSlider(session.volume); 
+
+        await fetchAudioSessionVolumes();
+
+        updateSlider(sessionButtons.get(session.name)?.volume ?? session.volume);
         updateSessionIcon(img.src);
+
+        startFastPolling();
 
         container.classList.add('d-none');
         document.getElementById('volume-slider-view').classList.remove('d-none');
       };
 
-      sessionButtons.set(session.name, { button, img, volume: 0 });
+      sessionButtons.set(session.name, { button, img, volume: session.volume });
     }
   });
 
@@ -151,11 +157,10 @@ async function fetchAudioSessionsMetadata() {
   }
 
   if (currentSessionName) {
-    const session = sessions.find(s => s.name === currentSessionName);
-    if (session) {
-      updateSlider(session.volume);
+    const entry = sessionButtons.get(currentSessionName);
+    if (entry) {
+      updateSlider(entry.volume);
     } else {
-      // Session ended, return to icons
       returnToIcons();
     }
   } else {
@@ -212,18 +217,31 @@ document.getElementById('volume-slider').addEventListener('input', function () {
   postToServer('set_app_volume', { app_name: currentSessionName, volume });
 });
 
+function startFastPolling() {
+  stopFastPolling();
+  volumePollTimer = setInterval(fetchAudioSessionVolumes, 400);
+}
+
+function stopFastPolling() {
+  if (volumePollTimer) clearInterval(volumePollTimer);
+  volumePollTimer = null;
+}
+
 function returnToIcons() {
+  stopFastPolling();
   currentSessionName = null;
   document.getElementById('volume-slider-view').classList.add('d-none');
   document.getElementById('audio-session-controls').classList.remove('d-none');
 }
 
-deviceReady = () => {
-  fetchMacros()
-  fetchAudioSessionsMetadata(); 
-  fetchAudioSessionVolumes(); 
+deviceReady = async () => {
+  await fetchMacros();
+  await fetchAudioSessionsMetadata();
+  await fetchAudioSessionVolumes();
 
-  setInterval(fetchAudioSessionVolumes, 5000);
+  setInterval(() => {
+    if (!currentSessionName) fetchAudioSessionVolumes();
+  }, 5000);
 };
 
 window.addEventListener('DOMContentLoaded', deviceReady);
