@@ -228,7 +228,9 @@ function wakeAndRedirect() {
     })
     .catch(error => {
       console.error("Failed to send WoL request:", error);
-      window.location.href = "/resources";
+      const defaultPage = localStorage.getItem("defaultPage") || "/dashboard";
+      window.location.href = defaultPage;
+
     });
 }
 
@@ -236,6 +238,7 @@ function waitForOpenHardwareMonitor() {
   let attempts = 0;
   const maxAttempts = 30;
   const checkInterval = 3000;
+  const defaultPage = localStorage.getItem("defaultPage") || "/dashboard";
 
   const checkStatus = () => {
     fetch(`http://${serverIP}/monitoring/stats`)
@@ -243,7 +246,8 @@ function waitForOpenHardwareMonitor() {
       .then(data => {
         if (data.cpu_usage && data.cpu_temp) {
           console.log("Open Hardware Monitor is responding!");
-          window.location.href = "/resources";
+          window.location.href = defaultPage;
+
         } else {
           throw new Error("Invalid data received");
         }
@@ -255,7 +259,7 @@ function waitForOpenHardwareMonitor() {
           setTimeout(checkStatus, checkInterval);
         } else {
           console.log("Timed out waiting for Open Hardware Monitor, redirecting anyway.");
-          window.location.href = "/resources";
+          window.location.href = defaultPage;
         }
       });
   };

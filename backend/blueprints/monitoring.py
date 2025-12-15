@@ -1,4 +1,5 @@
 import eventlet
+
 eventlet.monkey_patch()
 from flask import Blueprint, jsonify
 from dotenv import load_dotenv
@@ -28,8 +29,6 @@ socketio = None
 
 last_stats = {}
 
-last_good_network_data = {"download_speed": 0, "upload_speed": 0}
-
 
 def sanitize_ohm_value(value_str):
     """
@@ -57,32 +56,6 @@ def fetch_ohm_data():
     try:
         response = http.request("GET", OHM_API_URL, timeout=1.0)
         return json.loads(response.data.decode("utf-8"))
-    except Exception as e:
-        return {"error": str(e)}
-
-
-def fetch_network_data():
-    """Fetch network data from the local API."""
-    try:
-        response = http.request("GET", NETWORK_API_URL, timeout=2.0)
-        network_data = json.loads(response.data.decode("utf-8"))
-
-        ethernet = next(
-            (
-                iface
-                for iface in network_data
-                if iface.get("interface_name") == "Ethernet"
-            ),
-            None,
-        )
-
-        if ethernet:
-            return {
-                "download_speed": ethernet.get("bytes_recv_rate_per_sec", 0),
-                "upload_speed": ethernet.get("bytes_sent_rate_per_sec", 0),
-            }
-
-        return {"download_speed": 0, "upload_speed": 0}
     except Exception as e:
         return {"error": str(e)}
 
@@ -220,7 +193,6 @@ def background_task():
     Continuously fetch data and send updates via WebSockets.
     """
     global last_stats
-    last_good_network_data = {"download_speed": 0, "upload_speed": 0}
 
     loop_counter = 0
 
@@ -239,24 +211,6 @@ def background_task():
                 time.sleep(1)
                 continue
 
-            # Fetch Glances only every Nth loop
-            if loop_counter % FETCH_NETWORK_EVERY_N_LOOPS == 0:
-                try:
-                    network_data = fetch_network_data()
-                    if "error" in network_data:
-                        raise Exception(network_data["error"])
-
-                    last_good_network_data = {
-                        "download_speed": network_data.get("download_speed", 0),
-                        "upload_speed": network_data.get("upload_speed", 0),
-                    }
-
-                except Exception as e:
-                    print("[WARNING] Glances fetch failed:", str(e))
-                    network_data = {**last_good_network_data, "error": True}
-            else:
-                network_data = {**last_good_network_data, "cached": True}
-
             # Extract + sanitize values
             raw_cpu_usage = extract_sensor_value(ohm_data, "CPU Total", "Load")
             raw_cpu_temp = extract_sensor_value(ohm_data, "CPU Package", "Temperatures")
@@ -266,8 +220,9 @@ def background_task():
             raw_gpu_power = extract_sensor_value(ohm_data, "GPU Power", "Powers")
             raw_ram_usage = extract_sensor_value(ohm_data, "Used Memory", "Data")
             raw_disk_c_usage = get_disk_used_space(ohm_data, "SSD M2 (C:)")
-            raw_disk_d_usage = get_disk_used_space(ohm_data, "SSD Sata (D:)")
-            raw_disk_f_usage = get_disk_used_space(ohm_data, "SSD M2 (F:)")
+            raw_disk_d_usage = get_disk_used_space(ohm_data, "SSD M2 (D:)")
+            raw_disk_e_usage = get_disk_used_space(ohm_data, "SSD Sata (E:)")
+            raw_disk_f_usage = get_disk_used_space(ohm_data, "HDD (F:)")
 
             stats = {
                 "cpu_usage": sanitize_ohm_value(raw_cpu_usage),
@@ -279,10 +234,8 @@ def background_task():
                 "ram_usage_gb": sanitize_ohm_value(raw_ram_usage),
                 "disk_c_usage": sanitize_ohm_value(raw_disk_c_usage),
                 "disk_d_usage": sanitize_ohm_value(raw_disk_d_usage),
+                "disk_e_usage": sanitize_ohm_value(raw_disk_e_usage),
                 "disk_f_usage": sanitize_ohm_value(raw_disk_f_usage),
-                "network_download": network_data.get("download_speed", 0),
-                "network_upload": network_data.get("upload_speed", 0),
-                "network_status": "offline" if "error" in network_data else "online",
             }
 
             socketio.emit("update_stats", stats)

@@ -1,0 +1,13 @@
+Flask
+Flask-Cors
+Flask-SocketIO
+eventlet
+python-dotenv
+pyautogui
+comtypes
+pycaw
+Pillow
+pywin32
+wakeonlan
+urllib3
+requests
