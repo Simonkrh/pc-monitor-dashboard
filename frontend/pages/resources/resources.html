@@ -52,25 +52,11 @@
           </div>
         </div>
       </div>
+
       <div class="col-md-6">
         <div class="section-container disk-network-container">
-          <div class="disk-stats">
-            <p>SSD M2 (C:)</p>
-            <div class="progress">
-              <div id="disk-c-bar" class="progress-bar" role="progressbar"></div>
-            </div>
-            <p>SSD M2 (D:)</p>
-            <div class="progress">
-              <div id="disk-d-bar" class="progress-bar" role="progressbar"></div>
-            </div>
-            <p>SSD Sata (E:)</p>
-            <div class="progress">
-              <div id="disk-e-bar" class="progress-bar" role="progressbar"></div>
-            </div>
-             <p>HDD (F:)</p>
-            <div class="progress">
-              <div id="disk-f-bar" class="progress-bar" role="progressbar"></div>
-            </div>
+          <div class="disk-stats" id="disk-stats">
+            <p>Loading disks...</p>
           </div>
         </div>
       </div>
@@ -84,7 +70,6 @@
         </div>
       </div>
     </div>
-  </div>
   </div>
 
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>

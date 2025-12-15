@@ -20,7 +20,9 @@ MONITORED_PC_IP = os.getenv("MONITORED_PC_IP")
 MONITORED_PC_MAC = os.getenv("MONITORED_PC_MAC")
 
 OHM_API_URL = f"http://{MONITORED_PC_IP}:8085/data.json"
-NETWORK_API_URL = f"http://{MONITORED_PC_IP}:61208/api/4/network"
+
+RAW_MONITORED_DISKS = os.getenv("MONITORED_DISKS", "")
+MONITORED_DISKS = [d.strip() for d in RAW_MONITORED_DISKS.split(",") if d.strip()]
 
 UPDATE_INTERVAL = 1
 FETCH_NETWORK_EVERY_N_LOOPS = 3
@@ -219,10 +221,11 @@ def background_task():
             raw_gpu_temp = extract_sensor_value(ohm_data, "GPU Core", "Temperatures")
             raw_gpu_power = extract_sensor_value(ohm_data, "GPU Power", "Powers")
             raw_ram_usage = extract_sensor_value(ohm_data, "Used Memory", "Data")
-            raw_disk_c_usage = get_disk_used_space(ohm_data, "SSD M2 (C:)")
-            raw_disk_d_usage = get_disk_used_space(ohm_data, "SSD M2 (D:)")
-            raw_disk_e_usage = get_disk_used_space(ohm_data, "SSD Sata (E:)")
-            raw_disk_f_usage = get_disk_used_space(ohm_data, "HDD (F:)")
+
+            disk_stats = {}
+            for disk_name in MONITORED_DISKS:
+                raw_value = get_disk_used_space(ohm_data, disk_name)
+                disk_stats[disk_name] = sanitize_ohm_value(raw_value)
 
             stats = {
                 "cpu_usage": sanitize_ohm_value(raw_cpu_usage),
@@ -232,10 +235,7 @@ def background_task():
                 "gpu_temp": sanitize_ohm_value(raw_gpu_temp),
                 "gpu_power": sanitize_ohm_value(raw_gpu_power),
                 "ram_usage_gb": sanitize_ohm_value(raw_ram_usage),
-                "disk_c_usage": sanitize_ohm_value(raw_disk_c_usage),
-                "disk_d_usage": sanitize_ohm_value(raw_disk_d_usage),
-                "disk_e_usage": sanitize_ohm_value(raw_disk_e_usage),
-                "disk_f_usage": sanitize_ohm_value(raw_disk_f_usage),
+                "disks": disk_stats,
             }
 
             socketio.emit("update_stats", stats)
