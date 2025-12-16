@@ -40,17 +40,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const macroValueLabel = document.getElementById('macro-value-label');
   const uploadStatus = document.getElementById('upload-status');
 
+  const help = document.getElementById('macro-value-help');
+
   // Change label depending on macro type
   macroType.addEventListener('change', () => {
     if (macroType.value === 'switch_account') {
       macroValueLabel.textContent = 'Steam ID:';
       macroValueInput.placeholder = 'e.g. 76561198197834043';
+      help.style.display = 'none';
+      help.innerHTML = '';
     } else if (macroType.value === 'type_text') {
       macroValueLabel.textContent = 'Text to type:';
       macroValueInput.placeholder = 'e.g. Hello, World!';
+
+      help.style.display = 'block';
+      help.innerHTML = `
+        (Use <code>&lt;enter&gt;</code> to press Enter, and <code>&lt;wait:2000&gt;</code> to wait 2 seconds.
+        Example: <code>hello&lt;enter&gt;&lt;wait:2000&gt;world</code>)
+      `;
     } else {
       macroValueLabel.textContent = 'Executable Path:';
       macroValueInput.placeholder = 'C:\\Path\\To\\App.exe';
+      help.style.display = 'none';
+      help.innerHTML = '';
     }
   });
 
