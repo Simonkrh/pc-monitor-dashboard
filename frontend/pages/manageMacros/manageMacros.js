@@ -3,44 +3,87 @@ let selectedPosition = null;
 let moveFrom = null;
 let moveTo = null;
 
-const modeButtons = document.querySelectorAll('.mode-btn');
-const allForms = document.querySelectorAll('#mode-forms form');
+let jsonEditor;
+let uploadStatus;
 
-modeButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    const mode = button.dataset.mode;
-    
-    if (mode === "json") loadJsonEditor();
-    
-    // Clear selections
-    selectedPosition = null;
-    highlightSelectedPosition(null); 
-    moveFrom = null;
-    moveTo = null;
-    highlightMoveSelection();
-    highlightDeleteSelection(null);
-    updateMoveFormLabel();
+async function loadJsonEditor() {
+    uploadStatus.textContent = "Loading macros.json...";
+    const res = await fetch(`http://${macroServerIP}/macros`);
+    if (!res.ok) {
+      uploadStatus.textContent = "Failed to load macros.json";
+      return;
+    }
+    const data = await res.json();
+    jsonEditor.value = JSON.stringify(data, null, 2);
+    uploadStatus.textContent = "Loaded macros.json";
+  }
 
-    // Highlight selected button
-    modeButtons.forEach(btn => btn.classList.remove('active'));
-    button.classList.add('active');
+  function validateConfigClient(cfg) {
+    if (!cfg || typeof cfg !== "object") return "Root must be an object";
+    if (!cfg.grid || typeof cfg.grid !== "object") return "Missing grid";
+    if (!Number.isInteger(cfg.grid.columns) || cfg.grid.columns < 1) return "grid.columns must be an int >= 1";
+    if (!Number.isInteger(cfg.grid.rows) || cfg.grid.rows < 1) return "grid.rows must be an int >= 1";
+    if (!Array.isArray(cfg.macros)) return "macros must be an array";
 
-    // Show the correct form
-    allForms.forEach(form => {
-      form.style.display = form.dataset.mode === mode ? 'block' : 'none';
-    });
-  });
-});
+    const maxSlots = cfg.grid.columns * cfg.grid.rows;
+    const seen = new Set();
 
+    for (const m of cfg.macros) {
+      if (!m || typeof m !== "object") return "Each macro must be an object";
+      if (typeof m.label !== "string") return "macro.label must be a string";
+      if (typeof m.macro !== "string") return "macro.macro must be a string";
+      if (typeof m.icon !== "string") return "macro.icon must be a string";
+      if (!Number.isInteger(m.position)) return "macro.position must be an integer";
+      if (m.position < 0 || m.position >= maxSlots) return `macro.position ${m.position} out of bounds (0..${maxSlots - 1})`;
+      if (seen.has(m.position)) return `Duplicate macro position: ${m.position}`;
+      seen.add(m.position);
+    }
+    return null;
+  }
 
 document.addEventListener('DOMContentLoaded', () => {
+  uploadStatus = document.getElementById('upload-status');
+  jsonEditor = document.getElementById('macros-json-editor');
+
+  const modeButtons = document.querySelectorAll('.mode-btn');
+  const allForms = document.querySelectorAll('#mode-forms form');
+
+  modeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const mode = button.dataset.mode;
+      
+      if (mode === "json") loadJsonEditor();
+      
+      // Clear selections
+      selectedPosition = null;
+      highlightSelectedPosition(null); 
+      moveFrom = null;
+      moveTo = null;
+      highlightMoveSelection();
+      highlightDeleteSelection(null);
+      updateMoveFormLabel();
+
+      // Highlight selected button
+      modeButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      // Show the correct form
+      allForms.forEach(form => {
+        form.style.display = form.dataset.mode === mode ? 'block' : 'none';
+      });
+    });
+  });
+
   fetchMacros()
   
   const form = document.getElementById('upload-form');
   const macroType = document.getElementById('macro-type');
   const macroValueInput = document.getElementById('macro-value');
   const macroValueLabel = document.getElementById('macro-value-label');
-  const uploadStatus = document.getElementById('upload-status');
+
+  const jsonReloadBtn = document.getElementById('json-reload-btn');
+  const jsonFormatBtn = document.getElementById('json-format-btn');
+  const jsonSaveBtn = document.getElementById('json-save-btn');
 
   const help = document.getElementById('macro-value-help');
 
@@ -282,47 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
       uploadStatus.textContent = 'Error resizing grid.';
     }
   });
-
-  // Edit JSON tab logic
-  const jsonEditor = document.getElementById('macros-json-editor');
-  const jsonReloadBtn = document.getElementById('json-reload-btn');
-  const jsonFormatBtn = document.getElementById('json-format-btn');
-  const jsonSaveBtn = document.getElementById('json-save-btn');
-
-  async function loadJsonEditor() {
-    uploadStatus.textContent = "Loading macros.json...";
-    const res = await fetch(`http://${macroServerIP}/macros`);
-    if (!res.ok) {
-      uploadStatus.textContent = "Failed to load macros.json";
-      return;
-    }
-    const data = await res.json();
-    jsonEditor.value = JSON.stringify(data, null, 2);
-    uploadStatus.textContent = "Loaded macros.json";
-  }
-
-  function validateConfigClient(cfg) {
-    if (!cfg || typeof cfg !== "object") return "Root must be an object";
-    if (!cfg.grid || typeof cfg.grid !== "object") return "Missing grid";
-    if (!Number.isInteger(cfg.grid.columns) || cfg.grid.columns < 1) return "grid.columns must be an int >= 1";
-    if (!Number.isInteger(cfg.grid.rows) || cfg.grid.rows < 1) return "grid.rows must be an int >= 1";
-    if (!Array.isArray(cfg.macros)) return "macros must be an array";
-
-    const maxSlots = cfg.grid.columns * cfg.grid.rows;
-    const seen = new Set();
-
-    for (const m of cfg.macros) {
-      if (!m || typeof m !== "object") return "Each macro must be an object";
-      if (typeof m.label !== "string") return "macro.label must be a string";
-      if (typeof m.macro !== "string") return "macro.macro must be a string";
-      if (typeof m.icon !== "string") return "macro.icon must be a string";
-      if (!Number.isInteger(m.position)) return "macro.position must be an integer";
-      if (m.position < 0 || m.position >= maxSlots) return `macro.position ${m.position} out of bounds (0..${maxSlots - 1})`;
-      if (seen.has(m.position)) return `Duplicate macro position: ${m.position}`;
-      seen.add(m.position);
-    }
-    return null;
-  }
 
   jsonReloadBtn.addEventListener('click', loadJsonEditor);
 
