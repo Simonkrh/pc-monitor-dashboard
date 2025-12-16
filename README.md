@@ -7,7 +7,7 @@ This is a personal project designed specifically for use with my Raspberry Pi co
 This project sets up a PC monitoring dashboard using:
 
 - **[Open Hardware Monitor](https://openhardwaremonitor.org/news/release-version-0-9-6/)** to collect system stats
-- **[Macro Server](https://github.com/Simonkrh/pc-macro-server)** to launch applications, switch accounts with [TcNo Account Switcher](https://github.com/TCNOco/TcNo-Acc-Switcher/releases/tag/2024-08-30_01), and volume control
+- **[Macro Server](https://github.com/Simonkrh/pc-macro-server)** to launch applications, type text, switch accounts with [TcNo Account Switcher](https://github.com/TCNOco/TcNo-Acc-Switcher/releases/tag/2024-08-30_01), and volume control
 - **[Spotify Integration](https://developer.spotify.com/documentation/web-api)** to display and control songs and playlists
 
 ### Showcase
@@ -60,7 +60,7 @@ MONITORED_DISKS="SSD M2 (C:),SSD M2 (D:),SSD Sata (E:),HDD (F:)"
 Create a `config.js` file inside the **frontend folder** with the following content:
 ```js
 const CONFIG = {
-    SERVER_PC_IP: "" // The PC running the backend server - in my case, the Raspberry Pi
+    SERVER_PC_IP: "", // The PC running the backend server - in my case, the Raspberry Pi
     MACRO_PC_IP: "" // The PC running the macro server - in my case, the Gaming PC
 };
 ```
