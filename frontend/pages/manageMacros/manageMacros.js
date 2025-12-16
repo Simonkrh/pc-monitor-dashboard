@@ -42,10 +42,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Change label depending on macro type
   macroType.addEventListener('change', () => {
-    macroValueLabel.textContent = macroType.value === 'switch_account'
-      ? 'Steam ID:' : 'Executable Path:';
-    macroValueInput.placeholder = macroType.value === 'switch_account'
-      ? 'e.g. 76561198197834043' : 'C:\Path\To\App.exe';
+    if (macroType.value === 'switch_account') {
+      macroValueLabel.textContent = 'Steam ID:';
+      macroValueInput.placeholder = 'e.g. 76561198197834043';
+    } else if (macroType.value === 'type_text') {
+      macroValueLabel.textContent = 'Text to type:';
+      macroValueInput.placeholder = 'e.g. Hello, World!';
+    } else {
+      macroValueLabel.textContent = 'Executable Path:';
+      macroValueInput.placeholder = 'C:\\Path\\To\\App.exe';
+    }
   });
 
   form.addEventListener('submit', async (e) => {
@@ -54,8 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const label = document.getElementById('macro-label').value.trim();
     const iconFile = document.getElementById('icon-upload').files[0];
     const macroTypeValue = macroType.value;
-    let macroValue = macroValueInput.value.trim();
-
+    let macroValue = macroValueInput.value;
+    if (macroTypeValue !== "type_text") macroValue = macroValue.trim();
 
     if (!label || !iconFile || !macroValue) {
       uploadStatus.textContent = 'All fields are required.';
@@ -84,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Build macro object
       const macroCommand = macroTypeValue + ':' + macroValue;
+      
       const macroData = {
         label,
         macro: macroCommand,
