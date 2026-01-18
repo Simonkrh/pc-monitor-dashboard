@@ -1,4 +1,5 @@
 const serverIP = `${CONFIG.SERVER_PC_IP}`;
+const macroServerIP = `${CONFIG.MACRO_PC_IP}`;
 let images = [];
 
 async function checkPCStatus() {
@@ -53,6 +54,72 @@ fetch(`http://${serverIP}/slideshow/media`)
   })  
   .catch((err) => console.error(err));
 
+
+function waitForFirstVideoFrame(video, cb, timeoutMs = 8000) {
+  let done = false;
+
+  const finish = () => {
+    if (done) return;
+    done = true;
+    cb();
+  };
+
+  const t = setTimeout(() => finish(), timeoutMs);
+
+  // Best: fires when a real frame is ready (Chrome/Edge/Android)
+  if (video.requestVideoFrameCallback) {
+    video.requestVideoFrameCallback(() => {
+      clearTimeout(t);
+      finish();
+    });
+    return;
+  }
+
+  // Fallback: wait for "playing" (usually means frames are flowing)
+  video.addEventListener(
+    "playing",
+    () => {
+      clearTimeout(t);
+      // next tick so layout/paint catches up
+      requestAnimationFrame(finish);
+    },
+    { once: true }
+  );
+}
+
+function waitForImageDecode(img, cb, timeoutMs = 8000) {
+  let done = false;
+
+  const finish = () => {
+    if (done) return;
+    done = true;
+    cb();
+  };
+
+  const t = setTimeout(finish, timeoutMs);
+
+  // decode() waits for decode, not just download
+  if (img.decode) {
+    img
+      .decode()
+      .then(() => {
+        clearTimeout(t);
+        finish();
+      })
+      .catch(() => {
+        // Some browsers reject decode() sometimes; fallback
+        clearTimeout(t);
+        finish();
+      });
+  } else {
+    img.onload = () => {
+      clearTimeout(t);
+      finish();
+    };
+  }
+}
+
+
 function startSlideshow() {
   let index = Math.floor(Math.random() * mediaFiles.length);
 
@@ -62,126 +129,184 @@ function startSlideshow() {
   let currentSlide = slide1;
   let nextSlide = slide2;
 
-  displayMedia(mediaFiles[index], currentSlide, () => {
-    scheduleNextSlide(); // Only schedule once image or video is visible
-  });
+  let imageTimer = null;
+  let preloadEl = null;
+
+  function preloadNext(fileName) {
+    const lower = fileName.toLowerCase();
+    const url = `http://${serverIP}/slideshow/uploads/${encodeURIComponent(fileName)}`;
+
+    preloadEl = null;
+
+    if (lower.endsWith(".mp4") || lower.endsWith(".webm")) {
+      const v = document.createElement("video");
+      v.preload = "auto";
+      v.muted = true;
+      v.playsInline = true;
+      v.src = url;
+      v.load();
+      preloadEl = v;
+    } else {
+      const i = new Image();
+      i.src = url;
+      preloadEl = i;
+    }
+  }
+
+  function cleanupSlide(slideEl) {
+    const v = slideEl.querySelector("video");
+    if (v) {
+      try {
+        v.pause();
+        v.removeAttribute("src");
+        v.load();
+      } catch {}
+    }
+  }
+
 
   function scheduleNextSlide() {
     const currentMedia = currentSlide.querySelector("img, video");
     if (!currentMedia) return;
 
-    if (currentMedia.tagName.toLowerCase() === "img") {
-      setTimeout(() => transitionToNext(), 7000);
+    // Clear previous timer 
+    if (imageTimer) {
+      clearTimeout(imageTimer);
+      imageTimer = null;
     }
-    // Videos already handle `ended` event
+
+    if (currentMedia.tagName.toLowerCase() === "img") {
+      imageTimer = setTimeout(() => transitionToNext("image-timeout"), 7000);
+    }
+    // Videos transition on "ended" inside displayMedia
   }
 
-  function transitionToNext() {
-    index = index + 1;
+  function transitionToNext(reason) {
+    if (imageTimer) {
+      clearTimeout(imageTimer);
+      imageTimer = null;
+    }
+
+    // Advance index first
+    index++;
     if (index >= mediaFiles.length) {
       mediaFiles = shuffleArray(mediaFiles);
       index = 0;
     }
 
+    // Now preload the item AFTER the one we’re about to show
+    preloadNext(mediaFiles[(index + 1) % mediaFiles.length]);
+
     nextSlide.classList.remove("slide-center", "slide-left");
     nextSlide.classList.add("slide-right");
 
-    // Wait for the media to load before doing the transition
     displayMedia(mediaFiles[index], nextSlide, () => {
-      nextSlide.offsetHeight; 
+      nextSlide.offsetHeight;
 
-      // Slide nextSlide in from right -> center
       nextSlide.classList.remove("slide-right");
       nextSlide.classList.add("slide-center");
 
-      // Slide currentSlide from center -> left
       currentSlide.classList.remove("slide-center");
       currentSlide.classList.add("slide-left");
 
-      // After animation completes (2s), reset and swap slides
       setTimeout(() => {
+        // cleanup old media (see #2 below)
+        cleanupSlide(currentSlide);
+
         currentSlide.style.transition = "none";
         currentSlide.classList.remove("slide-left", "slide-center", "slide-right");
         currentSlide.classList.add("slide-right");
-        currentSlide.innerHTML = ""; 
-        currentSlide.offsetHeight; 
+        currentSlide.innerHTML = "";
+        currentSlide.offsetHeight;
         currentSlide.style.transition = "";
 
-        // Swap slides
         [currentSlide, nextSlide] = [nextSlide, currentSlide];
-
         scheduleNextSlide();
       }, 2000);
     });
   }
 
-  function displayMedia(fileName, container, onLoaded) {
+
+  function displayMedia(fileName, container, onReady) {
     container.innerHTML = "";
     const lower = fileName.toLowerCase();
     const isVideo = lower.endsWith(".mp4") || lower.endsWith(".webm");
+    const url = `http://${serverIP}/slideshow/uploads/${encodeURIComponent(fileName)}`;
 
     if (isVideo) {
       const video = document.createElement("video");
-      video.src = `http://${serverIP}/slideshow/uploads/${fileName}`;
-      video.autoplay = true;
+      video.preload = "auto";
       video.muted = true;
+      video.autoplay = true;
       video.playsInline = true;
       video.loop = false;
+      video.controls = false;
 
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      video.setAttribute("muted", "");
+
+      video.src = url;
       container.appendChild(video);
 
-      let hasStarted = false;
-      video.onplaying = () => {
-        hasStarted = true;
-        if (fallbackTimeout) clearTimeout(fallbackTimeout);
+      let endedOrSkipped = false;
+
+      const skip = (why) => {
+        if (endedOrSkipped) return;
+        endedOrSkipped = true;
+        console.warn(`Skipping video "${fileName}": ${why}`);
+        transitionToNext("video-skip");
       };
 
-      let fallbackTimeout = null;
+      video.addEventListener("error", () => skip("error loading/decoding"), { once: true });
 
-      video.onloadedmetadata = () => {
-        fallbackTimeout = setTimeout(() => {
-          if (!hasStarted) {
-            console.warn(`Video "${fileName}" didn't start playing — skipping...`);
-            transitionToNext();
-          }
-        }, 5000);
+      let stallTimer = null;
+      const armStall = () => {
+        clearTimeout(stallTimer);
+        stallTimer = setTimeout(() => skip("stalled/buffering"), 7000);
       };
-
-      video.onloadeddata = () => {
-        if (onLoaded) onLoaded();
-      };
-
-      video.onerror = () => {
-        console.error(`Failed to load video: ${fileName}`);
-        if (fallbackTimeout) clearTimeout(fallbackTimeout);
-        transitionToNext(); 
-      };
+      video.addEventListener("waiting", armStall);
+      video.addEventListener("stalled", armStall);
+      video.addEventListener("playing", () => clearTimeout(stallTimer));
 
       video.addEventListener("ended", () => {
-        if (fallbackTimeout) clearTimeout(fallbackTimeout);
-        transitionToNext();
+        clearTimeout(stallTimer);
+        transitionToNext("video-ended");
       });
 
-      video.play().catch(err => {
-        console.error("Autoplay failed:", err);
-        if (fallbackTimeout) clearTimeout(fallbackTimeout);
-        transitionToNext();
+      video.load();
+
+      // Try to play
+      video.play().catch(() => {
+      });
+
+      // Only transition in after a real frame exists
+      waitForFirstVideoFrame(video, () => {
+        if (onReady) onReady();
+        video.play().catch(() => skip("autoplay blocked"));
       });
 
     } else {
       const img = document.createElement("img");
-      img.src = `http://${serverIP}/slideshow/uploads/${fileName}`;
+      img.src = url;
+      img.loading = "eager";
+      img.decoding = "async";
       container.appendChild(img);
 
-      img.onload = () => {
-        if (onLoaded) onLoaded();
-      };
       img.onerror = () => {
         console.error(`Failed to load image: ${fileName}`);
-        transitionToNext();
+        transitionToNext("image-error");
       };
+
+      waitForImageDecode(img, () => {
+        if (onReady) onReady();
+      });
     }
   }
+
+  // Start first slide + preload next
+  preloadNext(mediaFiles[(index + 1) % mediaFiles.length]);
+  displayMedia(mediaFiles[index], currentSlide, scheduleNextSlide);
 }
 
 
@@ -224,7 +349,7 @@ function wakeAndRedirect() {
     .then(response => response.json())
     .then(data => {
       console.log(data.status);
-      waitForOpenHardwareMonitor();
+      waitForPCAndMaybeMacro();
     })
     .catch(error => {
       console.error("Failed to send WoL request:", error);
@@ -234,35 +359,56 @@ function wakeAndRedirect() {
     });
 }
 
-function waitForOpenHardwareMonitor() {
+async function waitForPCAndMaybeMacro() {
   let attempts = 0;
-  const maxAttempts = 30;
-  const checkInterval = 3000;
+  const maxAttempts = 40;
+  const intervalMs = 3000;
   const defaultPage = localStorage.getItem("defaultPage") || "/dashboard";
 
-  const checkStatus = () => {
-    fetch(`http://${serverIP}/monitoring/stats`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.cpu_usage && data.cpu_temp) {
-          console.log("Open Hardware Monitor is responding!");
-          window.location.href = defaultPage;
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-        } else {
-          throw new Error("Invalid data received");
-        }
-      })
-      .catch(() => {
-        attempts++;
-        if (attempts < maxAttempts) {
-          console.log(`Waiting for Open Hardware Monitor... (${attempts}/${maxAttempts})`);
-          setTimeout(checkStatus, checkInterval);
-        } else {
-          console.log("Timed out waiting for Open Hardware Monitor, redirecting anyway.");
-          window.location.href = defaultPage;
-        }
+  while (attempts < maxAttempts) {
+    attempts++;
+
+    try {
+      // If PC online
+      const pingRes = await fetch(`http://${serverIP}/monitoring/ping`, {
+        method: "GET",
+        cache: "no-store",
       });
-  };
 
-  checkStatus();
+      if (!pingRes.ok) throw new Error("ping endpoint not ok");
+
+      const pingData = await pingRes.json();
+      const pcOnline = pingData.status && pingData.status !== "offline";
+
+      if (!pcOnline) {
+        console.log(`Waiting for PC... (${attempts}/${maxAttempts})`);
+        await sleep(intervalMs);
+        continue;
+      }
+
+      // If macro server running
+      const macroRes = await fetch(`http://${macroServerIP}/macros`, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (macroRes.ok) {
+        console.log("PC is online and Macro Server is responding!");
+        window.location.href = defaultPage;
+        return;
+      } else {
+        console.log(`PC online, macro server not ready (HTTP ${macroRes.status})...`);
+      }
+
+    } catch (e) {
+      console.log(`Waiting... (${attempts}/${maxAttempts})`, e?.message || e);
+    }
+
+    await sleep(intervalMs);
+  }
+
+  console.log("Timed out waiting — redirecting anyway.");
+  window.location.href = defaultPage;
 }

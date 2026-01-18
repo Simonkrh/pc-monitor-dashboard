@@ -17,6 +17,7 @@
     <button type="button" data-mode="move" class="mode-btn">Move Macro</button>
     <button type="button" data-mode="delete" class="mode-btn">Delete Macro</button>
     <button type="button" data-mode="resize" class="mode-btn">Resize Grid</button>
+    <button type="button" data-mode="json" class="mode-btn">Edit JSON</button>
   </div>
   <div id="mode-forms">
     <form class="form" id="upload-form" data-mode="create"> 
@@ -33,11 +34,14 @@
       <select id="macro-type">
         <option value="open_app">Open App</option>
         <option value="switch_account">Switch Account</option>
+        <option value="type_text">Type Text</option>
       </select>
 
       <!-- Executable or Steam ID -->
       <label for="macro-value" id="macro-value-label">Executable Path:</label>
       <input type="text" id="macro-value" placeholder="C:\Path\To\Spotify.exe" required />
+
+      <small id="macro-value-help" class="help-text" style="display:none;"></small>
 
       <!-- Selected Position -->
       <label id="selected-position-label">Selected Position: None</label>
@@ -62,17 +66,33 @@
       </div>
     </form>
 
-   <form class="form" id="resize-form" data-mode="resize" style="display: none;">
-    <div class="form-section">
-      <label for="resize-columns">Columns:</label>
-      <input type="number" id="resize-columns" min="1" required>
+    <form class="form" id="resize-form" data-mode="resize" style="display: none;">
+      <div class="form-section">
+        <label for="resize-columns">Columns:</label>
+        <input type="number" id="resize-columns" min="1" required>
 
-      <label for="resize-rows">Rows:</label>
-      <input type="number" id="resize-rows" min="1" required>
+        <label for="resize-rows">Rows:</label>
+        <input type="number" id="resize-rows" min="1" required>
 
-      <button type="submit" id="resize-submit-button">Submit</button>
-    </div>
-  </form>
+        <button type="submit" id="resize-submit-button">Submit</button>
+      </div>
+    </form>
+
+    <form class="form" id="json-form" data-mode="json" style="display:none;">
+      <div class="form-section" style="flex-direction: column; align-items: stretch; width: 100%;">
+        <p style="margin:0 0 10px 0;">
+          Edit the full <code>macros.json</code> config. Be careful: invalid JSON or invalid positions will be rejected.
+        </p>
+
+        <textarea id="macros-json-editor" spellcheck="false"></textarea>
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button type="button" id="json-reload-btn">Reload</button>
+          <button type="button" id="json-format-btn">Format</button>
+          <button type="button" id="json-save-btn">Save</button>
+        </div>
+      </div>
+    </form>
   </div>
   <div id="upload-status"></div>
   

@@ -107,6 +107,21 @@ button:hover {
   border: 2px solid rgba(61, 61, 61, 0.644);
 }
 
+#macros-json-editor {
+  width: 100%;
+  min-height: 380px;
+  max-width: 900px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  background: #1f1f24;
+  color: #f1f1f1;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 12px;
+  resize: vertical;
+}
+
 .macro-btn:active {
   transform: scale(1.1); 
 }

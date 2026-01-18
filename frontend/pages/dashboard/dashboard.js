@@ -72,10 +72,16 @@ async function sendMacro(command) {
 
   if (command.startsWith("open_app:")) {
     endpoint = 'open_app';
-    payload = { app_path: command.replace("open_app:", "") };
+    payload = { app_path: command.slice("open_app:".length) };
+
   } else if (command.startsWith("switch_account:")) {
     endpoint = 'switch_account';
-    payload = { steam_id: command.replace("switch_account:", "") };
+    payload = { steam_id: command.slice("switch_account:".length) };
+
+  } else if (command.startsWith("type_text:")) {
+    endpoint = 'type_text';
+    payload = { text: command.slice("type_text:".length) };
+
   } else {
     console.error("Unknown macro command:", command);
     return;

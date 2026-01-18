@@ -3,49 +3,112 @@ let selectedPosition = null;
 let moveFrom = null;
 let moveTo = null;
 
-const modeButtons = document.querySelectorAll('.mode-btn');
-const allForms = document.querySelectorAll('#mode-forms form');
+let jsonEditor;
+let uploadStatus;
 
-modeButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    const mode = button.dataset.mode;
-    
-    // Clear selections
-    selectedPosition = null;
-    highlightSelectedPosition(null); 
-    moveFrom = null;
-    moveTo = null;
-    highlightMoveSelection();
-    highlightDeleteSelection(null);
-    updateMoveFormLabel();
+async function loadJsonEditor() {
+    uploadStatus.textContent = "Loading macros.json...";
+    const res = await fetch(`http://${macroServerIP}/macros`);
+    if (!res.ok) {
+      uploadStatus.textContent = "Failed to load macros.json";
+      return;
+    }
+    const data = await res.json();
+    jsonEditor.value = JSON.stringify(data, null, 2);
+    uploadStatus.textContent = "Loaded macros.json";
+  }
 
-    // Highlight selected button
-    modeButtons.forEach(btn => btn.classList.remove('active'));
-    button.classList.add('active');
+  function validateConfigClient(cfg) {
+    if (!cfg || typeof cfg !== "object") return "Root must be an object";
+    if (!cfg.grid || typeof cfg.grid !== "object") return "Missing grid";
+    if (!Number.isInteger(cfg.grid.columns) || cfg.grid.columns < 1) return "grid.columns must be an int >= 1";
+    if (!Number.isInteger(cfg.grid.rows) || cfg.grid.rows < 1) return "grid.rows must be an int >= 1";
+    if (!Array.isArray(cfg.macros)) return "macros must be an array";
 
-    // Show the correct form
-    allForms.forEach(form => {
-      form.style.display = form.dataset.mode === mode ? 'block' : 'none';
-    });
-  });
-});
+    const maxSlots = cfg.grid.columns * cfg.grid.rows;
+    const seen = new Set();
 
+    for (const m of cfg.macros) {
+      if (!m || typeof m !== "object") return "Each macro must be an object";
+      if (typeof m.label !== "string") return "macro.label must be a string";
+      if (typeof m.macro !== "string") return "macro.macro must be a string";
+      if (typeof m.icon !== "string") return "macro.icon must be a string";
+      if (!Number.isInteger(m.position)) return "macro.position must be an integer";
+      if (m.position < 0 || m.position >= maxSlots) return `macro.position ${m.position} out of bounds (0..${maxSlots - 1})`;
+      if (seen.has(m.position)) return `Duplicate macro position: ${m.position}`;
+      seen.add(m.position);
+    }
+    return null;
+  }
 
 document.addEventListener('DOMContentLoaded', () => {
+  uploadStatus = document.getElementById('upload-status');
+  jsonEditor = document.getElementById('macros-json-editor');
+
+  const modeButtons = document.querySelectorAll('.mode-btn');
+  const allForms = document.querySelectorAll('#mode-forms form');
+
+  modeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const mode = button.dataset.mode;
+      
+      if (mode === "json") loadJsonEditor();
+      
+      // Clear selections
+      selectedPosition = null;
+      highlightSelectedPosition(null); 
+      moveFrom = null;
+      moveTo = null;
+      highlightMoveSelection();
+      highlightDeleteSelection(null);
+      updateMoveFormLabel();
+
+      // Highlight selected button
+      modeButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      // Show the correct form
+      allForms.forEach(form => {
+        form.style.display = form.dataset.mode === mode ? 'block' : 'none';
+      });
+    });
+  });
+
   fetchMacros()
   
   const form = document.getElementById('upload-form');
   const macroType = document.getElementById('macro-type');
   const macroValueInput = document.getElementById('macro-value');
   const macroValueLabel = document.getElementById('macro-value-label');
-  const uploadStatus = document.getElementById('upload-status');
+
+  const jsonReloadBtn = document.getElementById('json-reload-btn');
+  const jsonFormatBtn = document.getElementById('json-format-btn');
+  const jsonSaveBtn = document.getElementById('json-save-btn');
+
+  const help = document.getElementById('macro-value-help');
 
   // Change label depending on macro type
   macroType.addEventListener('change', () => {
-    macroValueLabel.textContent = macroType.value === 'switch_account'
-      ? 'Steam ID:' : 'Executable Path:';
-    macroValueInput.placeholder = macroType.value === 'switch_account'
-      ? 'e.g. 76561198197834043' : 'C:\Path\To\App.exe';
+    if (macroType.value === 'switch_account') {
+      macroValueLabel.textContent = 'Steam ID:';
+      macroValueInput.placeholder = 'e.g. 76561198197834043';
+      help.style.display = 'none';
+      help.innerHTML = '';
+    } else if (macroType.value === 'type_text') {
+      macroValueLabel.textContent = 'Text to type:';
+      macroValueInput.placeholder = 'e.g. Hello, World!';
+
+      help.style.display = 'block';
+      help.innerHTML = `
+        (Use <code>&lt;enter&gt;</code> to press Enter, and <code>&lt;wait:2000&gt;</code> to wait 2 seconds.
+        Example: <code>hello&lt;enter&gt;&lt;wait:2000&gt;world</code>)
+      `;
+    } else {
+      macroValueLabel.textContent = 'Executable Path:';
+      macroValueInput.placeholder = 'C:\\Path\\To\\App.exe';
+      help.style.display = 'none';
+      help.innerHTML = '';
+    }
   });
 
   form.addEventListener('submit', async (e) => {
@@ -54,8 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const label = document.getElementById('macro-label').value.trim();
     const iconFile = document.getElementById('icon-upload').files[0];
     const macroTypeValue = macroType.value;
-    let macroValue = macroValueInput.value.trim();
-
+    let macroValue = macroValueInput.value;
+    if (macroTypeValue !== "type_text") macroValue = macroValue.trim();
 
     if (!label || !iconFile || !macroValue) {
       uploadStatus.textContent = 'All fields are required.';
@@ -84,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Build macro object
       const macroCommand = macroTypeValue + ':' + macroValue;
+      
       const macroData = {
         label,
         macro: macroCommand,
@@ -260,6 +324,50 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
       uploadStatus.textContent = 'Error resizing grid.';
     }
+  });
+
+  jsonReloadBtn.addEventListener('click', loadJsonEditor);
+
+  jsonFormatBtn.addEventListener('click', () => {
+    try {
+      const obj = JSON.parse(jsonEditor.value);
+      jsonEditor.value = JSON.stringify(obj, null, 2);
+      uploadStatus.textContent = "Formatted JSON";
+    } catch {
+      uploadStatus.textContent = "Invalid JSON (can’t format)";
+    }
+  });
+
+  jsonSaveBtn.addEventListener('click', async () => {
+    let cfg;
+    try {
+      cfg = JSON.parse(jsonEditor.value);
+    } catch {
+      uploadStatus.textContent = "Invalid JSON (fix before saving)";
+      return;
+    }
+
+    const err = validateConfigClient(cfg);
+    if (err) {
+      uploadStatus.textContent = `Config invalid: ${err}`;
+      return;
+    }
+
+    uploadStatus.textContent = "Saving...";
+    const res = await fetch(`http://${macroServerIP}/macros_raw`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cfg)
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      uploadStatus.textContent = `Save failed: ${msg}`;
+      return;
+    }
+
+    uploadStatus.textContent = "Saved macros.json";
+    fetchMacros(); // refresh grid view
   });
 });
 
