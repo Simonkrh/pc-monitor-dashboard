@@ -237,7 +237,7 @@ function wakeAndRedirect() {
 
 async function waitForPCAndMaybeMacro() {
   let attempts = 0;
-  const maxAttempts = 40;      // ~2 minutes if interval = 3s
+  const maxAttempts = 40;
   const intervalMs = 3000;
   const defaultPage = localStorage.getItem("defaultPage") || "/dashboard";
 
@@ -265,7 +265,7 @@ async function waitForPCAndMaybeMacro() {
       }
 
       // If macro server running
-      const macroRes = await fetch(`http://${macroIP}/macros`, {
+      const macroRes = await fetch(`http://${macroServerIP}/macros`, {
         method: "GET",
         cache: "no-store",
       });
