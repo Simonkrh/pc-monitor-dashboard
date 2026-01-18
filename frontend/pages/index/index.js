@@ -1,4 +1,5 @@
 const serverIP = `${CONFIG.SERVER_PC_IP}`;
+const macroServerIP = `${CONFIG.MACRO_PC_IP}`;
 let images = [];
 
 async function checkPCStatus() {
@@ -224,7 +225,7 @@ function wakeAndRedirect() {
     .then(response => response.json())
     .then(data => {
       console.log(data.status);
-      waitForOpenHardwareMonitor();
+      waitForPCAndMaybeMacro();
     })
     .catch(error => {
       console.error("Failed to send WoL request:", error);
@@ -234,35 +235,56 @@ function wakeAndRedirect() {
     });
 }
 
-function waitForOpenHardwareMonitor() {
+async function waitForPCAndMaybeMacro() {
   let attempts = 0;
-  const maxAttempts = 30;
-  const checkInterval = 3000;
+  const maxAttempts = 40;      // ~2 minutes if interval = 3s
+  const intervalMs = 3000;
   const defaultPage = localStorage.getItem("defaultPage") || "/dashboard";
 
-  const checkStatus = () => {
-    fetch(`http://${serverIP}/monitoring/stats`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.cpu_usage && data.cpu_temp) {
-          console.log("Open Hardware Monitor is responding!");
-          window.location.href = defaultPage;
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-        } else {
-          throw new Error("Invalid data received");
-        }
-      })
-      .catch(() => {
-        attempts++;
-        if (attempts < maxAttempts) {
-          console.log(`Waiting for Open Hardware Monitor... (${attempts}/${maxAttempts})`);
-          setTimeout(checkStatus, checkInterval);
-        } else {
-          console.log("Timed out waiting for Open Hardware Monitor, redirecting anyway.");
-          window.location.href = defaultPage;
-        }
+  while (attempts < maxAttempts) {
+    attempts++;
+
+    try {
+      // If PC online
+      const pingRes = await fetch(`http://${serverIP}/monitoring/ping`, {
+        method: "GET",
+        cache: "no-store",
       });
-  };
 
-  checkStatus();
+      if (!pingRes.ok) throw new Error("ping endpoint not ok");
+
+      const pingData = await pingRes.json();
+      const pcOnline = pingData.status && pingData.status !== "offline";
+
+      if (!pcOnline) {
+        console.log(`Waiting for PC... (${attempts}/${maxAttempts})`);
+        await sleep(intervalMs);
+        continue;
+      }
+
+      // If macro server running
+      const macroRes = await fetch(`http://${macroIP}/macros`, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (macroRes.ok) {
+        console.log("PC is online and Macro Server is responding!");
+        window.location.href = defaultPage;
+        return;
+      } else {
+        console.log(`PC online, macro server not ready (HTTP ${macroRes.status})...`);
+      }
+
+    } catch (e) {
+      console.log(`Waiting... (${attempts}/${maxAttempts})`, e?.message || e);
+    }
+
+    await sleep(intervalMs);
+  }
+
+  console.log("Timed out waiting — redirecting anyway.");
+  window.location.href = defaultPage;
 }
