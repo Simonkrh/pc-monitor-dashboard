@@ -5,29 +5,97 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Slideshow Upload</title>
+  <script>
+    (function () {
+      try {
+        const themes = {
+          ocean: {
+            "--bg-1": "#0f1626",
+            "--bg-2": "#142338",
+            "--panel": "rgba(16, 24, 38, 0.85)",
+            "--panel-border": "rgba(255, 255, 255, 0.08)",
+            "--text": "#e9edf3",
+            "--muted": "#a6b3c6",
+            "--accent": "#5ad1a2",
+            "--accent-strong": "#37b07f"
+          },
+          sunset: {
+            "--bg-1": "#2a0f1d",
+            "--bg-2": "#3a1e2e",
+            "--panel": "rgba(34, 16, 26, 0.88)",
+            "--panel-border": "rgba(255, 255, 255, 0.1)",
+            "--text": "#f7e9ee",
+            "--muted": "#d3b6c0",
+            "--accent": "#ffb74d",
+            "--accent-strong": "#ff8f00"
+          },
+          mono: {
+            "--bg-1": "#101418",
+            "--bg-2": "#1a1f24",
+            "--panel": "rgba(18, 22, 26, 0.9)",
+            "--panel-border": "rgba(255, 255, 255, 0.06)",
+            "--text": "#f1f3f5",
+            "--muted": "#b7bdc5",
+            "--accent": "#8fb1ff",
+            "--accent-strong": "#5f8bff"
+          }
+        };
+        let vars = JSON.parse(localStorage.getItem("themeVars") || "null");
+        if (!vars) {
+          const key = localStorage.getItem("theme") || "ocean";
+          vars = themes[key] || themes.ocean;
+          localStorage.setItem("themeVars", JSON.stringify(vars));
+        }
+        const root = document.documentElement;
+        Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+        if (vars["--bg-1"] && vars["--bg-2"]) {
+          root.style.background = `linear-gradient(180deg, ${vars["--bg-1"]}, ${vars["--bg-2"]})`;
+          root.style.backgroundColor = vars["--bg-1"];
+        }
+      } catch (e) {
+      }
+    })();
+  </script>
 
+  <link rel="stylesheet" href="/frontend/global/css/style.css" />
   <link rel="stylesheet" href="/frontend/pages/upload/upload.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <h1>Upload</h1>
-  <form id="upload-form" method="post" enctype="multipart/form-data">
-    <input type="file" name="file" required multiple>
-    <input type="submit" value="Upload">
-  </form>
-  <div id="upload-status">
-    <p id="upload-text">Waiting for upload...</p>
-    <progress id="upload-progress" value="0" max="100" style="width: 300px;"></progress>
+  <div class="page-header">
+    <h1>Upload</h1>
+    <div class="button-row">
+      <button id="return">Return</button>
+    </div>
   </div>
-  <br>
-  <button id="return">Return</button>
-  <h2>Uploaded Images</h2>
-  <button id="delete-selected">Delete Selected</button>
-  <div id="image-list"></div>
+
+  <div class="panel">
+    <form id="upload-form" method="post" enctype="multipart/form-data">
+      <input type="file" name="file" required multiple>
+      <input type="submit" value="Upload">
+    </form>
+
+    <div id="upload-status">
+      <p id="upload-text">Waiting for upload...</p>
+      <progress id="upload-progress" value="0" max="100"></progress>
+    </div>
+
+    <div class="panel-header">
+      <h2>Uploaded Media</h2>
+      <button id="delete-selected">Delete Selected</button>
+    </div>
+    <div id="image-list"></div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/js-sha256@0.9.0/build/sha256.min.js"></script>
   <script src="/frontend/config.js"></script>
   <script src="/frontend/pages/upload/upload.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.body.classList.add("show");
+    });
+  </script>
 </body>
 
 </html>

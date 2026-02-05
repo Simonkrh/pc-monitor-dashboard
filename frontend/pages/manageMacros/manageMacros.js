@@ -44,6 +44,13 @@ async function loadJsonEditor() {
 document.addEventListener('DOMContentLoaded', () => {
   uploadStatus = document.getElementById('upload-status');
   jsonEditor = document.getElementById('macros-json-editor');
+  const returnButton = document.getElementById('return-button');
+
+  if (returnButton) {
+    returnButton.addEventListener('click', () => {
+      window.location.href = "/settings";
+    });
+  }
 
   const modeButtons = document.querySelectorAll('.mode-btn');
   const allForms = document.querySelectorAll('#mode-forms form');
@@ -491,5 +498,5 @@ function highlightDeleteSelection(position) {
 
 function updateMoveFormLabel() {
   const label = document.getElementById('move-position-label');
-  label.textContent = `From: ${moveFrom !== null ? moveFrom : 'None'} → To: ${moveTo !== null ? moveTo : 'None'}`;
+  label.textContent = `From: ${moveFrom !== null ? moveFrom : 'None'} -> To: ${moveTo !== null ? moveTo : 'None'}`;
 }

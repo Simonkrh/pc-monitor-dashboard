@@ -5,103 +5,164 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manage Macros</title>
+  <script>
+    (function () {
+      try {
+        const themes = {
+          ocean: {
+            "--bg-1": "#0f1626",
+            "--bg-2": "#142338",
+            "--panel": "rgba(16, 24, 38, 0.85)",
+            "--panel-border": "rgba(255, 255, 255, 0.08)",
+            "--text": "#e9edf3",
+            "--muted": "#a6b3c6",
+            "--accent": "#5ad1a2",
+            "--accent-strong": "#37b07f"
+          },
+          sunset: {
+            "--bg-1": "#2a0f1d",
+            "--bg-2": "#3a1e2e",
+            "--panel": "rgba(34, 16, 26, 0.88)",
+            "--panel-border": "rgba(255, 255, 255, 0.1)",
+            "--text": "#f7e9ee",
+            "--muted": "#d3b6c0",
+            "--accent": "#ffb74d",
+            "--accent-strong": "#ff8f00"
+          },
+          mono: {
+            "--bg-1": "#101418",
+            "--bg-2": "#1a1f24",
+            "--panel": "rgba(18, 22, 26, 0.9)",
+            "--panel-border": "rgba(255, 255, 255, 0.06)",
+            "--text": "#f1f3f5",
+            "--muted": "#b7bdc5",
+            "--accent": "#8fb1ff",
+            "--accent-strong": "#5f8bff"
+          }
+        };
+        let vars = JSON.parse(localStorage.getItem("themeVars") || "null");
+        if (!vars) {
+          const key = localStorage.getItem("theme") || "ocean";
+          vars = themes[key] || themes.ocean;
+          localStorage.setItem("themeVars", JSON.stringify(vars));
+        }
+        const root = document.documentElement;
+        Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+        if (vars["--bg-1"] && vars["--bg-2"]) {
+          root.style.background = `linear-gradient(180deg, ${vars["--bg-1"]}, ${vars["--bg-2"]})`;
+          root.style.backgroundColor = vars["--bg-1"];
+        }
+      } catch (e) {
+      }
+    })();
+  </script>
 
+  <link rel="stylesheet" href="/frontend/global/css/style.css" />
   <link rel="stylesheet" href="/frontend/pages/manageMacros/manageMacros.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <h1>Manage Macros</h1>
-
-  <div id="macro-mode-buttons" class="mode-buttons">
-    <button type="button" data-mode="create" class="mode-btn active">Create Macro</button>
-    <button type="button" data-mode="move" class="mode-btn">Move Macro</button>
-    <button type="button" data-mode="delete" class="mode-btn">Delete Macro</button>
-    <button type="button" data-mode="resize" class="mode-btn">Resize Grid</button>
-    <button type="button" data-mode="json" class="mode-btn">Edit JSON</button>
+  <div class="page-header">
+    <h1>Manage Macros</h1>
+    <div class="button-row">
+      <button id="return-button">Return</button>
+    </div>
   </div>
-  <div id="mode-forms">
-    <form class="form" id="upload-form" data-mode="create"> 
-      <!-- Macro Label -->
-      <label for="macro-label">Macro Label:</label>
-      <input type="text" id="macro-label" placeholder="Macro name" required />
 
-      <!-- Upload icon -->
-      <label for="icon-upload">Upload Icon:</label>
-      <input type="file" id="icon-upload" accept="image/*" required />
+  <div class="panel">
+    <div id="macro-mode-buttons" class="mode-buttons">
+      <button type="button" data-mode="create" class="mode-btn active">Create Macro</button>
+      <button type="button" data-mode="move" class="mode-btn">Move Macro</button>
+      <button type="button" data-mode="delete" class="mode-btn">Delete Macro</button>
+      <button type="button" data-mode="resize" class="mode-btn">Resize Grid</button>
+      <button type="button" data-mode="json" class="mode-btn">Edit JSON</button>
+    </div>
+    <div id="mode-forms">
+      <form class="form" id="upload-form" data-mode="create"> 
+        <label for="macro-label">Macro Label:</label>
+        <input type="text" id="macro-label" placeholder="Macro name" required />
 
-      <!-- Macro Type -->
-      <label for="macro-type">Macro Type:</label>
-      <select id="macro-type">
-        <option value="open_app">Open App</option>
-        <option value="switch_account">Switch Account</option>
-        <option value="type_text">Type Text</option>
-      </select>
+        <label for="icon-upload">Upload Icon:</label>
+        <input type="file" id="icon-upload" accept="image/*" required />
 
-      <!-- Executable or Steam ID -->
-      <label for="macro-value" id="macro-value-label">Executable Path:</label>
-      <input type="text" id="macro-value" placeholder="C:\Path\To\Spotify.exe" required />
+        <label for="macro-type">Macro Type:</label>
+        <select id="macro-type">
+          <option value="open_app">Open App</option>
+          <option value="switch_account">Switch Account</option>
+          <option value="type_text">Type Text</option>
+        </select>
 
-      <small id="macro-value-help" class="help-text" style="display:none;"></small>
+        <label for="macro-value" id="macro-value-label">Executable Path:</label>
+        <input type="text" id="macro-value" placeholder="C:\Path\To\Spotify.exe" required />
 
-      <!-- Selected Position -->
-      <label id="selected-position-label">Selected Position: None</label>
+        <small id="macro-value-help" class="help-text" style="display:none;"></small>
 
-      <div class="submit-wrapper">
-        <button type="submit" id="upload-submit-button">Submit</button>
-      </div>
-    </form>
+        <label id="selected-position-label" class="status-label">Selected Position: None</label>
 
-    <form class="form" id="move-form" data-mode="move" style="display: none;">
-      <div class="form-section">
-        <p>Click a macro in the grid to select it, then choose a new position.</p>
-        <p id="move-position-label">From: None → To: None</p>
-        <button type="submit" id="move-submit-button">Submit</button>
-      </div>
-    </form>
-
-    <form class="form" id="delete-form" data-mode="delete" style="display: none;">
-      <div class="form-section">
-        <p>Click a macro in the grid to delete it.</p>
-        <button type="submit" id="delete-submit-button">Submit</button>
-      </div>
-    </form>
-
-    <form class="form" id="resize-form" data-mode="resize" style="display: none;">
-      <div class="form-section">
-        <label for="resize-columns">Columns:</label>
-        <input type="number" id="resize-columns" min="1" required>
-
-        <label for="resize-rows">Rows:</label>
-        <input type="number" id="resize-rows" min="1" required>
-
-        <button type="submit" id="resize-submit-button">Submit</button>
-      </div>
-    </form>
-
-    <form class="form" id="json-form" data-mode="json" style="display:none;">
-      <div class="form-section" style="flex-direction: column; align-items: stretch; width: 100%;">
-        <p style="margin:0 0 10px 0;">
-          Edit the full <code>macros.json</code> config. Be careful: invalid JSON or invalid positions will be rejected.
-        </p>
-
-        <textarea id="macros-json-editor" spellcheck="false"></textarea>
-
-        <div style="display:flex; gap:10px; margin-top:10px;">
-          <button type="button" id="json-reload-btn">Reload</button>
-          <button type="button" id="json-format-btn">Format</button>
-          <button type="button" id="json-save-btn">Save</button>
+        <div class="submit-wrapper">
+          <button type="submit" id="upload-submit-button">Submit</button>
         </div>
-      </div>
-    </form>
-  </div>
-  <div id="upload-status"></div>
-  
-  <div class="col-12 d-grid" id="macro-grid-container" style="max-width: 800px; gap: 10px; justify-content: center;"></div>
+      </form>
 
-  <button onclick="window.history.back()">Return</button>
+      <form class="form" id="move-form" data-mode="move" style="display: none;">
+        <div class="form-section">
+          <p>Click a macro in the grid to select it, then choose a new position.</p>
+          <p id="move-position-label">From: None -> To: None</p>
+          <button type="submit" id="move-submit-button">Submit</button>
+        </div>
+      </form>
+
+      <form class="form" id="delete-form" data-mode="delete" style="display: none;">
+        <div class="form-section">
+          <p>Click a macro in the grid to delete it.</p>
+          <button type="submit" id="delete-submit-button">Submit</button>
+        </div>
+      </form>
+
+      <form class="form" id="resize-form" data-mode="resize" style="display: none;">
+        <div class="form-section">
+          <label for="resize-columns">Columns:</label>
+          <input type="number" id="resize-columns" min="1" required>
+
+          <label for="resize-rows">Rows:</label>
+          <input type="number" id="resize-rows" min="1" required>
+
+          <button type="submit" id="resize-submit-button">Submit</button>
+        </div>
+      </form>
+
+      <form class="form" id="json-form" data-mode="json" style="display:none;">
+        <div class="form-section json-section">
+          <p style="margin:0 0 10px 0;">
+            Edit the full <code>macros.json</code> config. Be careful: invalid JSON or invalid positions will be rejected.
+          </p>
+
+          <textarea id="macros-json-editor" spellcheck="false"></textarea>
+
+          <div class="json-actions">
+            <button type="button" id="json-reload-btn">Reload</button>
+            <button type="button" id="json-format-btn">Format</button>
+            <button type="button" id="json-save-btn">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div id="upload-status" class="status-text"></div>
+    
+    <div class="macro-grid-wrap">
+      <div id="macro-grid-container"></div>
+    </div>
+  </div>
 
   <script src="/frontend/config.js"></script>
   <script src="/frontend/pages/manageMacros/manageMacros.js"></script>
+  <script src="/frontend/global/js/global.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.body.classList.add("show");
+    });
+  </script>
 </body>
 
 </html>

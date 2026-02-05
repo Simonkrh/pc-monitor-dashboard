@@ -28,23 +28,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 container.dataset.filename = file;
     
                 let mediaElement;
-                if (["mp4", "webm", "ogg"].includes(ext)) {
-                    mediaElement = document.createElement("video");
-                    mediaElement.src = fileUrl;
-                    mediaElement.controls = true;
-                    mediaElement.muted = true;
-                } else {
+                if (!["mp4", "webm", "ogg"].includes(ext)) {
                     mediaElement = document.createElement("img");
                     mediaElement.src = fileUrl;
+                    mediaElement.className = "media-preview";
                 }
-    
-                mediaElement.className = "media-preview";
-    
+
                 const label = document.createElement("div");
                 label.textContent = file;
                 label.className = "media-label";
     
-                container.appendChild(mediaElement);
+                if (mediaElement) {
+                    container.appendChild(mediaElement);
+                }
                 container.appendChild(label);
     
                 // Toggle selection on click
