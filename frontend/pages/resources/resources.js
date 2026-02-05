@@ -1,4 +1,4 @@
-const serverIP = `${CONFIG.SERVER_PC_IP}`;
+﻿const serverIP = `${CONFIG.SERVER_PC_IP}`;
 const socket = io(`http://${serverIP}`, {
     reconnection: true,
     reconnectionAttempts: 9999,
@@ -6,6 +6,30 @@ const socket = io(`http://${serverIP}`, {
     reconnectionDelayMax: 5000,
     timeout: 20000
 });
+
+const statusEl = document.getElementById("ohm-status");
+const startTime = Date.now();
+let lastUpdateAt = 0;
+const STALE_AFTER_MS = 5000;
+
+function setStatus(text, level) {
+    if (!statusEl) return;
+    statusEl.textContent = text || "";
+    statusEl.classList.remove("status-hidden", "status-warn", "status-error");
+
+    if (!text) {
+        statusEl.classList.add("status-hidden");
+        return;
+    }
+
+    if (level === "error") {
+        statusEl.classList.add("status-error");
+    } else {
+        statusEl.classList.add("status-warn");
+    }
+}
+
+setStatus("Waiting for Open Hardware Monitor...", "warn");
 
 // Disks
 function renderDisks(disks) {
@@ -40,6 +64,9 @@ function renderDisks(disks) {
 }
 
 socket.on("update_stats", (data) => {
+    lastUpdateAt = Date.now();
+    setStatus("", "warn");
+
     // CPU
     document.getElementById("cpu_temp").innerText = `CPU Temp: ${data.cpu_temp || "N/A"}°`;
     document.getElementById("cpu_power").innerText = `CPU Power: ${data.cpu_power || "N/A"}W`;
@@ -64,9 +91,23 @@ socket.on("update_stats", (data) => {
 
 socket.on("connect_error", (error) => {
     console.error("WebSocket connection error:", error);
+    setStatus("Cannot connect to the monitor server.", "error");
 });
 
 socket.on("disconnect", () => {
     console.warn("WebSocket disconnected. Attempting to reconnect...");
+    setStatus("Disconnected from monitor server. Reconnecting...", "error");
 });
 
+setInterval(() => {
+    const now = Date.now();
+    if (!lastUpdateAt) {
+        if (now - startTime > STALE_AFTER_MS) {
+            setStatus("Open Hardware Monitor not responding. Is it running on the PC?", "error");
+        }
+        return;
+    }
+    if (now - lastUpdateAt > STALE_AFTER_MS) {
+        setStatus("Open Hardware Monitor not responding. Is it running on the PC?", "error");
+    }
+}, 1000);

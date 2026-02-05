@@ -106,6 +106,33 @@
   gap: 5px;
 }
 
+/* OHM Status */
+.status-banner {
+  width: 100%;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  text-align: center;
+  border: 1px solid transparent;
+}
+
+.status-hidden {
+  display: none;
+}
+
+.status-warn {
+  color: #f2d18a;
+  background: rgba(242, 209, 138, 0.12);
+  border-color: rgba(242, 209, 138, 0.35);
+}
+
+.status-error {
+  color: #f5a4a4;
+  background: rgba(245, 164, 164, 0.12);
+  border-color: rgba(245, 164, 164, 0.35);
+}
+
 /* Time & Date */
 #current-time {
   font-size: 3rem;
