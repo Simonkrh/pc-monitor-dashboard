@@ -1,23 +1,84 @@
+﻿:root {
+  --bg-1: #0f1626;
+  --bg-2: #142338;
+  --panel: rgba(16, 24, 38, 0.85);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text: #e9edf3;
+  --muted: #a6b3c6;
+  --accent: #5ad1a2;
+  --accent-strong: #37b07f;
+  --danger: #ff6b6b;
+  --warn: #f2d18a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  font-family: "Sora", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% -20%, #1c3b57 0%, transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, #1b2a46 0%, transparent 55%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2));
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  background: repeating-linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 2px,
+    transparent 2px,
+    transparent 8px
+  );
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.container {
+  height: 100vh;
+  padding: 12px 20px 16px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.container.mt-4 {
+  margin-top: 0 !important;
+}
+
+.row {
+  margin-top: 0 !important;
+}
+
 /* Section container with rounded borders */
 .section-container {
   display: flex;
   align-items: center;
-  border: 2px solid white;
-  border-radius: 15px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: var(--panel);
   width: 100%;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
 }
 
 /* Responsive Gauge Styling */
 .gauge {
   flex-shrink: 0;
-  width: 40vw;
-  max-width: 250px;
+  width: min(34vw, 210px);
   height: auto;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: conic-gradient(#4e9ef3 var(--value), #444 var(--value));
+  background: conic-gradient(var(--accent) var(--value), #2a3346 var(--value));
   position: relative;
   display: flex;
   align-items: center;
@@ -27,25 +88,27 @@
 /* Text inside gauge */
 .gauge-text {
   position: absolute;
-  font-weight: bold;
-  font-size: 4vw;
-  margin-bottom: 2rem;
+  font-weight: 600;
+  font-size: clamp(1.2rem, 3.2vw, 2.2rem);
+  margin-bottom: 1.6rem;
 }
 
 .gauge-label {
   position: absolute;
-  margin-top: 5vw;
-  font-size: 1.5rem;
-  font-weight: bold;
+  margin-top: 3.6vw;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 /* Text-based stats */
 .text-stats {
-  margin-top: 1rem;
-  font-size: 1.5rem;
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
   text-align: left;
-  margin-left: 20px;
+  margin-left: 16px;
   flex-grow: 1;
+  color: var(--text);
 }
 
 /* Disk Usage Section */
@@ -64,57 +127,39 @@
 }
 
 .disk-stats p {
-  margin-bottom: 5px;
-  font-size: 1rem;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+  color: var(--muted);
 }
 
 .progress {
-  height: 20px;
-  background-color: #444;
-  border-radius: 10px;
-  margin-bottom: 12px;
+  height: 16px;
+  background-color: #2a3346;
+  border-radius: 999px;
+  margin-bottom: 10px;
 }
 
 .progress-bar {
   height: 100%;
   width: 0%;
-  background-color: #4e9ef3;
-  border-radius: 10px;
+  background-color: var(--accent);
+  border-radius: 999px;
   transition: width 0.5s ease-in-out;
-}
-
-/* Network*/
-.network-stats {
-  text-align: center;
-  margin-top: 20px;
-  padding-top: 10px;
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.network-speed-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-}
-
-.network-speed-container p {
-  font-size: 1.2rem;
-  margin: 5px 0;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  color: #0a1b14;
+  font-weight: 600;
+  font-size: 0.8rem;
 }
 
 /* OHM Status */
 .status-banner {
   width: 100%;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 8px 12px;
-  margin: 0 0 12px 0;
-  font-size: 1rem;
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
   text-align: center;
   border: 1px solid transparent;
+  background: rgba(242, 209, 138, 0.12);
 }
 
 .status-hidden {
@@ -122,57 +167,37 @@
 }
 
 .status-warn {
-  color: #f2d18a;
-  background: rgba(242, 209, 138, 0.12);
+  color: var(--warn);
   border-color: rgba(242, 209, 138, 0.35);
 }
 
 .status-error {
-  color: #f5a4a4;
-  background: rgba(245, 164, 164, 0.12);
+  color: var(--danger);
   border-color: rgba(245, 164, 164, 0.35);
+  background: rgba(245, 164, 164, 0.12);
 }
 
 /* Time & Date */
 #current-time {
-  font-size: 3rem;
-  top: 20%;
-  font-weight: bold;
-  margin-left: 5%;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-left: 0;
 }
 
 #current-date {
-  font-size: 1.3rem;
+  font-size: 1rem;
   font-weight: 400;
-  top: 20%;
-  color: #ddd;
-  margin-left: 5%;
+  color: var(--muted);
+  margin-left: 0;
+  margin-top: 5.4vw;
 }
 
-
-
-@media (max-width: 1300px) {
+@media (max-width: 1100px) {
   .gauge {
-    width: 16vw;
-  }
-
-  .gauge-text {
-    font-size: 5vw;
+    width: min(30vw, 190px);
   }
 
   .gauge-label {
-    font-size: 1.2rem;
-    margin-top: 4vw;
-  }
-
-  #current-time {
-    font-size: 2.6rem;
-    top: 15%;
-  }
-
-  #current-date {
-    font-size: 1.2rem;
-    font-weight: 400;
-    top: 28%;
+    font-size: 0.9rem;
   }
 }
