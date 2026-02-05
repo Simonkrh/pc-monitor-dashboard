@@ -20,6 +20,7 @@ body {
     overflow: hidden;
     font-family: "Sora", sans-serif;
     color: var(--text);
+    padding-top: 12px;
     background:
         radial-gradient(1200px 600px at 10% -20%, #1c3b57 0%, transparent 60%),
         radial-gradient(900px 500px at 110% 10%, #1b2a46 0%, transparent 55%),
@@ -42,7 +43,7 @@ body::before {
 }
 
 h1 {
-    margin: 16px 24px 8px;
+    margin: 0 24px 8px;
     font-size: 1.6rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;

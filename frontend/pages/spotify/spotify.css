@@ -175,15 +175,16 @@ body::before {
   left: 0;
   width: 100%;
   padding: 0 16px 12px;
-  gap: 12px;
+  gap: 24px;
   display: flex;
   flex-direction: column;
 }
 
 .controls {
   display: flex;
-  justify-content: space-between;
-  padding: 0 6px;
+  justify-content: center;
+  gap: 60px;
+  padding: 0 12px;
 }
 
 /* Track Bar */
