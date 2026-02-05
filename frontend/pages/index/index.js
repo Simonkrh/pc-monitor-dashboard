@@ -2,6 +2,15 @@ const serverIP = `${CONFIG.SERVER_PC_IP}`;
 const macroServerIP = `${CONFIG.MACRO_PC_IP}`;
 let images = [];
 
+const dimOverlay =
+  document.getElementById("dimOverlay") ||
+  (() => {
+    const d = document.createElement("div");
+    d.id = "dimOverlay";
+    document.body.appendChild(d);
+    return d;
+  })();
+
 async function checkPCStatus() {
   const now = new Date();
   const hour = now.getHours();
@@ -19,16 +28,15 @@ async function checkPCStatus() {
   } catch (error) {
     console.log("Server is unresponsive:", error);
   }
-
   // Dim the page if it's after 23:00 and PC is off
   if ((hour >= 23 || hour < 11) && !pcIsOn) {
     // console.log("It's after 23:00 and the PC is off. Dimming the page...");
-    document.body.style.filter = "brightness(25%)";
+    dimOverlay.style.opacity  = "0.75";
   }
   // Restore brightness if PC is on OR it's after 11:00 
   else {
     // console.log("PC is up or it's past 11:00. Restoring brightness...");
-    document.body.style.filter = "brightness(100%)";
+    dimOverlay.style.opacity = "0";
   }
 }
 
@@ -36,7 +44,7 @@ checkPCStatus();
 setInterval(checkPCStatus, 30000);
 
 function shuffleArray(array) {
-  const shuffled = array.slice(); 
+  const shuffled = array.slice();
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -51,7 +59,7 @@ fetch(`http://${serverIP}/slideshow/media`)
     if (mediaFiles.length > 0) {
       startSlideshow();
     }
-  })  
+  })
   .catch((err) => console.error(err));
 
 
@@ -160,10 +168,9 @@ function startSlideshow() {
         v.pause();
         v.removeAttribute("src");
         v.load();
-      } catch {}
+      } catch { }
     }
   }
-
 
   function scheduleNextSlide() {
     const currentMedia = currentSlide.querySelector("img, video");
@@ -223,11 +230,14 @@ function startSlideshow() {
         [currentSlide, nextSlide] = [nextSlide, currentSlide];
         scheduleNextSlide();
       }, 2000);
+    }, () => {
+      // If next media fails to load, skip to the next item.
+      setTimeout(() => transitionToNext("media-load-failed"), 1000);
     });
   }
 
 
-  function displayMedia(fileName, container, onReady) {
+  function displayMedia(fileName, container, onReady, onFail) {
     container.innerHTML = "";
     const lower = fileName.toLowerCase();
     const isVideo = lower.endsWith(".mp4") || lower.endsWith(".webm");
@@ -255,7 +265,7 @@ function startSlideshow() {
         if (endedOrSkipped) return;
         endedOrSkipped = true;
         console.warn(`Skipping video "${fileName}": ${why}`);
-        transitionToNext("video-skip");
+        if (onFail) onFail();
       };
 
       video.addEventListener("error", () => skip("error loading/decoding"), { once: true });
@@ -295,7 +305,7 @@ function startSlideshow() {
 
       img.onerror = () => {
         console.error(`Failed to load image: ${fileName}`);
-        transitionToNext("image-error");
+        if (onFail) onFail();
       };
 
       waitForImageDecode(img, () => {

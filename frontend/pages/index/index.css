@@ -22,6 +22,18 @@ body {
   width: 100%;
   height: 100%;
   transition: transform 2s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.slideshow-img video {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.slideshow-img img,
+.slideshow-img video {
+  will-change: transform, opacity;
 }
 
 .slideshow-img img,
@@ -31,23 +43,15 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;    
-  object-position: center; 
-  pointer-events: none;    
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
 }
 
 
-.slide-left {
-  transform: translateX(-100%);
-}
-
-.slide-center {
-  transform: translateX(0);
-}
-
-.slide-right {
-  transform: translateX(100%);
-}
+.slide-left  { transform: translate3d(-100%, 0, 0); }
+.slide-center{ transform: translate3d(0,     0, 0); }
+.slide-right { transform: translate3d(100%,  0, 0); }
 
 #loading-spinner {
   position: fixed;
@@ -76,4 +80,14 @@ body {
   100% {
     transform: rotate(360deg);
   }
+}
+
+#dimOverlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms ease;
+  z-index: 999999;
 }
