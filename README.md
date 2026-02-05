@@ -28,30 +28,16 @@ This project sets up a PC monitoring dashboard using:
 </p>
 
 ## Configs
-### Set Up the Required .env File
-Create a `.env` file in the **root folder** with the following structure:
-```
-MONITORED_PC_IP=""  # The PC being monitored (Open Hardware Monitor)
-MONITORED_PC_MAC="" # MAC address for Wake-on-LAN (optional)
-SERVER_PC_IP=""     # The PC running the backend server
+### Config UI (Recommended)
+Use the dashboard UI to set up and manage all required settings:
+- Open **Settings** → **Config** (or go to `/config`).
+- Changes are saved to disk. If the files don't exist yet, they are created on save.
+- If you change `SERVER_PC_IP` or `MACRO_PC_IP`, refresh the page to use the new IPs.
 
-# From "https://developer.spotify.com/"
-SPOTIFY_CLIENT_ID="" 
-SPOTIFY_CLIENT_SECRET=""
-SPOTIFY_REFRESH_TOKEN=""
-
-UPLOAD_FOLDER="" # The folder where images are uploaded to (for slideshow)
-MONITORED_DISKS="" # Comma-separated OHM disk names, must match OHM exactly
-```
-
-### Configuring `config.js`
-Create a `config.js` file inside the **frontend folder** with the following content:
-```js
-const CONFIG = {
-    SERVER_PC_IP: "" // The PC running the backend server - include :PORT if not default (backend uses 5000)
-    MACRO_PC_IP: "" // The PC running the macro server - include :PORT if not default
-};
-```
+### Optional: Edit Files Manually
+If you prefer, you can edit the config files directly:
+- `.env` in the repo root (backend settings)
+- `frontend/config.js` (frontend IPs)
 ## How to Use 
 You don't need all integrations enabled. Each feature works independently:
 - Open Hardware Monitor is only needed for the Resources page stats.

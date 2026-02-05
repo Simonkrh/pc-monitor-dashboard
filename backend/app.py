@@ -9,6 +9,7 @@ import os
 from blueprints.slideshow import slideshow
 from blueprints.monitoring import monitoring, setup_socketio
 from blueprints.spotify import spotify
+from blueprints.config import config
 
 load_dotenv()
 
@@ -24,6 +25,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.register_blueprint(monitoring, url_prefix="/monitoring")
 app.register_blueprint(spotify, url_prefix="/spotify")
 app.register_blueprint(slideshow, url_prefix="/slideshow")
+app.register_blueprint(config, url_prefix="/config")
 
 setup_socketio(socketio)
 

@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const slideshowBtn = document.getElementById("slideshowButton");
     const uploadBtn = document.getElementById("uploadButton");
     const manageMacrosBtn = document.getElementById("manageMacrosButton");
+    const configBtn = document.getElementById("configButton");
     
     
     slideshowBtn.addEventListener("click", () => {
@@ -19,6 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     manageMacrosBtn.addEventListener("click", () => {
         window.location.href = "/manageMacros";
+    });
+
+    configBtn.addEventListener("click", () => {
+        window.location.href = "/config";
     });
 
     fetchAudioOutputs();

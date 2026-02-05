@@ -36,6 +36,10 @@ def manageMacros():
 def settings():
     return send_from_directory(app.static_folder + "/pages/settings", "settings.html")
 
+@app.route("/config")
+def config_page():
+    return send_from_directory(app.static_folder + "/pages/config", "config.html")
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
