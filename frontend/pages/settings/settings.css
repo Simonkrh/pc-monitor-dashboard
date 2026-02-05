@@ -40,6 +40,12 @@ button:hover {
     background-color: #357fd8;  
 }
 
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #4e9ef3;
+}
+
 .red-background {
     background-color: rgb(255, 95, 95) !important;
 }

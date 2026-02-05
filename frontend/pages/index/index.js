@@ -363,17 +363,27 @@ function wakeAndRedirect() {
     })
     .catch(error => {
       console.error("Failed to send WoL request:", error);
-      const defaultPage = localStorage.getItem("defaultPage") || "/dashboard";
+      const defaultPage = getDefaultPage();
       window.location.href = defaultPage;
 
     });
+}
+
+function getDefaultPage() {
+  const hiddenPages = JSON.parse(localStorage.getItem("hiddenPages")) || [];
+  const candidate = localStorage.getItem("defaultPage") || "/dashboard";
+  if (!hiddenPages.includes(candidate)) {
+    return candidate;
+  }
+  const fallbackOrder = ["/dashboard", "/spotify", "/resources"];
+  return fallbackOrder.find((p) => !hiddenPages.includes(p)) || "/dashboard";
 }
 
 async function waitForPCAndMaybeMacro() {
   let attempts = 0;
   const maxAttempts = 40;
   const intervalMs = 3000;
-  const defaultPage = localStorage.getItem("defaultPage") || "/dashboard";
+  const defaultPage = getDefaultPage();
 
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 

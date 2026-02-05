@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchAudioOutputs();
     fetchAudioSessionsMetadata()
     setupDefaultPageButtons();
+    setupHiddenPagesButtons();
 });
 
 async function fetchAudioOutputs() {
@@ -161,22 +162,22 @@ function setupDefaultPageButtons() {
         resources: document.getElementById("defaultResources")
     };
 
-    const defaultPage = localStorage.getItem("defaultPage") || "/dashboard";
+    const defaultPage = getDefaultPage();
     highlightSelected(defaultPage);
 
     buttons.dashboard.addEventListener("click", () => {
-        localStorage.setItem("defaultPage", "/dashboard");
-        highlightSelected("/dashboard");
+        setDefaultPage("/dashboard");
+        highlightSelected(getDefaultPage());
     });
 
     buttons.spotify.addEventListener("click", () => {
-        localStorage.setItem("defaultPage", "/spotify");
-        highlightSelected("/spotify");
+        setDefaultPage("/spotify");
+        highlightSelected(getDefaultPage());
     });
 
     buttons.resources.addEventListener("click", () => {
-        localStorage.setItem("defaultPage", "/resources");
-        highlightSelected("/resources");
+        setDefaultPage("/resources");
+        highlightSelected(getDefaultPage());
     });
 
     function highlightSelected(selected) {
@@ -188,4 +189,88 @@ function setupDefaultPageButtons() {
     });
 }
 
+}
+
+function getHiddenPages() {
+    return JSON.parse(localStorage.getItem("hiddenPages")) || [];
+}
+
+function getDefaultPage() {
+    const hiddenPages = getHiddenPages();
+    const candidate = localStorage.getItem("defaultPage") || "/dashboard";
+    if (!hiddenPages.includes(candidate)) {
+        return candidate;
+    }
+    const fallbackOrder = ["/dashboard", "/spotify", "/resources"];
+    return fallbackOrder.find((p) => !hiddenPages.includes(p)) || "/dashboard";
+}
+
+function setDefaultPage(page) {
+    const hiddenPages = getHiddenPages();
+    if (hiddenPages.includes(page)) {
+        return;
+    }
+    localStorage.setItem("defaultPage", page);
+}
+
+function setupHiddenPagesButtons() {
+    const pageButtons = [
+        { id: "toggleDashboardPage", path: "/dashboard", label: "Dashboard" },
+        { id: "toggleSpotifyPage", path: "/spotify", label: "Spotify" },
+        { id: "toggleResourcesPage", path: "/resources", label: "Resources" }
+    ];
+
+    const swipePages = ["/dashboard", "/spotify", "/resources"];
+    const hiddenPages = getHiddenPages();
+
+    const applyState = (btn, path, label, canHide) => {
+        const isHidden = hiddenPages.includes(path);
+        btn.classList.toggle("red-background", isHidden);
+        btn.textContent = isHidden ? `${label} (Hidden)` : label;
+        btn.disabled = !isHidden && !canHide;
+    };
+
+    const updateAllButtons = () => {
+        const visibleSwipePages = swipePages.filter((p) => !hiddenPages.includes(p));
+        const canHideAnyMore = visibleSwipePages.length > 1;
+
+        pageButtons.forEach(({ id, path, label }) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const canHide = canHideAnyMore;
+            applyState(btn, path, label, canHide);
+        });
+
+        const defaultPage = getDefaultPage();
+        localStorage.setItem("defaultPage", defaultPage);
+    };
+
+    pageButtons.forEach(({ id, path, label }) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+
+        applyState(btn, path, label, true);
+
+        btn.addEventListener("click", () => {
+            const nextHidden = [...hiddenPages];
+            const idx = nextHidden.indexOf(path);
+            if (idx >= 0) {
+                nextHidden.splice(idx, 1);
+            } else {
+                nextHidden.push(path);
+            }
+
+            const visibleSwipePages = swipePages.filter((p) => !nextHidden.includes(p));
+            if (visibleSwipePages.length === 0) {
+                return;
+            }
+
+            hiddenPages.length = 0;
+            hiddenPages.push(...nextHidden);
+            localStorage.setItem("hiddenPages", JSON.stringify(hiddenPages));
+            updateAllButtons();
+        });
+    });
+
+    updateAllButtons();
 }
