@@ -5,9 +5,15 @@ let moveY = 0;
 const threshold = 300; // Minimum swipe distance
 
 // Define the order of the pages
-const pages = ["/resources", "/spotify", "/dashboard"];
+const pages = ["/dashboard", "/spotify", "/resources"];
+const hiddenPages = JSON.parse(localStorage.getItem("hiddenPages")) || [];
+const visiblePages = pages.filter((page) => !hiddenPages.includes(page));
+
+if (visiblePages.length === 0) {
+  visiblePages.push("/dashboard");
+}
 let currentPage = window.location.pathname;
-let currentIndex = pages.findIndex((page) => currentPage.includes(page.split('/').pop()));
+let currentIndex = visiblePages.findIndex((page) => currentPage.includes(page.split('/').pop()));
 
 if (currentIndex === -1) {
   currentIndex = 0;
@@ -97,7 +103,7 @@ function handleSwipe() {
     } else if (diffY < 0 && isSettingsPage) {
       // Swipe Up -> go to previous page
       document.body.classList.add("swipe-up");
-      const previousPage = document.referrer || pages[currentIndex] || "/dashboard";
+      const previousPage = document.referrer || visiblePages[currentIndex] || "/dashboard";
       setTimeout(() => {
         window.location.href = previousPage;
       }, 300);
@@ -110,13 +116,13 @@ function handleSwipe() {
 function navigateHorizontally(direction) {
   if (direction === "next") {
     document.body.classList.add("swipe-left");
-    currentIndex = (currentIndex + 1) % pages.length;
+    currentIndex = (currentIndex + 1) % visiblePages.length;
   } else {
     document.body.classList.add("swipe-right");
-    currentIndex = (currentIndex - 1 + pages.length) % pages.length;
+    currentIndex = (currentIndex - 1 + visiblePages.length) % visiblePages.length;
   }
 
   setTimeout(() => {
-    window.location.href = pages[currentIndex];
+    window.location.href = visiblePages[currentIndex];
   }, 300);
 }

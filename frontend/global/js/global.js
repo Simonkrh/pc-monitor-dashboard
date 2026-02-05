@@ -98,4 +98,21 @@ if (document.getElementById("current-time") || document.getElementById("current-
 document.addEventListener('dragstart', (e) => {
     e.preventDefault();
   });
+
+function applyTheme() {
+    const root = document.documentElement;
+    const stored = localStorage.getItem("themeVars");
+    if (!stored) return;
+
+    try {
+        const vars = JSON.parse(stored);
+        Object.entries(vars).forEach(([key, value]) => {
+            root.style.setProperty(key, value);
+        });
+    } catch (e) {
+        console.warn("Failed to apply theme:", e);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", applyTheme);
   
