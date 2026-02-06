@@ -1,5 +1,45 @@
-const backendServerIP = `${CONFIG.SERVER_PC_IP}`;
-const configApiBase = `http://${backendServerIP}/config`;
+function getBackendServerIP() {
+    const fromConfig = (window.CONFIG && `${CONFIG.SERVER_PC_IP}`.trim()) || "";
+    if (fromConfig) return fromConfig;
+
+    const stored = localStorage.getItem("backendServerOverride");
+    if (stored) return stored;
+
+    const input = document.getElementById("cfg-frontend-server");
+    if (input && input.value.trim()) return input.value.trim();
+
+    return "";
+}
+
+function getConfigApiBase() {
+    const backendServerIP = getBackendServerIP();
+    return backendServerIP ? `http://${backendServerIP}/config` : "";
+}
+
+function getFallbackApiBase() {
+    const fallbackHost = window.location.hostname;
+    if (!fallbackHost) return "";
+    const fallback = `http://${fallbackHost}:5000/config`;
+    const primary = getConfigApiBase();
+    if (primary && primary.toLowerCase() === fallback.toLowerCase()) {
+        return "";
+    }
+    return fallback;
+}
+
+async function fetchWithFallback(url, options) {
+    try {
+        return await fetch(url, options);
+    } catch (err) {
+        const fallback = getFallbackApiBase();
+        if (!fallback || fallback === url) {
+            throw err;
+        }
+        const res = await fetch(fallback, options);
+        localStorage.setItem("backendServerOverride", `${window.location.hostname}:5000`);
+        return res;
+    }
+}
 
 let cachedConfig = null;
 
@@ -18,6 +58,7 @@ function setupConfigUi() {
     const reloadBtn = document.getElementById("configReload");
     const saveBtn = document.getElementById("configSave");
     const showSpotify = document.getElementById("cfg-spotify-show");
+    const frontendServerInput = document.getElementById("cfg-frontend-server");
 
     if (!reloadBtn || !saveBtn) {
         return;
@@ -33,6 +74,15 @@ function setupConfigUi() {
                 const input = document.getElementById(id);
                 if (input) input.type = type;
             });
+        });
+    }
+
+    if (frontendServerInput) {
+        frontendServerInput.addEventListener("change", () => {
+            const value = frontendServerInput.value.trim();
+            if (value) {
+                localStorage.setItem("backendServerOverride", value);
+            }
         });
     }
 
@@ -70,8 +120,13 @@ function fillConfigInputs(data) {
 
 async function loadConfig() {
     setConfigStatus("Loading...");
+    const configApiBase = getConfigApiBase();
+    if (!configApiBase) {
+        setConfigStatus("Set Backend API IP:Port to load config.", true);
+        return;
+    }
     try {
-        const resp = await fetch(configApiBase, { cache: "no-store" });
+        const resp = await fetchWithFallback(configApiBase, { cache: "no-store" });
         if (!resp.ok) {
             setConfigStatus(`Failed to load config (${resp.status})`, true);
             return;
@@ -113,6 +168,11 @@ function buildConfigPayload() {
 
 async function saveConfig() {
     const payload = buildConfigPayload();
+    const configApiBase = getConfigApiBase();
+    if (!configApiBase) {
+        setConfigStatus("Set Backend API IP:Port before saving.", true);
+        return;
+    }
     const previous = cachedConfig?.frontend || {};
     const frontendChanged =
         previous.SERVER_PC_IP !== payload.frontend.SERVER_PC_IP ||
@@ -120,7 +180,7 @@ async function saveConfig() {
 
     setConfigStatus("Saving...");
     try {
-        const resp = await fetch(configApiBase, {
+        const resp = await fetchWithFallback(configApiBase, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)

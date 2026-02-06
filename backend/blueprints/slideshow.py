@@ -8,7 +8,7 @@ load_dotenv()
 
 slideshow = Blueprint("slideshow", __name__)
 
-UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
+UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER") or "uploads"
 HASH_FILE = os.path.join(UPLOAD_FOLDER, "hashes.json")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 

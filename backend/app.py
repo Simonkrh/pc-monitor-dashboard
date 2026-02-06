@@ -17,7 +17,7 @@ app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 CORS(app)
 
-UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "uploads")
+UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER") or "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
