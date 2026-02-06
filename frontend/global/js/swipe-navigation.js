@@ -101,11 +101,10 @@ function handleSwipe() {
         window.location.href = "/settings";
       }, 300);
     } else if (diffY < 0 && isSettingsPage) {
-      // Swipe Up -> go to previous page
+      // Swipe Up -> go to default page
       document.body.classList.add("swipe-up");
-      const previousPage = document.referrer || visiblePages[currentIndex] || "/dashboard";
       setTimeout(() => {
-        window.location.href = previousPage;
+        window.location.href = getDefaultPage();
       }, 300);
     }
   }
@@ -125,4 +124,14 @@ function navigateHorizontally(direction) {
   setTimeout(() => {
     window.location.href = visiblePages[currentIndex];
   }, 300);
+}
+
+function getDefaultPage() {
+  const hidden = JSON.parse(localStorage.getItem("hiddenPages")) || [];
+  const candidate = localStorage.getItem("defaultPage") || "/dashboard";
+  if (!hidden.includes(candidate)) {
+    return candidate;
+  }
+  const fallbackOrder = ["/dashboard", "/spotify", "/resources"];
+  return fallbackOrder.find((p) => !hidden.includes(p)) || "/dashboard";
 }
