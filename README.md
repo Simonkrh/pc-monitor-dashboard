@@ -38,6 +38,7 @@ Use the dashboard UI to set up and manage all required settings:
 If you prefer, you can edit the config files directly:
 - `.env` in the repo root (backend settings)
 - `frontend/config.js` (frontend IPs)
+  - This file is optional at first run. If it doesn't exist, the frontend uses `frontend/config-default.js`, which sets `SERVER_PC_IP` to the current host and port `:5000`.
 ## How to Use 
 You don't need all integrations enabled. Each feature works independently:
 - Open Hardware Monitor is only needed for the Resources page stats.
