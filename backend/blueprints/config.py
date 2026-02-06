@@ -146,6 +146,17 @@ def update_frontend_config(path: Path, updates: dict) -> None:
         path.write_text(updated, encoding="utf-8")
 
 
+def ensure_frontend_config_exists() -> None:
+    if FRONTEND_CONFIG_PATH.exists():
+        return
+    env = read_env_file(ENV_PATH)
+    updates = {
+        "SERVER_PC_IP": env.get("SERVER_PC_IP", ""),
+        "MACRO_PC_IP": env.get("MACRO_PC_IP", ""),
+    }
+    update_frontend_config(FRONTEND_CONFIG_PATH, updates)
+
+
 def get_config_snapshot() -> dict:
     env = read_env_file(ENV_PATH)
     frontend = read_frontend_config(FRONTEND_CONFIG_PATH)
@@ -195,6 +206,7 @@ def apply_runtime_updates(env_updates: dict) -> None:
 
 @config.route("", methods=["GET"])
 def get_config():
+    ensure_frontend_config_exists()
     return jsonify(get_config_snapshot())
 
 
