@@ -1,7 +1,7 @@
 import eventlet
 
 eventlet.monkey_patch()
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from dotenv import load_dotenv
 import urllib3
 import os
@@ -28,6 +28,7 @@ UPDATE_INTERVAL = 1
 FETCH_NETWORK_EVERY_N_LOOPS = 3
 
 socketio = None
+connected_clients = set()
 
 last_stats = {}
 
@@ -204,6 +205,10 @@ def background_task():
                 time.sleep(1)
                 continue
 
+            if not connected_clients:
+                time.sleep(2)
+                continue
+
             loop_counter += 1
 
             # Always fetch OHM
@@ -253,6 +258,12 @@ def setup_socketio(sio):
 
     @socketio.on("connect")
     def handle_connect():
+        connected_clients.add(request.sid)
         print("Client connected")
+
+    @socketio.on("disconnect")
+    def handle_disconnect():
+        connected_clients.discard(request.sid)
+        print("Client disconnected")
 
     socketio.start_background_task(background_task)

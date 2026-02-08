@@ -2,7 +2,19 @@ let startX = 0;
 let startY = 0;
 let moveX = 0;
 let moveY = 0;
-const threshold = 300; // Minimum swipe distance
+let isMouseDown = false;
+
+function getSwipeThreshold() {
+  const base = Math.round(window.innerWidth * 0.18);
+  return Math.max(90, Math.min(180, base));
+}
+
+function setStart(x, y) {
+  startX = x;
+  startY = y;
+  moveX = x;
+  moveY = y;
+}
 
 // Define the order of the pages
 const pages = ["/dashboard", "/spotify", "/resources"];
@@ -19,18 +31,55 @@ if (currentIndex === -1) {
   currentIndex = 0;
 }
 
-// Ensure the new page fades in quickly
-window.onload = () => {
+function canPrefetch() {
+  const conn =
+    navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (!conn) return true;
+  if (conn.saveData) return false;
+  return !["slow-2g", "2g"].includes(conn.effectiveType);
+}
+
+function prefetchUrl(url) {
+  if (!url || !canPrefetch()) return;
+
+  const existing = document.querySelector(`link[rel="prefetch"][href="${url}"]`);
+  if (existing) return;
+
+  const link = document.createElement("link");
+  link.rel = "prefetch";
+  link.as = "document";
+  link.href = url;
+  document.head.appendChild(link);
+}
+
+function prefetchNeighbors() {
+  if (visiblePages.length <= 1) {
+    prefetchUrl("/settings");
+    return;
+  }
+
+  const next = visiblePages[(currentIndex + 1) % visiblePages.length];
+  const prev =
+    visiblePages[(currentIndex - 1 + visiblePages.length) % visiblePages.length];
+  prefetchUrl(next);
+  prefetchUrl(prev);
+  prefetchUrl("/settings");
+  prefetchUrl(getDefaultPage());
+}
+
+document.addEventListener("DOMContentLoaded", () => {
   document.body.classList.add("show");
-};
+  setTimeout(prefetchNeighbors, 350);
+});
 
 // Touch Events
 document.addEventListener("touchstart", (event) => {
-  startX = event.touches[0].clientX;
-  startY = event.touches[0].clientY;
+  if (event.touches.length !== 1) return;
+  setStart(event.touches[0].clientX, event.touches[0].clientY);
 });
 
 document.addEventListener("touchmove", (event) => {
+  if (event.touches.length !== 1) return;
   moveX = event.touches[0].clientX;
   moveY = event.touches[0].clientY;
 
@@ -51,27 +100,36 @@ document.addEventListener("touchmove", (event) => {
   }
 }, { passive: false });
 
-document.addEventListener("touchend", () => {
+document.addEventListener("touchend", (event) => {
+  const last = event.changedTouches && event.changedTouches[0];
+  if (last) {
+    moveX = last.clientX;
+    moveY = last.clientY;
+  }
   handleSwipe();
 });
 
 // Mouse Events (for swiping with a mouse)
 document.addEventListener("mousedown", (event) => {
-  startX = event.clientX;
-  startY = event.clientY;
+  isMouseDown = true;
+  setStart(event.clientX, event.clientY);
 });
 
 document.addEventListener("mousemove", (event) => {
+  if (!isMouseDown) return;
   moveX = event.clientX;
   moveY = event.clientY;
 });
 
 document.addEventListener("mouseup", () => {
+  if (!isMouseDown) return;
+  isMouseDown = false;
   handleSwipe();
 });
 
 // Swipe Handling
 function handleSwipe() {
+  const threshold = getSwipeThreshold();
   const diffX = moveX - startX;
   const diffY = moveY - startY;
 

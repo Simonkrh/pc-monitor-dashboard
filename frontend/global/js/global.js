@@ -20,28 +20,9 @@ async function fetchWithTimeout(resource, options = {}, timeout = 5000) {
 
 async function checkPCStatus() {
     if (isChecking) return;
+    if (document.hidden) return;
     isChecking = true;
     try {
-        const statsRes = await fetchWithTimeout(`${SERVER_IP}/stats`, { method: "GET", cache: "no-store" }, 8000);
-
-        if (statsRes.ok) {
-            const data = await statsRes.json();
-
-            if (data.error || data.cpu_usage === undefined || data.cpu_temp === undefined) {
-                console.warn("[checkPCStatus] Stats incomplete or returned error:", data.error);
-                throw new Error("Stats check failed");
-            }
-
-            offlineCounter = 0;
-            lastSuccessfulPing = Date.now();
-            return;
-        } else {
-            console.warn("[checkPCStatus] /stats responded with non-OK status");
-            throw new Error("Non-OK /stats");
-        }
-    } catch (statsErr) {
-        console.warn("[checkPCStatus] /stats failed, trying /ping...", statsErr);
-
         try {
             const pingRes = await fetchWithTimeout(`${SERVER_IP}/ping`, { method: "GET", cache: "no-store" }, 8000);
 
@@ -75,6 +56,9 @@ async function checkPCStatus() {
 }
 
 setInterval(checkPCStatus, 30000); 
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) checkPCStatus();
+});
 
 
 function updateTimeAndDate() {
@@ -115,4 +99,8 @@ function applyTheme() {
 }
 
 document.addEventListener("DOMContentLoaded", applyTheme);
+document.addEventListener("DOMContentLoaded", () => {
+    document.body.classList.add("show");
+    checkPCStatus();
+});
   

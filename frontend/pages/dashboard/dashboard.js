@@ -3,13 +3,46 @@ const macroServerIP = `${CONFIG.MACRO_PC_IP}`;
 let currentSessionName = null;
 const sessionButtons = new Map();
 let volumePollTimer = null;
+let baseVolumePollTimer = null;
+let volumeFetchInFlight = false;
+
+const MACROS_CACHE_KEY = "macros_cache_v1";
+const MACROS_CACHE_TTL_MS = 5 * 60 * 1000;
+
+function readJsonCache(key, maxAgeMs) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    if (typeof parsed.savedAt !== "number") return null;
+    if (Date.now() - parsed.savedAt > maxAgeMs) return null;
+    return parsed.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function writeJsonCache(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), value }));
+  } catch {
+    // Ignore quota / private mode failures
+  }
+}
 
 async function fetchMacros() {
   try {
+    const cached = readJsonCache(MACROS_CACHE_KEY, MACROS_CACHE_TTL_MS);
+    if (cached?.grid && Array.isArray(cached?.macros)) {
+      renderMacroGrid(cached.grid, cached.macros);
+    }
+
     const response = await fetch(`http://${macroServerIP}/macros`);
     const config = await response.json();
 
     renderMacroGrid(config.grid, config.macros);
+    writeJsonCache(MACROS_CACHE_KEY, config);
   } catch (err) {
     console.error("Failed to fetch dashboard config:", err);
   }
@@ -208,31 +241,42 @@ function isSessionHidden(id) {
 }
 
 async function fetchAudioSessionVolumes() {
-  const response = await fetch(`http://${macroServerIP}/audio_sessions_volume`);
-  const volumes = await response.json();
+  if (document.hidden) return;
+  if (volumeFetchInFlight) return;
+  volumeFetchInFlight = true;
 
-  let shouldFetchMetadata = false;
+  try {
+    const response = await fetch(`http://${macroServerIP}/audio_sessions_volume`);
+    if (!response.ok) throw new Error(`macro-server responded ${response.status}`);
+    const volumes = await response.json();
 
-  volumes.forEach(session => {
-    if (sessionButtons.has(session.name)) {
-      const entry = sessionButtons.get(session.name);
-      entry.volume = session.volume;
+    let shouldFetchMetadata = false;
 
-      if (currentSessionName === session.name) {
-        updateSlider(session.volume);
+    volumes.forEach(session => {
+      if (sessionButtons.has(session.name)) {
+        const entry = sessionButtons.get(session.name);
+        entry.volume = session.volume;
+
+        if (currentSessionName === session.name) {
+          updateSlider(session.volume);
+        }
+      } else {
+        shouldFetchMetadata = true;
       }
-    } else {
-      shouldFetchMetadata = true;
+    });
+
+    // If current session no longer exists, return to icon view
+    if (currentSessionName && !volumes.some(s => s.name === currentSessionName)) {
+      returnToIcons();
     }
-  });
 
-  // If current session no longer exists, return to icon view
-  if (currentSessionName && !volumes.some(s => s.name === currentSessionName)) {
-    returnToIcons();
-  }
-
-  if (shouldFetchMetadata) {
-    fetchAudioSessionsMetadata();
+    if (shouldFetchMetadata) {
+      fetchAudioSessionsMetadata();
+    }
+  } catch (err) {
+    console.error("Failed to fetch audio session volumes:", err);
+  } finally {
+    volumeFetchInFlight = false;
   }
 }
 
@@ -254,6 +298,18 @@ function stopFastPolling() {
   volumePollTimer = null;
 }
 
+function startBasePolling() {
+  stopBasePolling();
+  baseVolumePollTimer = setInterval(() => {
+    if (!currentSessionName) fetchAudioSessionVolumes();
+  }, 5000);
+}
+
+function stopBasePolling() {
+  if (baseVolumePollTimer) clearInterval(baseVolumePollTimer);
+  baseVolumePollTimer = null;
+}
+
 function returnToIcons() {
   stopFastPolling();
   currentSessionName = null;
@@ -265,11 +321,19 @@ deviceReady = async () => {
   await fetchMacros();
   await fetchAudioSessionsMetadata();
   await fetchAudioSessionVolumes();
-
-  setInterval(() => {
-    if (!currentSessionName) fetchAudioSessionVolumes();
-  }, 5000);
+  startBasePolling();
 };
 
 window.addEventListener('DOMContentLoaded', deviceReady);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopFastPolling();
+    stopBasePolling();
+    return;
+  }
+
+  if (currentSessionName) startFastPolling();
+  startBasePolling();
+  fetchAudioSessionVolumes();
+});
  
