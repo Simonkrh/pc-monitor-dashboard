@@ -157,10 +157,9 @@ body::before {
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
 }
 
-#audio-session-controls,
-#volume-slider-view {
+#audio-session-controls {
   position: absolute;
-  top: 10px;
+  top: 30px;
   left: 0;
   width: 100%;
 }
@@ -181,10 +180,21 @@ body::before {
 #volume-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 22px;
-  height: 22px;
+  width: 0;
+  height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   position: relative;
   z-index: 2;
+}
+
+#volume-slider::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 #volume-slider-view {
@@ -202,8 +212,6 @@ body::before {
   border: none;
   border-radius: 12px;
   color: #0a1b14;
-  padding: 8px 18px;
-  margin-bottom: 4px;
   font-size: 0.95rem;
   font-weight: 700;
 }
