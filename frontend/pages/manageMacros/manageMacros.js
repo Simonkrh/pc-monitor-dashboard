@@ -87,6 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const macroType = document.getElementById('macro-type');
   const macroValueInput = document.getElementById('macro-value');
   const macroValueLabel = document.getElementById('macro-value-label');
+  const macroLaunchParamsInput = document.getElementById('macro-launch-params');
+  const macroLaunchParamsLabel = document.getElementById('macro-launch-params-label');
+  const macroLaunchParamsHelp = document.getElementById('macro-launch-params-help');
 
   const jsonReloadBtn = document.getElementById('json-reload-btn');
   const jsonFormatBtn = document.getElementById('json-format-btn');
@@ -94,14 +97,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const help = document.getElementById('macro-value-help');
 
-  // Change label depending on macro type
-  macroType.addEventListener('change', () => {
+  function setLaunchParamsVisible(visible) {
+    const display = visible ? '' : 'none';
+    macroLaunchParamsInput.style.display = display;
+    macroLaunchParamsLabel.style.display = display;
+    macroLaunchParamsHelp.style.display = display;
+
+    if (!visible) macroLaunchParamsInput.value = '';
+  }
+
+  function updateMacroTypeUI() {
     if (macroType.value === 'switch_account') {
       macroValueLabel.textContent = 'Steam ID:';
       macroValueInput.placeholder = 'e.g. 76561198197834043';
       help.style.display = 'none';
       help.innerHTML = '';
-    } else if (macroType.value === 'type_text') {
+      setLaunchParamsVisible(false);
+      return;
+    }
+
+    if (macroType.value === 'type_text') {
       macroValueLabel.textContent = 'Text to type:';
       macroValueInput.placeholder = 'e.g. Hello, World!';
 
@@ -110,13 +125,24 @@ document.addEventListener('DOMContentLoaded', () => {
         (Use <code>&lt;enter&gt;</code> to press Enter, and <code>&lt;wait:2000&gt;</code> to wait 2 seconds.
         Example: <code>hello&lt;enter&gt;&lt;wait:2000&gt;world</code>)
       `;
-    } else {
-      macroValueLabel.textContent = 'Executable Path:';
-      macroValueInput.placeholder = 'C:\\Path\\To\\App.exe';
-      help.style.display = 'none';
-      help.innerHTML = '';
+      setLaunchParamsVisible(false);
+      return;
     }
+
+    macroValueLabel.textContent = 'Executable Path:';
+    macroValueInput.placeholder = 'C:\\Path\\To\\App.exe';
+    help.style.display = 'none';
+    help.innerHTML = '';
+
+    setLaunchParamsVisible(macroType.value === 'open_app');
+  }
+
+  // Change label depending on macro type
+  macroType.addEventListener('change', () => {
+    updateMacroTypeUI();
   });
+
+  updateMacroTypeUI();
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -126,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const macroTypeValue = macroType.value;
     let macroValue = macroValueInput.value;
     if (macroTypeValue !== "type_text") macroValue = macroValue.trim();
+    const launchParams = (macroLaunchParamsInput?.value ?? "").trim();
 
     if (!label || !iconFile || !macroValue) {
       uploadStatus.textContent = 'All fields are required.';
@@ -153,7 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const { icon_path } = await uploadRes.json();
 
       // Build macro object
-      const macroCommand = macroTypeValue + ':' + macroValue;
+      let macroCommand = macroTypeValue + ':' + macroValue;
+
+      if (macroTypeValue === "open_app" && launchParams) {
+        macroCommand = `open_app:${JSON.stringify({ app_path: macroValue, launch_params: launchParams })}`;
+      }
       
       const macroData = {
         label,
@@ -174,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.reset();
         selectedPosition = null;
         highlightSelectedPosition(null); 
+        updateMacroTypeUI();
         fetchMacros(); 
       } else {
         uploadStatus.textContent = 'Failed to save macro.';

@@ -72,7 +72,28 @@ async function sendMacro(command) {
 
   if (command.startsWith("open_app:")) {
     endpoint = 'open_app';
-    payload = { app_path: command.slice("open_app:".length) };
+
+    const raw = command.slice("open_app:".length);
+    const trimmed = raw.trimStart();
+
+    if (trimmed.startsWith("{")) {
+      try {
+        const obj = JSON.parse(trimmed);
+        if (obj && typeof obj === "object" && typeof obj.app_path === "string") {
+          payload = { app_path: obj.app_path };
+
+          if (typeof obj.launch_params === "string" || Array.isArray(obj.launch_params)) {
+            payload.launch_params = obj.launch_params;
+          }
+        } else {
+          payload = { app_path: raw };
+        }
+      } catch {
+        payload = { app_path: raw };
+      }
+    } else {
+      payload = { app_path: raw };
+    }
 
   } else if (command.startsWith("switch_account:")) {
     endpoint = 'switch_account';
