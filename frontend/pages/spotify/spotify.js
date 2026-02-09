@@ -77,10 +77,12 @@ async function updateSongInfo() {
       document.getElementById("song-title").innerText = "No song playing";
       document.getElementById("artist-name").innerText = "";
       document.getElementById("album-art").src = "default.jpg";
+      currentPlaylistId = null;
       updatePlayPauseIcon(false);
       isPlaying = false;
       if (trackUpdateRequest) cancelAnimationFrame(trackUpdateRequest);
       updateTrackProgress(0, 0);
+      highlightPlayingPlaylist();
 
       return;
     }
@@ -129,6 +131,7 @@ async function updateSongInfo() {
     updateTrackTime();
 
     highlightPlayingSong();
+    highlightPlayingPlaylist();
   } catch (error) {
     console.error("Error fetching song info:", error);
     document.getElementById("song-title").innerText = "Error fetching song info";
@@ -273,6 +276,23 @@ function updateShuffleIcon(isShuffle) {
   shuffleIcon.classList.toggle("active-green", isShuffle);
 }
 
+function renderPlaylistFeedback(title, message) {
+  const playlistTitle = document.getElementById("playlist-title");
+  if (playlistTitle) {
+    playlistTitle.innerText = title;
+  }
+
+  const playlistUl = document.getElementById("playlist");
+  if (!playlistUl) return;
+
+  playlistUl.innerHTML = "";
+
+  const feedbackItem = document.createElement("li");
+  feedbackItem.classList.add("list-group-item", "playlist-feedback");
+  feedbackItem.innerText = message;
+  playlistUl.appendChild(feedbackItem);
+}
+
 
 async function loadPlaylist(playlistId) {
   try {
@@ -283,7 +303,11 @@ async function loadPlaylist(playlistId) {
 
     if (data.error) {
       console.error("Error fetching playlist:", data.error);
-      return;
+      renderPlaylistFeedback(
+        "Playlist unavailable",
+        "This playlist can't be shown here because it isn't one of your playlists (Spotify API restriction)."
+      );
+      return false;
     }
 
     const playlistTitle = document.getElementById("playlist-title");
@@ -339,8 +363,14 @@ async function loadPlaylist(playlistId) {
 
       highlightPlayingSong();
     });
+    return true;
   } catch (error) {
     console.error("Error loading playlist:", error);
+    renderPlaylistFeedback(
+      "Playlist unavailable",
+      "Could not load this playlist in the left panel."
+    );
+    return false;
   }
 }
 
@@ -387,6 +417,18 @@ function highlightPlayingSong() {
   });
 }
 
+function highlightPlayingPlaylist() {
+  const playlistItems = document.querySelectorAll("#playlist .list-group-item");
+
+  playlistItems.forEach((li) => {
+    if (li.dataset.playlistId && li.dataset.playlistId === currentPlaylistId) {
+      li.classList.add("playing-playlist-highlight");
+    } else {
+      li.classList.remove("playing-playlist-highlight");
+    }
+  });
+}
+
 async function getSpotifyVolume() {
   try {
     const response = await fetch(`${API_BASE_URL}/get-volume`);
@@ -406,6 +448,7 @@ async function getSpotifyVolume() {
 
 async function loadPlaylists() {
   try {
+    currentlyLoadedPlaylist = null;
     const response = await fetch(`${API_BASE_URL}/playlists`);
     const data = await response.json();
 
@@ -425,6 +468,7 @@ async function loadPlaylists() {
     data.items.forEach((playlist) => {
       const li = document.createElement("li");
       li.classList.add("list-group-item", "d-flex", "align-items-center");
+      li.dataset.playlistId = playlist.id;
 
       const playlistImages = playlist.images;
       const playlistCoverUrl =
@@ -449,6 +493,8 @@ async function loadPlaylists() {
       li.appendChild(textDiv);
       playlistUl.appendChild(li);
     });
+
+    highlightPlayingPlaylist();
   } catch (error) {
     console.error("Error loading playlists:", error);
   }
@@ -488,6 +534,10 @@ async function goToCurrentPlaylist() {
 
   if (!currentPlaylistId) {
     console.warn("No associated playlist for the current song.");
+    renderPlaylistFeedback(
+      "No playlist context",
+      "The current track is not playing from a playlist."
+    );
     return;
   }
 
@@ -543,16 +593,16 @@ document.addEventListener("DOMContentLoaded", async function () {
     infoWrapper.addEventListener("click", goToCurrentPlaylist);
   }
 
-  const musicIcon = document.getElementById("playlist-icon");
-  if (musicIcon) {
-    musicIcon.addEventListener("click", loadPlaylists);
+  const playlistsButton = document.getElementById("playlist-home-btn");
+  if (playlistsButton) {
+    playlistsButton.addEventListener("click", loadPlaylists);
   }
 
-  document.querySelectorAll(".controls i, .shuffle i, .repeat i, #playlist-icon").forEach(icon => {
-    icon.addEventListener("click", () => {
-      icon.style.transform = "scale(1.2)";
+  document.querySelectorAll(".controls i, .shuffle i, .repeat i, #playlist-home-btn").forEach((clickTarget) => {
+    clickTarget.addEventListener("click", () => {
+      clickTarget.style.transform = "scale(1.2)";
       setTimeout(() => {
-        icon.style.transform = "scale(1)";
+        clickTarget.style.transform = "scale(1)";
       }, 150);
     });
   });
