@@ -12,7 +12,7 @@ let songDuration = 0;
 let isPlaying = false;
 let trackUpdateRequest;
 let songInfoRequestId = 0;
-let playPausePending = null;
+let playPausePending = null; // { desired: boolean, startedAt: number, stableSince: number | null }
 let playPauseSyncTimeouts = [];
 
 function clearPlayPauseSyncTimeouts() {
@@ -105,10 +105,18 @@ async function updateSongInfo() {
     let effectiveIsPlaying = serverIsPlaying;
     if (playPausePending) {
       const ageMs = Date.now() - playPausePending.startedAt;
-      if (ageMs <= 6000) {
+      if (ageMs <= 8000) {
         if (serverIsPlaying === playPausePending.desired) {
-          playPausePending = null;
+          if (playPausePending.stableSince == null) {
+            playPausePending.stableSince = Date.now();
+          } else if (Date.now() - playPausePending.stableSince >= 900) {
+            playPausePending = null;
+          }
         } else {
+          playPausePending.stableSince = null;
+        }
+
+        if (playPausePending) {
           effectiveIsPlaying = playPausePending.desired;
         }
       } else {
@@ -194,7 +202,7 @@ async function togglePlayPause() {
   const desired = !isPlaying;
 
   clearPlayPauseSyncTimeouts();
-  playPausePending = { desired, startedAt: Date.now() };
+  playPausePending = { desired, startedAt: Date.now(), stableSince: null };
 
   isPlaying = desired;
   updatePlayPauseIcon(desired);
