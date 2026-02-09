@@ -11,6 +11,20 @@ let lastUpdateTime = 0;
 let songDuration = 0;
 let isPlaying = false;
 let trackUpdateRequest;
+let songInfoRequestId = 0;
+let playPausePending = null;
+let playPauseSyncTimeouts = [];
+
+function clearPlayPauseSyncTimeouts() {
+  playPauseSyncTimeouts.forEach((t) => clearTimeout(t));
+  playPauseSyncTimeouts = [];
+}
+
+function scheduleSongInfoRefresh(delaysMs) {
+  delaysMs.forEach((delay) => {
+    playPauseSyncTimeouts.push(setTimeout(updateSongInfo, delay));
+  });
+}
 
 // Existing sendCommand function
 async function sendCommand(command) {
@@ -31,7 +45,12 @@ async function sendCommand(command) {
     const data = await response.json();
 
     if (command === "pause" || command === "play") {
-      setTimeout(updateSongInfo, 1000);
+      // Spotify state can take a moment to reflect the change; refresh a few times.
+      if (!playPausePending) {
+        setTimeout(updateSongInfo, 400);
+        setTimeout(updateSongInfo, 1000);
+        setTimeout(updateSongInfo, 2000);
+      }
     }
 
     if (command === "next" || command === "prev") {
@@ -46,10 +65,13 @@ async function sendCommand(command) {
 }
 
 async function updateSongInfo() {
+  const requestId = ++songInfoRequestId;
   try {
     const response = await fetch(`${API_BASE_URL}/current-song`);
     const data = await response.json();
 
+    // Ignore out-of-order responses (can happen with multiple overlapping refreshes)
+    if (requestId !== songInfoRequestId) return;
 
     if (!data || data.error) {
       document.getElementById("song-title").innerText = "No song playing";
@@ -57,6 +79,7 @@ async function updateSongInfo() {
       document.getElementById("album-art").src = "default.jpg";
       updatePlayPauseIcon(false);
       isPlaying = false;
+      if (trackUpdateRequest) cancelAnimationFrame(trackUpdateRequest);
       updateTrackProgress(0, 0);
 
       return;
@@ -73,12 +96,28 @@ async function updateSongInfo() {
     lastProgress = data.progress_ms || 0;
     songDuration = data.item.duration_ms || 0;
     lastUpdateTime = Date.now();
-    isPlaying = data.is_playing;
+    const serverIsPlaying = !!data.is_playing;
 
     currentPlayingUri = data.item.uri;
     currentPlaylistId = data.context?.uri?.split(":").pop() || null;
 
-    updatePlayPauseIcon(isPlaying);
+    // Prevent play/pause icon flicker while Spotify is still transitioning states.
+    let effectiveIsPlaying = serverIsPlaying;
+    if (playPausePending) {
+      const ageMs = Date.now() - playPausePending.startedAt;
+      if (ageMs <= 6000) {
+        if (serverIsPlaying === playPausePending.desired) {
+          playPausePending = null;
+        } else {
+          effectiveIsPlaying = playPausePending.desired;
+        }
+      } else {
+        playPausePending = null;
+      }
+    }
+
+    isPlaying = effectiveIsPlaying;
+    updatePlayPauseIcon(effectiveIsPlaying);
     updateTrackTime();
 
     highlightPlayingSong();
@@ -152,16 +191,24 @@ async function fetchPlayerState() {
 }
 
 async function togglePlayPause() {
-  isPlaying = !isPlaying;
-  updatePlayPauseIcon(isPlaying);
+  const desired = !isPlaying;
 
-  if (isPlaying) {
+  clearPlayPauseSyncTimeouts();
+  playPausePending = { desired, startedAt: Date.now() };
+
+  isPlaying = desired;
+  updatePlayPauseIcon(desired);
+
+  if (desired) {
     trackUpdateRequest = requestAnimationFrame(updateTrackTime);
     sendCommand("play");
   } else {
-    cancelAnimationFrame(trackUpdateRequest);
+    if (trackUpdateRequest) cancelAnimationFrame(trackUpdateRequest);
     sendCommand("pause");
   }
+
+  // Extra refreshes to settle the UI quickly even if Spotify lags a bit.
+  scheduleSongInfoRefresh([250, 750, 1500, 3000, 5000]);
 }
 
 async function toggleRepeat() {
