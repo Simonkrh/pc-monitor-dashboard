@@ -7,6 +7,14 @@ app = Flask(__name__, static_folder="../frontend", static_url_path="/frontend")
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 60 * 60 * 24 * 7  # 7 days
 
 
+def send_no_cache(directory, filename):
+    response = send_from_directory(directory, filename, max_age=0)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
 @app.route("/")
 def index():
     return send_from_directory(app.static_folder + "/pages/index", "index.html", max_age=0)
@@ -40,6 +48,11 @@ def manageMacros():
     return send_from_directory(
         app.static_folder + "/pages/manageMacros", "manageMacros.html", max_age=0
     )
+
+
+@app.route("/frontend/config.js")
+def frontend_config():
+    return send_no_cache(app.static_folder, "config.js")
 
 
 @app.route("/settings")
