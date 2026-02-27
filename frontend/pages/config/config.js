@@ -1,12 +1,12 @@
 function getBackendServerIP() {
-    const fromConfig = (window.CONFIG && `${CONFIG.SERVER_PC_IP}`.trim()) || "";
-    if (fromConfig) return fromConfig;
-
     const stored = localStorage.getItem("backendServerOverride");
     if (stored) return stored;
 
     const input = document.getElementById("cfg-frontend-server");
     if (input && input.value.trim()) return input.value.trim();
+
+    const fromConfig = (window.CONFIG && `${CONFIG.SERVER_PC_IP}`.trim()) || "";
+    if (fromConfig) return fromConfig;
 
     return "";
 }
@@ -194,6 +194,9 @@ async function saveConfig() {
 
         const data = await resp.json();
         cachedConfig = data?.config || cachedConfig;
+        if (payload.frontend?.SERVER_PC_IP) {
+            localStorage.setItem("backendServerOverride", payload.frontend.SERVER_PC_IP);
+        }
         if (cachedConfig) {
             fillConfigInputs(cachedConfig);
         }
