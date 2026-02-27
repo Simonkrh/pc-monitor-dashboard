@@ -17,7 +17,9 @@ def send_no_cache(directory, filename):
 
 @app.route("/")
 def index():
-    return send_from_directory(app.static_folder + "/pages/index", "index.html", max_age=0)
+    return send_from_directory(
+        app.static_folder + "/pages/index", "index.html", max_age=0
+    )
 
 
 @app.route("/resources")
@@ -29,7 +31,9 @@ def resources():
 
 @app.route("/spotify")
 def spotify():
-    return send_from_directory(app.static_folder + "/pages/spotify", "spotify.html", max_age=0)
+    return send_from_directory(
+        app.static_folder + "/pages/spotify", "spotify.html", max_age=0
+    )
 
 
 @app.route("/dashboard")
@@ -41,7 +45,10 @@ def dashboard():
 
 @app.route("/upload")
 def upload():
-    return send_from_directory(app.static_folder + "/pages/upload", "upload.html", max_age=0)
+    return send_from_directory(
+        app.static_folder + "/pages/upload", "upload.html", max_age=0
+    )
+
 
 @app.route("/manageMacros")
 def manageMacros():
@@ -61,9 +68,12 @@ def settings():
         app.static_folder + "/pages/settings", "settings.html", max_age=0
     )
 
+
 @app.route("/config")
 def config_page():
-    return send_from_directory(app.static_folder + "/pages/config", "config.html", max_age=0)
+    return send_from_directory(
+        app.static_folder + "/pages/config", "config.html", max_age=0
+    )
 
 
 if __name__ == "__main__":
