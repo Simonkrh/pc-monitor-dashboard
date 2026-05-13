@@ -4,8 +4,7 @@ let mediaFiles = [];
 
 const IMAGE_DISPLAY_MS = 7000;
 const VIDEO_READY_TIMEOUT_MS = 12000;
-const VIDEO_STALL_TIMEOUT_MS = 10000;
-const VIDEO_PROGRESS_TIMEOUT_MS = 15000;
+const VIDEO_STALL_TIMEOUT_MS = 15000;
 
 const dimOverlay =
   document.getElementById("dimOverlay") ||
@@ -148,25 +147,23 @@ function startSlideshow() {
   let imageTimer = null;
   let preloadEl = null;
 
-  function preloadNext(fileName) {
+  function isVideoFile(fileName) {
     const lower = fileName.toLowerCase();
+    return lower.endsWith(".mp4") || lower.endsWith(".webm");
+  }
+
+  function preloadNext(fileName) {
     const url = `http://${serverIP}/slideshow/uploads/${encodeURIComponent(fileName)}`;
 
     preloadEl = null;
 
-    if (lower.endsWith(".mp4") || lower.endsWith(".webm")) {
-      const v = document.createElement("video");
-      v.preload = "auto";
-      v.muted = true;
-      v.playsInline = true;
-      v.src = url;
-      v.load();
-      preloadEl = v;
-    } else {
-      const i = new Image();
-      i.src = url;
-      preloadEl = i;
+    if (isVideoFile(fileName)) {
+      return;
     }
+
+    const i = new Image();
+    i.src = url;
+    preloadEl = i;
   }
 
   function cleanupSlide(slideEl) {
@@ -196,6 +193,13 @@ function startSlideshow() {
     // Videos transition on "ended" inside displayMedia
   }
 
+  function playVisibleVideo(container) {
+    const video = container.querySelector("video");
+    if (video && typeof video.startWhenVisible === "function") {
+      video.startWhenVisible();
+    }
+  }
+
   function transitionToNext(reason) {
     if (imageTimer) {
       clearTimeout(imageTimer);
@@ -209,7 +213,6 @@ function startSlideshow() {
       index = 0;
     }
 
-    // Now preload the item AFTER the one we’re about to show
     preloadNext(mediaFiles[(index + 1) % mediaFiles.length]);
 
     nextSlide.classList.remove("slide-center", "slide-left");
@@ -236,19 +239,19 @@ function startSlideshow() {
         currentSlide.style.transition = "";
 
         [currentSlide, nextSlide] = [nextSlide, currentSlide];
+        playVisibleVideo(currentSlide);
         scheduleNextSlide();
       }, 2000);
     }, () => {
       // If next media fails to load, skip to the next item.
       setTimeout(() => transitionToNext("media-load-failed"), 1000);
-    });
+    }, { deferVideoPlayback: true });
   }
 
 
-  function displayMedia(fileName, container, onReady, onFail) {
+  function displayMedia(fileName, container, onReady, onFail, options = {}) {
     container.innerHTML = "";
-    const lower = fileName.toLowerCase();
-    const isVideo = lower.endsWith(".mp4") || lower.endsWith(".webm");
+    const isVideo = isVideoFile(fileName);
     const url = `http://${serverIP}/slideshow/uploads/${encodeURIComponent(fileName)}`;
 
     if (isVideo) {
@@ -268,15 +271,10 @@ function startSlideshow() {
       container.appendChild(video);
 
       let endedOrSkipped = false;
-      let ready = false;
       let stallTimer = null;
-      let progressTimer = null;
-      let lastCurrentTime = 0;
-      let lastProgressAt = Date.now();
 
       const stopWatchdogs = () => {
         clearTimeout(stallTimer);
-        clearInterval(progressTimer);
       };
 
       const skip = (why) => {
@@ -299,39 +297,21 @@ function startSlideshow() {
         stallTimer = setTimeout(() => skip("stalled/buffering"), VIDEO_STALL_TIMEOUT_MS);
       };
 
-      const startProgressWatchdog = () => {
-        lastCurrentTime = video.currentTime;
-        lastProgressAt = Date.now();
-        clearInterval(progressTimer);
-        progressTimer = setInterval(() => {
-          if (endedOrSkipped || video.ended) return;
-
-          const currentTimeMoved = Math.abs(video.currentTime - lastCurrentTime) > 0.05;
-          const hasUsableData = video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
-
-          if (currentTimeMoved) {
-            lastCurrentTime = video.currentTime;
-            lastProgressAt = Date.now();
-            return;
-          }
-
-          if (ready && (!hasUsableData || video.paused || Date.now() - lastProgressAt > VIDEO_PROGRESS_TIMEOUT_MS)) {
-            skip("playback stopped progressing");
-          }
-        }, 3000);
-      };
-
       video.addEventListener("waiting", armStall);
       video.addEventListener("stalled", armStall);
-      video.addEventListener("playing", () => {
-        clearTimeout(stallTimer);
-        lastProgressAt = Date.now();
-      });
+      video.addEventListener("playing", () => clearTimeout(stallTimer));
+      video.addEventListener("canplay", () => clearTimeout(stallTimer));
+      video.addEventListener("timeupdate", () => clearTimeout(stallTimer));
 
       video.addEventListener("ended", () => {
         stopWatchdogs();
         transitionToNext("video-ended");
       });
+
+      video.startWhenVisible = () => {
+        if (endedOrSkipped) return;
+        video.play().catch(() => skip("autoplay blocked"));
+      };
 
       video.load();
 
@@ -339,12 +319,15 @@ function startSlideshow() {
       video.play().catch(() => {
       });
 
-      startProgressWatchdog();
-
       waitForFirstVideoFrame(video, () => {
-        ready = true;
+        clearTimeout(stallTimer);
+        if (options.deferVideoPlayback) {
+          video.pause();
+        }
         if (onReady) onReady();
-        video.play().catch(() => skip("autoplay blocked"));
+        if (!options.deferVideoPlayback) {
+          video.startWhenVisible();
+        }
       }, () => {
         skip("timed out waiting for first frame");
       });
