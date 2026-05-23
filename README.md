@@ -47,6 +47,24 @@ You don't need all integrations enabled. Each feature works independently:
 
 1. **Start Open Hardware Monitor** (optional) Launch `OpenHardwareMonitor.exe` on the PC you want to monitor (must match `MONITORED_PC_IP`). Then go to **Options > Remote Web Server > Run** to start the OHM web server (default port `8085`).
 2. **Install requirements**: On the dashboard PC, run ```bash pip install -r requirements.txt```
+   - For slideshow videos, also install `ffmpeg` so uploads can be optimized automatically.
+     On Raspberry Pi OS: ```bash sudo apt install ffmpeg```
 3. **Start the backend server**: On the same PC, run: ```bash python backend/app.py ``` (default port `5000`).
 4. **Start the frontend web server**: On the same PC, run: ```bash python frontend/webserver.py ``` 
 5. **Start the [Macro Server](https://github.com/Simonkrh/pc-macro-server)** (optional): Required for macro buttons and volume control. Run it on the PC where macros should be triggered.
+
+### Slideshow Video Optimization
+Uploaded videos are automatically converted to MP4 files before they are added to the slideshow:
+- max size: `1024x600`
+- max frame rate: `30 FPS`
+- codec: H.264 MP4
+- audio removed
+- fast-start metadata
+
+This keeps the slideshow responsive while reducing decode load and fan noise on the Pi. You can tune the conversion with optional `.env` values:
+- `SLIDESHOW_VIDEO_MAX_WIDTH=1024`
+- `SLIDESHOW_VIDEO_MAX_HEIGHT=600`
+- `SLIDESHOW_VIDEO_FPS=30`
+- `SLIDESHOW_VIDEO_CRF=27`
+- `SLIDESHOW_VIDEO_PRESET=veryfast`
+- `FFMPEG_PATH=/usr/bin/ffmpeg`

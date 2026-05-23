@@ -98,6 +98,8 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const hash = await calculateFileHash(file);
+            const ext = file.name.split(".").pop().toLowerCase();
+            const isVideo = ["mp4", "webm", "mov", "mkv", "avi"].includes(ext);
         
             // Check with backend if file is duplicate
             const res = await fetch(`${serverIP}/check-hash`, {
@@ -117,22 +119,46 @@ document.addEventListener("DOMContentLoaded", () => {
             const formData = new FormData();
             formData.append("file", file);
         
-            await new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open("POST", `${serverIP}/upload`);
-        
-                xhr.upload.onprogress = (e) => {
-                    if (e.lengthComputable) {
-                        const percent = (e.loaded / e.total) * 100;
-                        progressBar.value = percent;
-                        statusText.textContent = `Uploading ${file.name} (${i + 1}/${files.length})... ${Math.round(percent)}%`;
-                    }
-                };
-        
-                xhr.onload = () => xhr.status === 200 ? resolve() : reject(new Error("Upload failed"));
-                xhr.onerror = () => reject(new Error("Upload error"));
-                xhr.send(formData);
-            });
+            try {
+                await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("POST", `${serverIP}/upload`);
+            
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percent = (e.loaded / e.total) * 100;
+                            progressBar.value = percent;
+                            statusText.textContent = `Uploading ${file.name} (${i + 1}/${files.length})... ${Math.round(percent)}%`;
+                        }
+                    };
+
+                    xhr.upload.onload = () => {
+                        statusText.textContent = isVideo
+                            ? `Optimizing ${file.name} for the Pi (${i + 1}/${files.length})...`
+                            : `Saving ${file.name} (${i + 1}/${files.length})...`;
+                    };
+            
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            resolve();
+                            return;
+                        }
+
+                        let message = "Upload failed";
+                        try {
+                            const error = JSON.parse(xhr.responseText);
+                            message = error.details || error.error || message;
+                        } catch { }
+                        reject(new Error(message));
+                    };
+                    xhr.onerror = () => reject(new Error("Upload error"));
+                    xhr.send(formData);
+                });
+            } catch (error) {
+                statusText.textContent = `Failed to upload ${file.name}: ${error.message}`;
+                alert(`Failed to upload ${file.name}:\n${error.message}`);
+                return;
+            }
         }
     
         statusText.textContent = `All files uploaded!${duplicateCount > 0 ? ` (${duplicateCount} duplicate${duplicateCount > 1 ? "s" : ""} skipped)` : ""}`;

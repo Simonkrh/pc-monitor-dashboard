@@ -5,6 +5,7 @@ let mediaFiles = [];
 const IMAGE_DISPLAY_MS = 7000;
 const VIDEO_READY_TIMEOUT_MS = 12000;
 const VIDEO_STALL_TIMEOUT_MS = 15000;
+const VIDEO_PRELOAD_MAX_BYTES = 80 * 1024 * 1024;
 
 const dimOverlay =
   document.getElementById("dimOverlay") ||
@@ -146,23 +147,103 @@ function startSlideshow() {
 
   let imageTimer = null;
   let preloadEl = null;
+  let videoPreload = null;
 
   function isVideoFile(fileName) {
     const lower = fileName.toLowerCase();
     return lower.endsWith(".mp4") || lower.endsWith(".webm");
   }
 
-  function preloadNext(fileName) {
-    const url = `http://${serverIP}/slideshow/uploads/${encodeURIComponent(fileName)}`;
+  function getMediaUrl(fileName) {
+    return `http://${serverIP}/slideshow/uploads/${encodeURIComponent(fileName)}`;
+  }
 
-    preloadEl = null;
+  function cancelVideoPreload() {
+    if (videoPreload && !videoPreload.done) {
+      videoPreload.controller.abort();
+    }
+    videoPreload = null;
+  }
 
-    if (isVideoFile(fileName)) {
+  async function readResponseBody(response) {
+    if (!response.body) {
+      await response.blob();
       return;
     }
 
+    const reader = response.body.getReader();
+    let receivedBytes = 0;
+
+    while (true) {
+      const result = await reader.read();
+      if (result.done) return;
+
+      receivedBytes += result.value.byteLength;
+      if (receivedBytes > VIDEO_PRELOAD_MAX_BYTES) {
+        await reader.cancel();
+        console.warn(`Stopped video preload after ${receivedBytes} bytes`);
+        return;
+      }
+    }
+  }
+
+  function warmVideoCache(fileName) {
+    if (videoPreload && videoPreload.fileName === fileName) return;
+
+    cancelVideoPreload();
+
+    const controller = new AbortController();
+    const preload = {
+      fileName,
+      controller,
+      done: false,
+    };
+    videoPreload = preload;
+
+    fetch(getMediaUrl(fileName), {
+      cache: "force-cache",
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const contentLength = Number(response.headers.get("content-length") || 0);
+        if (contentLength > VIDEO_PRELOAD_MAX_BYTES) {
+          console.warn(`Skipping full preload for large video "${fileName}" (${contentLength} bytes)`);
+          return;
+        }
+
+        return readResponseBody(response);
+      })
+      .then(() => {
+        if (videoPreload === preload) {
+          preload.done = true;
+        }
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          console.warn(`Could not preload video "${fileName}":`, error);
+        }
+      });
+  }
+
+  function preloadNext(fileName) {
+    preloadEl = null;
+
+    if (isVideoFile(fileName)) {
+      const currentVideo = currentSlide.querySelector("video");
+      if (!currentVideo || currentVideo.paused || currentVideo.ended) {
+        warmVideoCache(fileName);
+      }
+      return;
+    }
+
+    cancelVideoPreload();
+
     const i = new Image();
-    i.src = url;
+    i.src = getMediaUrl(fileName);
     preloadEl = i;
   }
 
@@ -213,8 +294,6 @@ function startSlideshow() {
       index = 0;
     }
 
-    preloadNext(mediaFiles[(index + 1) % mediaFiles.length]);
-
     nextSlide.classList.remove("slide-center", "slide-left");
     nextSlide.classList.add("slide-right");
 
@@ -241,6 +320,7 @@ function startSlideshow() {
         [currentSlide, nextSlide] = [nextSlide, currentSlide];
         playVisibleVideo(currentSlide);
         scheduleNextSlide();
+        preloadNext(mediaFiles[(index + 1) % mediaFiles.length]);
       }, 2000);
     }, () => {
       // If next media fails to load, skip to the next item.
@@ -252,7 +332,7 @@ function startSlideshow() {
   function displayMedia(fileName, container, onReady, onFail, options = {}) {
     container.innerHTML = "";
     const isVideo = isVideoFile(fileName);
-    const url = `http://${serverIP}/slideshow/uploads/${encodeURIComponent(fileName)}`;
+    const url = getMediaUrl(fileName);
 
     if (isVideo) {
       const video = document.createElement("video");
@@ -350,10 +430,12 @@ function startSlideshow() {
     }
   }
 
-  // Start first slide + preload next
-  preloadNext(mediaFiles[(index + 1) % mediaFiles.length]);
+  // Start first slide, then warm the following media once playback/display is settled.
   displayMedia(mediaFiles[index], currentSlide, scheduleNextSlide, () => {
     setTimeout(() => transitionToNext("initial-media-load-failed"), 1000);
+  });
+  requestAnimationFrame(() => {
+    preloadNext(mediaFiles[(index + 1) % mediaFiles.length]);
   });
 }
 
