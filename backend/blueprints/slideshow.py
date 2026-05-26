@@ -12,13 +12,16 @@ load_dotenv()
 
 slideshow = Blueprint("slideshow", __name__)
 
-UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER") or "uploads"
+UPLOAD_FOLDER = os.path.abspath(os.getenv("UPLOAD_FOLDER") or "uploads")
 HASH_FILE = os.path.join(UPLOAD_FOLDER, "hashes.json")
+THUMBNAIL_FOLDER = os.path.join(UPLOAD_FOLDER, ".thumbnails")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(THUMBNAIL_FOLDER, exist_ok=True)
 
 IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif")
 VIDEO_EXTENSIONS = (".mp4", ".webm", ".mov", ".mkv", ".avi")
 MEDIA_EXTENSIONS = IMAGE_EXTENSIONS + (".mp4", ".webm")
+PLAYABLE_VIDEO_EXTENSIONS = (".mp4", ".webm")
 
 VIDEO_MAX_WIDTH = int(os.getenv("SLIDESHOW_VIDEO_MAX_WIDTH", "1024"))
 VIDEO_MAX_HEIGHT = int(os.getenv("SLIDESHOW_VIDEO_MAX_HEIGHT", "600"))
@@ -55,6 +58,15 @@ def clean_filename(filename):
     return filename.replace("\\", "/").rsplit("/", 1)[-1].strip()
 
 
+def safe_upload_path(filename):
+    cleaned = clean_filename(filename)
+    path = os.path.abspath(os.path.join(UPLOAD_FOLDER, cleaned))
+    upload_root = os.path.abspath(UPLOAD_FOLDER)
+    if not path.startswith(upload_root + os.sep):
+        raise ValueError("Invalid filename")
+    return cleaned, path
+
+
 def is_video_file(filename):
     return filename.lower().endswith(VIDEO_EXTENSIONS)
 
@@ -84,7 +96,7 @@ def transcode_video(source_path, output_path):
     ffmpeg = ffmpeg_path()
     if not ffmpeg:
         raise RuntimeError(
-            "ffmpeg was not found. Install ffmpeg on the Pi to optimize slideshow videos."
+            "ffmpeg was not found. Install ffmpeg to optimize slideshow videos."
         )
 
     video_filter = (
@@ -130,8 +142,61 @@ def transcode_video(source_path, output_path):
         raise RuntimeError("ffmpeg failed: " + "\n".join(details))
 
 
-def save_uploaded_file(file, filename):
+def video_thumbnail_filename(filename):
+    digest = hashlib.sha256(filename.encode("utf-8")).hexdigest()[:16]
+    name, _ext = os.path.splitext(clean_filename(filename))
+    safe_name = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in name)
+    return f"{safe_name}-{digest}.jpg"
+
+
+def create_video_thumbnail(video_path, thumbnail_path):
+    ffmpeg = ffmpeg_path()
+    if not ffmpeg:
+        raise RuntimeError("ffmpeg was not found.")
+
+    command = [
+        ffmpeg,
+        "-hide_banner",
+        "-y",
+        "-ss",
+        "00:00:01",
+        "-i",
+        video_path,
+        "-frames:v",
+        "1",
+        "-vf",
+        "scale=360:240:force_original_aspect_ratio=increase,crop=360:240",
+        "-q:v",
+        "4",
+        thumbnail_path,
+    ]
+
+    result = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+
+    if result.returncode != 0:
+        details = result.stderr.strip().splitlines()[-8:]
+        raise RuntimeError("ffmpeg thumbnail failed: " + "\n".join(details))
+
+
+def save_uploaded_file(file, filename, optimize_video=True):
     if is_video_file(filename):
+        if not optimize_video and not filename.lower().endswith(PLAYABLE_VIDEO_EXTENSIONS):
+            raise RuntimeError(
+                "This video format needs optimization before it can be used in the slideshow."
+            )
+
+        if not optimize_video:
+            final_filename = available_filename(filename)
+            save_path = os.path.join(UPLOAD_FOLDER, final_filename)
+            file.save(save_path)
+            return final_filename
+
         tmp_dir = os.path.join(UPLOAD_FOLDER, ".tmp")
         os.makedirs(tmp_dir, exist_ok=True)
 
@@ -180,6 +245,7 @@ def upload_file():
     hash_cache = load_hash_cache()
     uploaded_filenames = []
     duplicate_filenames = []
+    optimize_videos = request.form.get("optimize_videos", "true").lower() == "true"
 
     for file in files:
         filename = clean_filename(file.filename)
@@ -194,7 +260,7 @@ def upload_file():
             continue
 
         try:
-            saved_filename = save_uploaded_file(file, filename)
+            saved_filename = save_uploaded_file(file, filename, optimize_videos)
         except Exception as e:
             if uploaded_filenames:
                 save_hash_cache(hash_cache)
@@ -242,6 +308,35 @@ def uploaded_file(filename):
     return response
 
 
+@slideshow.route("/thumbnail/<filename>")
+def video_thumbnail(filename):
+    try:
+        cleaned_filename, file_path = safe_upload_path(filename)
+    except ValueError:
+        return jsonify({"error": "Invalid filename"}), 400
+
+    if not is_video_file(cleaned_filename) or not os.path.exists(file_path):
+        return jsonify({"error": "Video not found"}), 404
+
+    thumbnail_filename = video_thumbnail_filename(cleaned_filename)
+    thumbnail_path = os.path.join(THUMBNAIL_FOLDER, thumbnail_filename)
+
+    if not os.path.exists(thumbnail_path):
+        try:
+            create_video_thumbnail(file_path, thumbnail_path)
+        except Exception as e:
+            return jsonify({"error": "Failed to create thumbnail", "details": str(e)}), 500
+
+    response = send_from_directory(
+        THUMBNAIL_FOLDER,
+        thumbnail_filename,
+        conditional=True,
+        max_age=86400,
+    )
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
 @slideshow.route("/media")
 def list_media():
     media_files = [
@@ -252,7 +347,11 @@ def list_media():
 
 @slideshow.route("/delete/<filename>", methods=["DELETE"])
 def delete_file(filename):
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    try:
+        cleaned_filename, file_path = safe_upload_path(filename)
+    except ValueError:
+        return jsonify({"error": "Invalid filename"}), 400
+
     if not os.path.exists(file_path):
         return jsonify({"error": "File not found"}), 404
 
@@ -265,8 +364,15 @@ def delete_file(filename):
         return jsonify({"error": f"Failed to delete file: {str(e)}"}), 500
 
     # Remove the file's hash from the hash cache
-    new_cache = {k: v for k, v in hash_cache.items() if v != filename}
+    new_cache = {k: v for k, v in hash_cache.items() if v != cleaned_filename}
     save_hash_cache(new_cache)
+
+    thumbnail_path = os.path.join(THUMBNAIL_FOLDER, video_thumbnail_filename(cleaned_filename))
+    if os.path.exists(thumbnail_path):
+        try:
+            os.remove(thumbnail_path)
+        except OSError:
+            pass
 
     return jsonify({"message": "File deleted"}), 200
 
@@ -286,10 +392,18 @@ def delete_multiple_files():
 
     errors = []
     for filename in files_to_delete:
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        try:
+            cleaned_filename, file_path = safe_upload_path(filename)
+        except ValueError:
+            errors.append(f"{filename}: invalid filename")
+            continue
+
         try:
             if os.path.exists(file_path):
                 os.remove(file_path)
+            thumbnail_path = os.path.join(THUMBNAIL_FOLDER, video_thumbnail_filename(cleaned_filename))
+            if os.path.exists(thumbnail_path):
+                os.remove(thumbnail_path)
         except Exception as e:
             errors.append(f"{filename}: {str(e)}")
 

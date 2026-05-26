@@ -9,6 +9,8 @@ logs/
 server.log
 webserver.log
 
+uploads/
+
 # Ignore virtual environment
 venv/
 .env

@@ -59,7 +59,7 @@
   </script>
 
   <link rel="stylesheet" href="/frontend/global/css/style.css" />
-  <link rel="stylesheet" href="/frontend/pages/upload/upload.css" />
+  <link rel="stylesheet" href="/frontend/pages/upload/upload.css?v=video-thumbs-2" />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 
@@ -74,6 +74,10 @@
   <div class="panel">
     <form id="upload-form" method="post" enctype="multipart/form-data">
       <input type="file" name="file" accept="image/*,video/*" required multiple>
+      <label class="upload-option">
+        <input id="optimize-videos" type="checkbox" checked>
+        <span>Optimize videos</span>
+      </label>
       <input type="submit" value="Upload">
     </form>
 
@@ -84,7 +88,30 @@
 
     <div class="panel-header">
       <h2>Uploaded Media</h2>
-      <button id="delete-selected">Delete Selected</button>
+      <div class="media-actions">
+        <label class="search-field">
+          <span>Search</span>
+          <input id="media-search" type="search" autocomplete="off" placeholder="Filename">
+        </label>
+        <label class="page-size-field">
+          <span>Per page</span>
+          <select id="media-page-size">
+            <option value="12">12</option>
+            <option value="24" selected>24</option>
+            <option value="48">48</option>
+            <option value="96">96</option>
+          </select>
+        </label>
+        <button id="delete-selected">Delete Selected</button>
+      </div>
+    </div>
+    <div class="media-toolbar">
+      <span id="media-summary">0 of 0 media</span>
+      <div class="pagination-controls">
+        <button id="prev-page" type="button">Prev</button>
+        <span id="page-info">1 / 1</span>
+        <button id="next-page" type="button">Next</button>
+      </div>
     </div>
     <div id="image-list"></div>
   </div>
@@ -92,7 +119,7 @@
   <script src="https://cdn.jsdelivr.net/npm/js-sha256@0.9.0/build/sha256.min.js"></script>
   <script src="/frontend/config-default.js"></script>
   <script src="/frontend/config.js"></script>
-  <script src="/frontend/pages/upload/upload.js"></script>
+  <script src="/frontend/pages/upload/upload.js?v=video-thumbs-2"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       document.body.classList.add("show");

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a personal project designed specifically for use with my Raspberry Pi connected to a small 1024x600 touchscreen display.  It acts as a dashboard for my gaming PC, kind of like a Stream Deck.
+This is a personal project designed for a small 1024x600 touchscreen dashboard device. It acts as a dashboard for my gaming PC, kind of like a Stream Deck.
 
 This project sets up a PC monitoring dashboard using:
 
@@ -47,8 +47,8 @@ You don't need all integrations enabled. Each feature works independently:
 
 1. **Start Open Hardware Monitor** (optional) Launch `OpenHardwareMonitor.exe` on the PC you want to monitor (must match `MONITORED_PC_IP`). Then go to **Options > Remote Web Server > Run** to start the OHM web server (default port `8085`).
 2. **Install requirements**: On the dashboard PC, run ```bash pip install -r requirements.txt```
-   - For slideshow videos, also install `ffmpeg` so uploads can be optimized automatically.
-     On Raspberry Pi OS: ```bash sudo apt install ffmpeg```
+   - For slideshow videos, also install `ffmpeg` if you want uploads to be optimized automatically.
+     On Debian-based systems: ```bash sudo apt install ffmpeg```
 3. **Start the backend server**: On the same PC, run: ```bash python backend/app.py ``` (default port `5000`).
 4. **Start the frontend web server**: On the same PC, run: ```bash python frontend/webserver.py ``` 
 5. **Start the [Macro Server](https://github.com/Simonkrh/pc-macro-server)** (optional): Required for macro buttons and volume control. Run it on the PC where macros should be triggered.
@@ -61,7 +61,7 @@ Uploaded videos are automatically converted to MP4 files before they are added t
 - audio removed
 - fast-start metadata
 
-This keeps the slideshow responsive while reducing decode load and fan noise on the Pi. You can tune the conversion with optional `.env` values:
+This keeps the slideshow responsive while reducing decode load on the dashboard device. You can tune the conversion with optional `.env` values:
 - `SLIDESHOW_VIDEO_MAX_WIDTH=1024`
 - `SLIDESHOW_VIDEO_MAX_HEIGHT=600`
 - `SLIDESHOW_VIDEO_FPS=30`
