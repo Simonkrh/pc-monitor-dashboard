@@ -7,7 +7,7 @@
   <title>Slideshow</title>
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="/frontend/global/css/style.css" />
-  <link rel="stylesheet" href="/frontend/pages/index/index.css" />
+  <link rel="stylesheet" href="/frontend/pages/index/index.css?v=status-overlay-3" />
 </head>
 
 <body>
@@ -20,9 +20,31 @@
     <div class="spinner"></div>
   </div>
 
+  <div id="status-overlay" aria-hidden="true">
+    <div class="status-clock">
+      <div class="status-time-row">
+        <span id="status-time">00:00</span>
+        <span id="status-seconds">00</span>
+      </div>
+    </div>
+    <div class="status-details">
+      <div id="status-date">Monday, 1 January</div>
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="status-label">Week</span>
+          <span id="status-week">--</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">PC</span>
+          <span id="status-pc">Checking</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="/frontend/config-default.js"></script>
   <script src="/frontend/config.js"></script>
-  <script src="/frontend/pages/index/index.js"></script>
+  <script src="/frontend/pages/index/index.js?v=status-overlay-3"></script>
 </body>
 
 </html>

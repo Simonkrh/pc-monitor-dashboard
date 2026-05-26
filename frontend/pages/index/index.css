@@ -50,6 +50,7 @@ body {
   align-items: center;
   padding: 10px 15px;
   border-radius: 8px;
+  z-index: 20;
 }
 
 .spinner {
@@ -79,4 +80,127 @@ body {
   pointer-events: none;
   transition: opacity 250ms ease;
   z-index: 999999;
+}
+
+#status-overlay {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: min(520px, calc(100vw - 32px));
+  min-height: 64px;
+  padding: 8px 16px;
+  color: #f8fbff;
+  background:
+    linear-gradient(145deg, rgba(10, 14, 22, 0.78), rgba(8, 12, 18, 0.56)),
+    rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  opacity: 0;
+  transform: translate(-50%, -8px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 220ms ease, transform 220ms ease;
+  z-index: 1000000;
+}
+
+#status-overlay.visible {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.status-time-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+#status-time {
+  font-size: clamp(2rem, 6vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-shadow: 0 3px 22px rgba(0, 0, 0, 0.5);
+}
+
+#status-seconds {
+  padding: 3px 5px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(248, 251, 255, 0.88);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+#status-date {
+  color: rgba(248, 251, 255, 0.82);
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.status-details {
+  min-width: 0;
+}
+
+.status-grid {
+  display: flex;
+  justify-content: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.status-item {
+  min-width: 0;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.status-label {
+  display: block;
+  margin-bottom: 2px;
+  color: rgba(248, 251, 255, 0.55);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-item span:last-child {
+  display: block;
+  overflow: hidden;
+  color: rgba(248, 251, 255, 0.95);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  #status-overlay {
+    top: 10px;
+    width: calc(100vw - 20px);
+    min-height: 58px;
+    gap: 10px;
+    padding: 7px 10px;
+  }
+
+  #status-date {
+    font-size: 0.76rem;
+  }
+
+  .status-item {
+    padding: 4px 7px;
+  }
 }

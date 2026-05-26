@@ -6,6 +6,10 @@ const IMAGE_DISPLAY_MS = 7000;
 const VIDEO_READY_TIMEOUT_MS = 12000;
 const VIDEO_STALL_TIMEOUT_MS = 15000;
 const VIDEO_PRELOAD_MAX_BYTES = 80 * 1024 * 1024;
+const TAP_MAX_DISTANCE = 18;
+const TAP_MAX_DURATION_MS = 450;
+
+let pcStatusLabel = "Checking";
 
 const dimOverlay =
   document.getElementById("dimOverlay") ||
@@ -16,10 +20,56 @@ const dimOverlay =
     return d;
   })();
 
+const statusOverlay = document.getElementById("status-overlay");
+const statusTime = document.getElementById("status-time");
+const statusSeconds = document.getElementById("status-seconds");
+const statusDate = document.getElementById("status-date");
+const statusWeek = document.getElementById("status-week");
+const statusPc = document.getElementById("status-pc");
+
+function getIsoWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function formatDate(date) {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(date);
+}
+
+function updateStatusOverlay() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+
+  statusTime.textContent = `${hh}:${mm}`;
+  statusSeconds.textContent = ss;
+  statusDate.textContent = formatDate(now);
+  statusWeek.textContent = getIsoWeek(now);
+  statusPc.textContent = pcStatusLabel;
+}
+
+function toggleStatusOverlay() {
+  const isVisible = statusOverlay.classList.toggle("visible");
+  statusOverlay.setAttribute("aria-hidden", isVisible ? "false" : "true");
+  updateStatusOverlay();
+}
+
+updateStatusOverlay();
+setInterval(updateStatusOverlay, 1000);
+
 async function checkPCStatus() {
   const now = new Date();
   const hour = now.getHours();
   let pcIsOn = false;
+  pcStatusLabel = "Offline";
 
   try {
     const response = await fetch(`http://${serverIP}/monitoring/ping`, { method: "GET", cache: "no-store" });
@@ -27,11 +77,13 @@ async function checkPCStatus() {
     if (response.ok) {
       const data = await response.json();
       pcIsOn = data.status !== "offline";
+      pcStatusLabel = pcIsOn ? "Online" : "Offline";
     } else {
       throw new Error("Server did not respond");
     }
   } catch (error) {
     console.log("Server is unresponsive:", error);
+    pcStatusLabel = "Unknown";
   }
   // Dim the page if it's after 23:00 and PC is off
   if ((hour >= 23 || hour < 11) && !pcIsOn) {
@@ -43,6 +95,7 @@ async function checkPCStatus() {
     // console.log("PC is up or it's past 11:00. Restoring brightness...");
     dimOverlay.style.opacity = "0";
   }
+  updateStatusOverlay();
 }
 
 checkPCStatus();
@@ -61,6 +114,7 @@ fetch(`http://${serverIP}/slideshow/media`)
   .then((response) => response.json())
   .then((data) => {
     mediaFiles = shuffleArray(data);
+    updateStatusOverlay();
     if (mediaFiles.length > 0) {
       startSlideshow();
     }
@@ -442,28 +496,68 @@ function startSlideshow() {
 
 let swipeStartY = 0;
 let swipeEndY = 0;
+let pointerStartX = 0;
+let pointerStartY = 0;
+let pointerEndX = 0;
+let pointerEndY = 0;
+let pointerStartTime = 0;
+let lastTouchEndTime = 0;
 const swipeThreshold = 150;
 
 document.addEventListener("touchstart", (event) => {
-  swipeStartY = event.touches[0].clientY;
+  const touch = event.touches[0];
+  pointerStartX = touch.clientX;
+  pointerStartY = touch.clientY;
+  pointerEndX = pointerStartX;
+  pointerEndY = pointerStartY;
+  pointerStartTime = Date.now();
+  swipeStartY = pointerStartY;
+  swipeEndY = pointerStartY;
 });
 
 document.addEventListener("touchmove", (event) => {
-  swipeEndY = event.touches[0].clientY;
+  const touch = event.touches[0];
+  pointerEndX = touch.clientX;
+  pointerEndY = touch.clientY;
+  swipeEndY = pointerEndY;
 });
 
 document.addEventListener("mousedown", (event) => {
-  swipeStartY = event.clientY;
+  pointerStartX = event.clientX;
+  pointerStartY = event.clientY;
+  pointerEndX = pointerStartX;
+  pointerEndY = pointerStartY;
+  pointerStartTime = Date.now();
+  swipeStartY = pointerStartY;
+  swipeEndY = pointerStartY;
 });
 
 document.addEventListener("mousemove", (event) => {
-  swipeEndY = event.clientY;
+  pointerEndX = event.clientX;
+  pointerEndY = event.clientY;
+  swipeEndY = pointerEndY;
 });
 
 document.addEventListener("mouseup", handleSwipe);
 document.addEventListener("touchend", handleSwipe);
 
-function handleSwipe() {
+function handleSwipe(event) {
+  if (event.type === "touchend") {
+    lastTouchEndTime = Date.now();
+  } else if (Date.now() - lastTouchEndTime < 700) {
+    return;
+  }
+
+  const dx = pointerEndX - pointerStartX;
+  const dy = pointerEndY - pointerStartY;
+  const distance = Math.hypot(dx, dy);
+  const duration = Date.now() - pointerStartTime;
+
+  if (distance <= TAP_MAX_DISTANCE && duration <= TAP_MAX_DURATION_MS) {
+    toggleStatusOverlay();
+    return;
+  }
+
   if (swipeStartY - swipeEndY > swipeThreshold) {
     console.log("Swipe up detected - waking PC...");
     wakeAndRedirect();
@@ -549,6 +643,6 @@ async function waitForPCAndMaybeMacro() {
     await sleep(intervalMs);
   }
 
-  console.log("Timed out waiting — redirecting anyway.");
+  console.log("Timed out waiting - redirecting anyway.");
   window.location.href = defaultPage;
 }
