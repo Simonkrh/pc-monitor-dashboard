@@ -110,9 +110,16 @@ body::before {
   padding-bottom: 0;
 }
 
+.audio-session-tile {
+  position: relative;
+  width: 66px;
+  height: 66px;
+}
+
 #audio-session-controls .macro-btn {
   width: 66px;
   height: 66px;
+  position: relative;
   border-radius: 12px;
 }
 
@@ -122,9 +129,56 @@ body::before {
   object-fit: contain;
 }
 
-#audio-session-controls img:hover {
+#audio-session-controls .macro-btn:hover img {
   transform: scale(1.06);
   transition: transform 0.2s ease-in-out;
+}
+
+.mute-toggle,
+.muted-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.mute-toggle {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  background: rgba(15, 23, 35, 0.94);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  font-size: 0.78rem;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+
+.mute-toggle:active {
+  transform: scale(1.08);
+}
+
+.audio-session-tile.is-muted .mute-toggle {
+  background: #d94f4f;
+}
+
+.muted-badge {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: rgba(5, 8, 14, 0.58);
+  font-size: 1.45rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.audio-session-tile.is-muted .muted-badge {
+  opacity: 1;
 }
 
 #volume-session-icon {

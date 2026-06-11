@@ -151,6 +151,46 @@ function updateSlider(volume) {
   slider.style.setProperty('--volume-fill', `${volume}%`);
 }
 
+function setSessionVolume(entry, volume) {
+  const numericVolume = Number(volume);
+  entry.volume = numericVolume;
+
+  if (numericVolume > 0) {
+    entry.previousVolume = numericVolume;
+  }
+
+  updateMuteState(entry);
+}
+
+function updateMuteState(entry) {
+  const isMuted = Number(entry.volume) === 0;
+  const label = isMuted ? `Unmute ${entry.name}` : `Mute ${entry.name}`;
+  entry.tile.classList.toggle('is-muted', isMuted);
+  entry.muteButton.setAttribute('aria-pressed', String(isMuted));
+  entry.muteButton.setAttribute('aria-label', label);
+  entry.muteButton.title = label;
+}
+
+async function toggleSessionMute(sessionName) {
+  const entry = sessionButtons.get(sessionName);
+  if (!entry) return;
+
+  const isMuted = Number(entry.volume) === 0;
+  const nextVolume = isMuted ? (entry.previousVolume || 50) : 0;
+
+  if (!isMuted && Number(entry.volume) > 0) {
+    entry.previousVolume = Number(entry.volume);
+  }
+
+  setSessionVolume(entry, nextVolume);
+
+  if (currentSessionName === sessionName) {
+    updateSlider(nextVolume);
+  }
+
+  await postToServer('set_app_volume', { app_name: sessionName, volume: nextVolume });
+}
+
 function updateSessionIcon(src) {
   const icon = document.getElementById('volume-session-icon');
   icon.src = src;
@@ -177,8 +217,12 @@ async function fetchAudioSessionsMetadata() {
     seenSessions.add(session.name);
 
     if (!sessionButtons.has(session.name) && !isSessionHidden(session.name)) {
+      const tile = document.createElement('div');
+      tile.className = 'audio-session-tile';
+
       const button = document.createElement('button');
       button.className = 'macro-btn';
+      button.type = 'button';
 
       const img = document.createElement('img');
       img.src = `data:image/png;base64,${session.icon}`;
@@ -187,7 +231,22 @@ async function fetchAudioSessionsMetadata() {
       img.title = session.name;
       img.style.transform = 'scaleY(-1)';
       button.appendChild(img);
-      container.appendChild(button);
+
+      const mutedBadge = document.createElement('span');
+      mutedBadge.className = 'muted-badge';
+      mutedBadge.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+      mutedBadge.setAttribute('aria-hidden', 'true');
+      button.appendChild(mutedBadge);
+
+      const muteButton = document.createElement('button');
+      muteButton.className = 'mute-toggle';
+      muteButton.type = 'button';
+      muteButton.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+      muteButton.setAttribute('aria-label', `Mute ${session.name}`);
+
+      tile.appendChild(button);
+      tile.appendChild(muteButton);
+      container.appendChild(tile);
 
       button.onclick = async () => {
         currentSessionName = session.name;
@@ -203,15 +262,31 @@ async function fetchAudioSessionsMetadata() {
         document.getElementById('volume-slider-view').classList.remove('d-none');
       };
 
-      sessionButtons.set(session.name, { button, img, volume: session.volume });
+      muteButton.onclick = (event) => {
+        event.stopPropagation();
+        toggleSessionMute(session.name);
+      };
+
+      const entry = {
+        name: session.name,
+        tile,
+        button,
+        img,
+        muteButton,
+        volume: Number(session.volume),
+        previousVolume: Number(session.volume) > 0 ? Number(session.volume) : 50
+      };
+
+      sessionButtons.set(session.name, entry);
+      updateMuteState(entry);
     }
   });
 
   // Remove buttons for sessions that no longer exist
   for (const name of sessionButtons.keys()) {
     if (!seenSessions.has(name)) {
-      const { button } = sessionButtons.get(name);
-      container.removeChild(button);
+      const { tile } = sessionButtons.get(name);
+      container.removeChild(tile);
       sessionButtons.delete(name);
     }
   }
@@ -255,7 +330,7 @@ async function fetchAudioSessionVolumes() {
     volumes.forEach(session => {
       if (sessionButtons.has(session.name)) {
         const entry = sessionButtons.get(session.name);
-        entry.volume = session.volume;
+        setSessionVolume(entry, session.volume);
 
         if (currentSessionName === session.name) {
           updateSlider(session.volume);
@@ -283,8 +358,12 @@ async function fetchAudioSessionVolumes() {
 document.getElementById('volume-slider').addEventListener('input', function () {
   if (!currentSessionName) return;
   const volume = this.value;
+  const entry = sessionButtons.get(currentSessionName);
 
   updateSlider(volume);
+  if (entry) {
+    setSessionVolume(entry, volume);
+  }
   postToServer('set_app_volume', { app_name: currentSessionName, volume });
 });
 
