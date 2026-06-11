@@ -16,6 +16,7 @@ FRONTEND_CONFIG_PATH = ROOT_DIR / "frontend" / "config.js"
 ENV_KEYS = [
     "MONITORED_PC_IP",
     "MONITORED_PC_MAC",
+    "OHM_PORT",
     "SERVER_PC_IP",
     "SPOTIFY_CLIENT_ID",
     "SPOTIFY_CLIENT_SECRET",
@@ -179,17 +180,14 @@ def apply_runtime_updates(env_updates: dict) -> None:
 
         monitoring.MONITORED_PC_IP = os.getenv("MONITORED_PC_IP") or ""
         monitoring.MONITORED_PC_MAC = os.getenv("MONITORED_PC_MAC") or ""
+        monitoring.OHM_PORT = (os.getenv("OHM_PORT", "8085") or "8085").strip()
         monitoring.RAW_MONITORED_DISKS = os.getenv("MONITORED_DISKS", "")
         monitoring.MONITORED_DISKS = [
             d.strip()
             for d in monitoring.RAW_MONITORED_DISKS.split(",")
             if d.strip()
         ]
-        monitoring.OHM_API_URL = (
-            f"http://{monitoring.MONITORED_PC_IP}:8085/data.json"
-            if monitoring.MONITORED_PC_IP
-            else ""
-        )
+        monitoring.OHM_API_URL = monitoring.build_ohm_api_url()
 
         spotify.CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
         spotify.CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")

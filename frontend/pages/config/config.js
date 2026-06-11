@@ -109,6 +109,7 @@ function fillConfigInputs(data) {
     setValue("cfg-frontend-macro", frontend.MACRO_PC_IP ?? CONFIG.MACRO_PC_IP ?? "");
 
     setValue("cfg-monitored-ip", env.MONITORED_PC_IP ?? "");
+    setValue("cfg-ohm-port", env.OHM_PORT || "8085");
     setValue("cfg-monitored-mac", env.MONITORED_PC_MAC ?? "");
     setValue("cfg-monitored-disks", env.MONITORED_DISKS ?? "");
     setValue("cfg-spotify-client-id", env.SPOTIFY_CLIENT_ID ?? "");
@@ -155,6 +156,7 @@ function buildConfigPayload() {
         },
         env: {
             MONITORED_PC_IP: getValue("cfg-monitored-ip"),
+            OHM_PORT: getValue("cfg-ohm-port") || "8085",
             MONITORED_PC_MAC: getValue("cfg-monitored-mac"),
             MONITORED_DISKS: getValue("cfg-monitored-disks"),
             SPOTIFY_CLIENT_ID: getValue("cfg-spotify-client-id"),

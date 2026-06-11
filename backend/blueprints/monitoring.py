@@ -18,8 +18,17 @@ load_dotenv()
 
 MONITORED_PC_IP = os.getenv("MONITORED_PC_IP")
 MONITORED_PC_MAC = os.getenv("MONITORED_PC_MAC")
+OHM_PORT = (os.getenv("OHM_PORT", "8085") or "8085").strip()
 
-OHM_API_URL = f"http://{MONITORED_PC_IP}:8085/data.json"
+
+def build_ohm_api_url():
+    if not MONITORED_PC_IP:
+        return ""
+    port = OHM_PORT or "8085"
+    return f"http://{MONITORED_PC_IP}:{port}/data.json"
+
+
+OHM_API_URL = build_ohm_api_url()
 
 RAW_MONITORED_DISKS = os.getenv("MONITORED_DISKS", "")
 MONITORED_DISKS = [d.strip() for d in RAW_MONITORED_DISKS.split(",") if d.strip()]
@@ -56,6 +65,9 @@ http = urllib3.PoolManager()
 
 def fetch_ohm_data():
     """Fetch data from Open Hardware Monitor"""
+    if not OHM_API_URL:
+        return {"error": "MONITORED_PC_IP not configured"}
+
     try:
         response = http.request("GET", OHM_API_URL, timeout=1.0)
         return json.loads(response.data.decode("utf-8"))

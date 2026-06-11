@@ -90,12 +90,18 @@
       <div class="config-block">
         <div class="section-label">Monitoring</div>
         <div class="field">
-          <label for="cfg-monitored-ip">Monitored PC IP</label>
+          <label for="cfg-monitored-ip">Monitored PC IP (running Open Hardware Monitor)</label>
           <input id="cfg-monitored-ip" type="text" autocomplete="off" placeholder="192.168.1.50">
+          <div class="field-hint">Use the PC with OpenHardwareMonitor.exe running and Remote Web Server enabled.</div>
         </div>
         <div class="field">
-          <label for="cfg-monitored-mac">Monitored PC MAC</label>
+          <label for="cfg-ohm-port">Open Hardware Monitor Port</label>
+          <input id="cfg-ohm-port" type="number" inputmode="numeric" min="1" max="65535" autocomplete="off" placeholder="8085">
+        </div>
+        <div class="field">
+          <label for="cfg-monitored-mac">Monitored PC MAC (Wake-on-LAN only)</label>
           <input id="cfg-monitored-mac" type="text" autocomplete="off" placeholder="AA:BB:CC:DD:EE:FF">
+          <div class="field-hint">Optional. Used only to wake the monitored PC with Wake-on-LAN.</div>
         </div>
         <div class="field">
           <label for="cfg-monitored-disks">Monitored Disks (comma separated, must match disk names in OHM exactly)</label>

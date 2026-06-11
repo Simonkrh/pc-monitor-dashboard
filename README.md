@@ -45,7 +45,8 @@ You don't need all integrations enabled. Each feature works independently:
 - Spotify integration is only needed for the Spotify page.
 - Macro Server is only needed for macros and volume control.
 
-1. **Start Open Hardware Monitor** (optional) Launch `OpenHardwareMonitor.exe` on the PC you want to monitor (must match `MONITORED_PC_IP`). Then go to **Options > Remote Web Server > Run** to start the OHM web server (default port `8085`).
+1. **Start Open Hardware Monitor** (optional) Launch `OpenHardwareMonitor.exe` on the PC you want to monitor (must match `MONITORED_PC_IP`). Then go to **Options > Remote Web Server > Run** to start the OHM web server. The default port is `8085`; change `OHM_PORT` in Config if you use a different port.
+   - `MONITORED_PC_MAC` is optional and only needed for Wake-on-LAN.
 2. **Install requirements**: On the dashboard PC, run ```bash pip install -r requirements.txt```
    - For slideshow videos, also install `ffmpeg` if you want uploads to be optimized automatically.
      On Debian-based systems: ```bash sudo apt install ffmpeg```
