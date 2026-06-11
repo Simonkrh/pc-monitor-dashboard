@@ -111,14 +111,14 @@ body::before {
 }
 
 #audio-session-controls .macro-btn {
-  width: 58px;
-  height: 58px;
+  width: 66px;
+  height: 66px;
   border-radius: 12px;
 }
 
 #audio-session-controls .macro-icon {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
 }
 
@@ -128,8 +128,8 @@ body::before {
 }
 
 #volume-session-icon {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
 }
 
 /* Slider */
@@ -137,7 +137,7 @@ body::before {
   -webkit-appearance: none;
   appearance: none;
   width: 420px;
-  height: 22px;
+  height: 30px;
   background: #2a3346;
   border-radius: 999px;
   outline: none;
@@ -148,7 +148,7 @@ body::before {
 /* Audio controls */
 #audio-controls-wrapper {
   position: relative;
-  height: 120px;
+  height: 132px;
   overflow: hidden;
   background: var(--panel);
   border: 1px solid var(--panel-border);
@@ -165,13 +165,13 @@ body::before {
 }
 
 #volume-slider::-webkit-slider-runnable-track {
-  height: 22px;
+  height: 30px;
   background: linear-gradient(to right, var(--accent) var(--volume-fill, 50%), #2a3346 var(--volume-fill, 50%));
   border-radius: 999px;
 }
 
 #volume-slider::-moz-range-track {
-  height: 22px;
+  height: 30px;
   background: linear-gradient(to right, var(--accent) var(--volume-fill, 50%), #2a3346 var(--volume-fill, 50%));
   border-radius: 999px;
 }

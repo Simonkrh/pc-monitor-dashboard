@@ -1,8 +1,9 @@
-from flask import Flask, send_from_directory
+from flask import Flask, request, send_from_directory
 
 app = Flask(__name__, static_folder="../frontend", static_url_path="/frontend")
 
-# Cache static assets aggressively (CSS/JS/images under /frontend/*).
+# Cache static assets aggressively by default.
+# CSS/JS are revalidated below so UI changes show up during development.
 # HTML routes are served with max_age=0 below so navigation always revalidates.
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 60 * 60 * 24 * 7  # 7 days
 
@@ -12,6 +13,15 @@ def send_no_cache(directory, filename):
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
+    return response
+
+
+@app.after_request
+def prevent_stale_styles_and_scripts(response):
+    if request.path.startswith("/frontend/") and request.path.endswith((".css", ".js")):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
     return response
 
 
