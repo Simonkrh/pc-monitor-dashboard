@@ -103,4 +103,133 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add("show");
     checkPCStatus();
 });
+
+(function setupTimerAlertMonitor() {
+    const timerStorageKey = "timerToolsTimers";
+    let overlay;
+    let edge;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        ensureTimerAlertElements();
+        updateTimerAlertState();
+        setInterval(updateTimerAlertState, 750);
+    });
+
+    function ensureTimerAlertElements() {
+        if (!edge) {
+            edge = document.createElement("div");
+            edge.className = "timer-alert-screen-edge";
+            edge.setAttribute("aria-hidden", "true");
+            document.body.appendChild(edge);
+        }
+
+        if (!overlay) {
+            overlay = document.createElement("div");
+            overlay.className = "timer-alert-overlay";
+            overlay.setAttribute("role", "alert");
+            overlay.setAttribute("aria-live", "assertive");
+            overlay.innerHTML = `
+                <div class="timer-alert-panel">
+                    <div>
+                        <div class="timer-alert-title" id="timer-alert-title">Timer done</div>
+                        <div class="timer-alert-detail" id="timer-alert-detail">A timer finished.</div>
+                    </div>
+                    <div class="timer-alert-actions">
+                        <button type="button" data-timer-alert-action="open">Open</button>
+                        <button class="timer-alert-primary" type="button" data-timer-alert-action="dismiss">Dismiss</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            overlay.querySelectorAll("[data-timer-alert-action]").forEach((button) => {
+                button.addEventListener("click", () => {
+                    handleTimerAlertAction(button.dataset.timerAlertAction);
+                });
+            });
+        }
+    }
+
+    function readTimers() {
+        try {
+            const timers = JSON.parse(localStorage.getItem(timerStorageKey) || "[]");
+            return Array.isArray(timers) ? timers : [];
+        } catch (error) {
+            console.warn("Failed to read timers:", error);
+            return [];
+        }
+    }
+
+    function writeTimers(timers) {
+        localStorage.setItem(timerStorageKey, JSON.stringify(timers));
+        window.dispatchEvent(new CustomEvent("timerToolsUpdated"));
+    }
+
+    function updateTimerAlertState() {
+        if (!document.body) return;
+        ensureTimerAlertElements();
+
+        const timers = readTimers();
+        const now = Date.now();
+        let changed = false;
+
+        timers.forEach((timer) => {
+            if (!timer.isRunning || !timer.endsAt) return;
+            const remainingMs = Math.max(0, timer.endsAt - now);
+            if (remainingMs <= 0) {
+                timer.remainingMs = 0;
+                timer.isRunning = false;
+                timer.endsAt = null;
+                timer.completed = true;
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            writeTimers(timers);
+        }
+
+        const completedTimers = timers.filter((timer) => timer.completed);
+        const isActive = completedTimers.length > 0;
+        document.body.classList.toggle("timer-alert-active", isActive);
+        overlay.classList.toggle("is-active", isActive);
+
+        if (!isActive) return;
+
+        const title = completedTimers.length === 1
+            ? "Timer done"
+            : `${completedTimers.length} timers done`;
+        const detail = completedTimers.length === 1
+            ? "Your timer finished."
+            : "Multiple timers finished.";
+
+        const titleEl = overlay.querySelector("#timer-alert-title");
+        const detailEl = overlay.querySelector("#timer-alert-detail");
+        if (titleEl) titleEl.textContent = title;
+        if (detailEl) detailEl.textContent = detail || "A timer finished.";
+    }
+
+    function handleTimerAlertAction(action) {
+        if (action === "open") {
+            window.location.href = "/timers";
+            return;
+        }
+
+        const timers = readTimers();
+
+        timers.forEach((timer) => {
+            if (!timer.completed) return;
+
+            if (action === "dismiss") {
+                timer.isRunning = false;
+                timer.endsAt = null;
+                timer.remainingMs = 0;
+                timer.completed = false;
+            }
+        });
+
+        writeTimers(timers);
+        updateTimerAlertState();
+    }
+})();
   

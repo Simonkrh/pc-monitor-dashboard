@@ -53,6 +53,13 @@ def dashboard():
     )
 
 
+@app.route("/timers")
+def timers():
+    return send_from_directory(
+        app.static_folder + "/pages/timers", "timers.html", max_age=0
+    )
+
+
 @app.route("/upload")
 def upload():
     return send_from_directory(

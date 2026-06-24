@@ -589,7 +589,7 @@ function getDefaultPage() {
   if (!hiddenPages.includes(candidate)) {
     return candidate;
   }
-  const fallbackOrder = ["/dashboard", "/spotify", "/resources"];
+  const fallbackOrder = ["/dashboard", "/spotify", "/timers", "/resources"];
   return fallbackOrder.find((p) => !hiddenPages.includes(p)) || "/dashboard";
 }
 

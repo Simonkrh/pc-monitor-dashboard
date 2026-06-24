@@ -17,7 +17,7 @@ function setStart(x, y) {
 }
 
 // Define the order of the pages
-const pages = ["/dashboard", "/spotify", "/resources"];
+const pages = ["/dashboard", "/spotify", "/timers", "/resources"];
 const hiddenPages = JSON.parse(localStorage.getItem("hiddenPages")) || [];
 const visiblePages = pages.filter((page) => !hiddenPages.includes(page));
 
@@ -190,6 +190,6 @@ function getDefaultPage() {
   if (!hidden.includes(candidate)) {
     return candidate;
   }
-  const fallbackOrder = ["/dashboard", "/spotify", "/resources"];
+  const fallbackOrder = ["/dashboard", "/spotify", "/timers", "/resources"];
   return fallbackOrder.find((p) => !hidden.includes(p)) || "/dashboard";
 }

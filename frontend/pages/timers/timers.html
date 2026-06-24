@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timers</title>
+  <link rel="icon" href="data:," />
+  <script>
+    (function () {
+      try {
+        const themes = {
+          ocean: {
+            "--bg-1": "#0f1626",
+            "--bg-2": "#142338",
+            "--panel": "rgba(16, 24, 38, 0.85)",
+            "--panel-border": "rgba(255, 255, 255, 0.08)",
+            "--text": "#e9edf3",
+            "--muted": "#a6b3c6",
+            "--accent": "#5ad1a2",
+            "--accent-strong": "#37b07f"
+          },
+          sunset: {
+            "--bg-1": "#2a0f1d",
+            "--bg-2": "#3a1e2e",
+            "--panel": "rgba(34, 16, 26, 0.88)",
+            "--panel-border": "rgba(255, 255, 255, 0.1)",
+            "--text": "#f7e9ee",
+            "--muted": "#d3b6c0",
+            "--accent": "#ffb74d",
+            "--accent-strong": "#ff8f00"
+          },
+          mono: {
+            "--bg-1": "#101418",
+            "--bg-2": "#1a1f24",
+            "--panel": "rgba(18, 22, 26, 0.9)",
+            "--panel-border": "rgba(255, 255, 255, 0.06)",
+            "--text": "#f1f3f5",
+            "--muted": "#b7bdc5",
+            "--accent": "#8fb1ff",
+            "--accent-strong": "#5f8bff"
+          }
+        };
+        let vars = JSON.parse(localStorage.getItem("themeVars") || "null");
+        if (!vars) {
+          const key = localStorage.getItem("theme") || "ocean";
+          vars = themes[key] || themes.ocean;
+          localStorage.setItem("themeVars", JSON.stringify(vars));
+        }
+        const root = document.documentElement;
+        Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+        if (vars["--bg-1"] && vars["--bg-2"]) {
+          root.style.background = `linear-gradient(180deg, ${vars["--bg-1"]}, ${vars["--bg-2"]})`;
+          root.style.backgroundColor = vars["--bg-1"];
+        }
+      } catch (e) {
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/frontend/global/css/style.css" />
+  <link rel="stylesheet" href="/frontend/pages/timers/timers.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <main class="timer-page">
+    <header class="timer-header">
+      <div>
+        <h1>Timers</h1>
+        <div class="date-line" id="current-date">Loading...</div>
+      </div>
+      <div class="clock-block">
+        <div id="current-time">00:00:00</div>
+      </div>
+    </header>
+
+    <section class="quick-panel">
+      <button type="button" data-preset="1">1m</button>
+      <button type="button" data-preset="5">5m</button>
+      <button type="button" data-preset="10">10m</button>
+      <button type="button" data-preset="25">25m</button>
+      <button type="button" data-preset="45">45m</button>
+      <button type="button" data-preset="60">60m</button>
+    </section>
+
+    <div class="content-grid">
+      <section class="panel timers-panel">
+        <div class="panel-heading">
+          <h2>Active Timers</h2>
+          <button id="clear-finished" class="ghost-button" type="button">
+            <i class="fa-solid fa-check-double"></i>
+            <span>Clear Done</span>
+          </button>
+        </div>
+        <div id="timer-list" class="timer-list"></div>
+      </section>
+
+      <section class="panel keypad-panel">
+        <div class="panel-heading">
+          <h2>Custom Time</h2>
+          <button id="keypad-clear" class="ghost-button" type="button">
+            <i class="fa-solid fa-xmark"></i>
+            <span>Clear</span>
+          </button>
+        </div>
+        <div class="keypad-display" id="keypad-display">00:00</div>
+        <div class="keypad-grid" aria-label="Timer keypad">
+          <button type="button" data-digit="1">1</button>
+          <button type="button" data-digit="2">2</button>
+          <button type="button" data-digit="3">3</button>
+          <button type="button" data-digit="4">4</button>
+          <button type="button" data-digit="5">5</button>
+          <button type="button" data-digit="6">6</button>
+          <button type="button" data-digit="7">7</button>
+          <button type="button" data-digit="8">8</button>
+          <button type="button" data-digit="9">9</button>
+          <button type="button" data-adjust="-30">-30s</button>
+          <button type="button" data-digit="0">0</button>
+          <button type="button" data-adjust="30">+30s</button>
+        </div>
+        <div class="keypad-actions">
+          <button id="keypad-backspace" class="secondary-action" type="button" aria-label="Backspace">
+            <i class="fa-solid fa-delete-left"></i>
+          </button>
+          <button id="keypad-start" class="primary-action" type="button">
+            <i class="fa-solid fa-play"></i>
+            <span>Start</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/frontend/config-default.js"></script>
+  <script src="/frontend/config.js"></script>
+  <script src="/frontend/global/js/global.js"></script>
+  <script src="/frontend/global/js/swipe-navigation.js"></script>
+  <script src="/frontend/pages/timers/timers.js"></script>
+</body>
+
+</html>
