@@ -68,12 +68,11 @@ button:disabled {
   height: 100vh;
   padding: 14px 22px 18px;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
 }
 
 .timer-header,
-.quick-panel,
 .panel {
   background: var(--panel);
   border: 1px solid var(--panel-border);
@@ -125,15 +124,6 @@ h2 {
   font-weight: 600;
 }
 
-.quick-panel {
-  border-radius: 16px;
-  padding: 12px;
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.quick-panel button,
 .ghost-button,
 .secondary-action,
 .timer-icon-button,
@@ -281,7 +271,8 @@ h2 {
 }
 
 .keypad-panel {
-  gap: 12px;
+  gap: 10px;
+  overflow: hidden;
 }
 
 .keypad-display {
@@ -299,7 +290,7 @@ h2 {
 
 .keypad-grid {
   min-height: 0;
-  flex: 1;
+  flex: 0 1 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
@@ -329,18 +320,57 @@ h2 {
   font-size: 1.18rem;
 }
 
+@media (max-height: 700px) {
+  .timer-page {
+    padding: 10px 22px 12px;
+    gap: 10px;
+  }
+
+  .timer-header {
+    min-height: 78px;
+    padding: 10px 16px;
+  }
+
+  .panel {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .ghost-button {
+    min-height: 44px;
+  }
+
+  .keypad-display {
+    min-height: 72px;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+  }
+
+  .keypad-grid {
+    gap: 10px;
+  }
+
+  .keypad-grid button {
+    min-height: 56px;
+    font-size: 1.28rem;
+  }
+
+  .keypad-actions {
+    gap: 8px;
+  }
+
+  .secondary-action,
+  .primary-action {
+    min-height: 60px;
+  }
+}
+
 @media (max-width: 900px) {
   .timer-page {
     padding: 10px;
   }
 
-  .quick-panel,
   .content-grid {
     grid-template-columns: 1fr;
-  }
-
-  .quick-panel {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .content-grid {

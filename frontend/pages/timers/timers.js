@@ -12,7 +12,6 @@ const keypadStartButton = document.getElementById("keypad-start");
 
 document.addEventListener("DOMContentLoaded", () => {
   hydrateExpiredTimers();
-  bindPresetButtons();
   bindKeypad();
   bindTimerActions();
   render();
@@ -40,15 +39,6 @@ function saveTimers() {
 
 function uid(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function bindPresetButtons() {
-  document.querySelectorAll("[data-preset]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const minutes = Number(button.dataset.preset);
-      addTimer(minutes * 60 * 1000);
-    });
-  });
 }
 
 function bindKeypad() {
