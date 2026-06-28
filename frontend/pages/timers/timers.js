@@ -9,6 +9,7 @@ const keypadDisplay = document.getElementById("keypad-display");
 const keypadClearButton = document.getElementById("keypad-clear");
 const keypadBackspaceButton = document.getElementById("keypad-backspace");
 const keypadStartButton = document.getElementById("keypad-start");
+const countUpStartButton = document.getElementById("count-up-start");
 
 document.addEventListener("DOMContentLoaded", () => {
   hydrateExpiredTimers();
@@ -74,11 +75,13 @@ function bindKeypad() {
     keypadDigits = "";
     renderKeypad();
   });
+
+  countUpStartButton.addEventListener("click", addCountUpTimer);
 }
 
 function bindTimerActions() {
   clearFinishedButton.addEventListener("click", () => {
-    timers = timers.filter((timer) => timer.isRunning || getRemainingMs(timer) > 0);
+    timers = timers.filter((timer) => isCountUpTimer(timer) || timer.isRunning || getRemainingMs(timer) > 0);
     saveTimers();
     renderTimers();
   });
@@ -101,11 +104,34 @@ function addTimer(durationMs) {
   renderTimers();
 }
 
+function addCountUpTimer() {
+  const timer = {
+    id: uid("timer"),
+    mode: "countup",
+    elapsedMs: 0,
+    startedAt: Date.now(),
+    isRunning: true,
+    completed: false,
+    createdAt: Date.now()
+  };
+
+  timers.unshift(timer);
+  saveTimers();
+  renderTimers();
+}
+
 function tickTimers() {
   let shouldRender = false;
   let shouldSave = false;
 
   timers.forEach((timer) => {
+    if (isCountUpTimer(timer)) {
+      if (timer.isRunning) {
+        shouldRender = true;
+      }
+      return;
+    }
+
     if (!timer.isRunning || !timer.endsAt) return;
 
     const remainingMs = Math.max(0, timer.endsAt - Date.now());
@@ -134,6 +160,7 @@ function tickTimers() {
 function hydrateExpiredTimers() {
   let changed = false;
   timers.forEach((timer) => {
+    if (isCountUpTimer(timer)) return;
     if (!timer.isRunning || !timer.endsAt) return;
     const remainingMs = Math.max(0, timer.endsAt - Date.now());
     timer.remainingMs = remainingMs;
@@ -162,17 +189,19 @@ function renderTimers() {
   }
 
   timers.forEach((timer) => {
-    const remainingMs = getRemainingMs(timer);
-    const progress = getProgress(timer, remainingMs);
+    const isCountUp = isCountUpTimer(timer);
+    const displayMs = isCountUp ? getElapsedMs(timer) : getRemainingMs(timer);
+    const progress = isCountUp ? 100 : getProgress(timer, displayMs);
     const card = document.createElement("article");
     card.className = "timer-card";
     card.classList.toggle("is-running", timer.isRunning);
-    card.classList.toggle("is-done", timer.completed || remainingMs <= 0);
+    card.classList.toggle("is-done", !isCountUp && (timer.completed || displayMs <= 0));
+    card.classList.toggle("is-count-up", isCountUp);
     card.style.setProperty("--timer-progress", `${progress}%`);
 
     card.innerHTML = `
-      <div class="timer-status">${getTimerStatus(timer, remainingMs)}</div>
-      <div class="timer-display">${formatClock(remainingMs)}</div>
+      <div class="timer-status">${getTimerStatus(timer, displayMs)}</div>
+      <div class="timer-display">${formatClock(displayMs)}</div>
       <div>
         <div class="progress-shell">
           <div class="progress-fill"></div>
@@ -204,7 +233,15 @@ function handleTimerAction(action, id) {
   if (!timer && action !== "delete") return;
 
   if (action === "toggle") {
-    if (timer.isRunning) {
+    if (isCountUpTimer(timer) && timer.isRunning) {
+      timer.elapsedMs = getElapsedMs(timer);
+      timer.startedAt = null;
+      timer.isRunning = false;
+    } else if (isCountUpTimer(timer)) {
+      timer.startedAt = Date.now();
+      timer.isRunning = true;
+      timer.completed = false;
+    } else if (timer.isRunning) {
       timer.remainingMs = getRemainingMs(timer);
       timer.endsAt = null;
       timer.isRunning = false;
@@ -218,8 +255,13 @@ function handleTimerAction(action, id) {
   }
 
   if (action === "reset") {
-    timer.remainingMs = timer.durationMs;
-    timer.endsAt = null;
+    if (isCountUpTimer(timer)) {
+      timer.elapsedMs = 0;
+      timer.startedAt = null;
+    } else {
+      timer.remainingMs = timer.durationMs;
+      timer.endsAt = null;
+    }
     timer.isRunning = false;
     timer.completed = false;
   }
@@ -230,6 +272,18 @@ function handleTimerAction(action, id) {
 
   saveTimers();
   renderTimers();
+}
+
+function isCountUpTimer(timer) {
+  return timer.mode === "countup";
+}
+
+function getElapsedMs(timer) {
+  const elapsedMs = Math.max(0, timer.elapsedMs || 0);
+  if (timer.isRunning && timer.startedAt) {
+    return elapsedMs + Math.max(0, Date.now() - timer.startedAt);
+  }
+  return elapsedMs;
 }
 
 function renderKeypad() {
@@ -269,6 +323,7 @@ function getProgress(timer, remainingMs) {
 }
 
 function getTimerStatus(timer, remainingMs) {
+  if (isCountUpTimer(timer)) return timer.isRunning ? "Counting" : "Stopped";
   if (timer.completed || remainingMs <= 0) return "Done";
   if (timer.isRunning) return "Running";
   return "Ready";

@@ -303,7 +303,7 @@ h2 {
 
 .keypad-actions {
   display: grid;
-  grid-template-columns: 0.42fr 1fr;
+  grid-template-columns: 0.46fr 1fr 1fr;
   gap: 10px;
 }
 
@@ -318,6 +318,10 @@ h2 {
 
 .primary-action {
   font-size: 1.18rem;
+}
+
+.count-up-action {
+  color: var(--text);
 }
 
 @media (max-height: 700px) {
@@ -361,6 +365,7 @@ h2 {
   .secondary-action,
   .primary-action {
     min-height: 60px;
+    font-size: 0.98rem;
   }
 }
 
