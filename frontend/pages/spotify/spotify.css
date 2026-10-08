@@ -115,6 +115,12 @@ body::before {
   transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
 
+.controls > div,
+#album-art,
+#playlist .list-group-item {
+  cursor: pointer;
+}
+
 .shuffle i,
 .repeat i {
   font-size: 2rem;

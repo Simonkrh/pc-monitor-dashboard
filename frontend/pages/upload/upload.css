@@ -186,6 +186,7 @@ input[type="submit"]:hover {
 }
 
 .media-container {
+  cursor: pointer;
   opacity: 0;
   animation: fadeIn 0.4s ease forwards;
   position: relative;
