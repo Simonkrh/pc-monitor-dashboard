@@ -3,6 +3,7 @@ let startY = 0;
 let moveX = 0;
 let moveY = 0;
 let isMouseDown = false;
+const NAVIGATION_DELAY_MS = 150;
 
 function getSwipeThreshold() {
   const base = Math.round(window.innerWidth * 0.18);
@@ -157,13 +158,13 @@ function handleSwipe() {
       document.body.classList.add("swipe-down");
       setTimeout(() => {
         window.location.href = "/settings";
-      }, 300);
+      }, NAVIGATION_DELAY_MS);
     } else if (diffY < 0 && isSettingsPage) {
       // Swipe Up -> go to default page
       document.body.classList.add("swipe-up");
       setTimeout(() => {
         window.location.href = getDefaultPage();
-      }, 300);
+      }, NAVIGATION_DELAY_MS);
     }
   }
 }
@@ -181,7 +182,7 @@ function navigateHorizontally(direction) {
 
   setTimeout(() => {
     window.location.href = visiblePages[currentIndex];
-  }, 300);
+  }, NAVIGATION_DELAY_MS);
 }
 
 function getDefaultPage() {

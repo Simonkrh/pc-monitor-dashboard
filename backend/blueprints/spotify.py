@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 import requests
 import os
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,22 +16,45 @@ TOKEN_URL = "https://accounts.spotify.com/api/token"
 SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1/me/player"
 SPOTIFY_API_GENERIC = "https://api.spotify.com/v1"
 
+_access_token = None
+_access_token_expires_at = 0.0
+_access_token_credentials = None
+
 
 def get_access_token():
+    global _access_token, _access_token_expires_at, _access_token_credentials
+
+    credentials = (CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN)
+    if (
+        _access_token
+        and _access_token_credentials == credentials
+        and time.monotonic() < _access_token_expires_at
+    ):
+        return _access_token
+
     token_data = {
         "grant_type": "refresh_token",
         "refresh_token": REFRESH_TOKEN,
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
     }
-    response = requests.post(TOKEN_URL, data=token_data)
-    token_info = response.json()
+
+    try:
+        response = requests.post(TOKEN_URL, data=token_data, timeout=10)
+        token_info = response.json()
+    except (requests.RequestException, ValueError) as error:
+        print("Error getting access token:", error)
+        return None
 
     if "access_token" in token_info:
-        return token_info["access_token"]
-    else:
-        print("Error getting access token:", token_info)
-        return None
+        expires_in = int(token_info.get("expires_in", 3600))
+        _access_token = token_info["access_token"]
+        _access_token_expires_at = time.monotonic() + max(0, expires_in - 60)
+        _access_token_credentials = credentials
+        return _access_token
+
+    print("Error getting access token:", token_info)
+    return None
 
 
 def get_active_device():

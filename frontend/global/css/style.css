@@ -5,7 +5,7 @@ body {
   -ms-user-select: none;
 
   opacity: 0;
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-out;
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-out;
 }
 
 body,
@@ -32,11 +32,11 @@ body::-webkit-scrollbar {
 }
 
 .swipe-down {
-  animation: swipeDown 0.3s ease-out forwards;
+  animation: swipeDown 0.15s ease-out forwards;
 }
 
 .swipe-up {
-  animation: swipeUp 0.3s ease-out forwards;
+  animation: swipeUp 0.15s ease-out forwards;
 }
 
 @keyframes swipeDown {
