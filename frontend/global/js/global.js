@@ -3,6 +3,34 @@ const SERVER_IP = `http://${CONFIG.SERVER_PC_IP}/monitoring`;
 let offlineCounter = 0;
 let lastSuccessfulPing = Date.now();
 let isChecking = false;
+let appViewActive = true;
+
+window.appViewIsActive = () => appViewActive && !document.hidden;
+
+window.addEventListener("message", (event) => {
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.type !== "pc-monitor:view-state") return;
+
+    const wasActive = appViewActive;
+    appViewActive = Boolean(event.data.active);
+    if (wasActive !== appViewActive) {
+        window.dispatchEvent(new CustomEvent("appViewVisibilityChange", {
+            detail: { active: appViewActive }
+        }));
+    }
+});
+
+function navigateFromAppView(path) {
+    if (window.parent !== window) {
+        window.parent.postMessage(
+            { type: "pc-monitor:navigate", path },
+            window.location.origin
+        );
+        return;
+    }
+    const managedPages = ["/dashboard", "/spotify", "/timers", "/resources", "/settings"];
+    window.location.href = managedPages.includes(path) ? `/app#${path}` : path;
+}
 
 async function fetchWithTimeout(resource, options = {}, timeout = 5000) {
     const controller = new AbortController();
@@ -20,7 +48,7 @@ async function fetchWithTimeout(resource, options = {}, timeout = 5000) {
 
 async function checkPCStatus() {
     if (isChecking) return;
-    if (document.hidden) return;
+    if (!window.appViewIsActive()) return;
     isChecking = true;
     try {
         try {
@@ -48,7 +76,7 @@ async function checkPCStatus() {
         const timeSinceLastSuccess = Date.now() - lastSuccessfulPing;
         if (offlineCounter >= 3 && timeSinceLastSuccess > 90000) {
             console.warn("[checkPCStatus] PC seems down. Redirecting to /.");
-            window.location.href = "/";
+            navigateFromAppView("/");
         }
     } finally {
         isChecking = false;
@@ -97,6 +125,10 @@ function applyTheme() {
         console.warn("Failed to apply theme:", e);
     }
 }
+
+window.addEventListener("storage", (event) => {
+    if (["theme", "themeVars"].includes(event.key)) applyTheme();
+});
 
 document.addEventListener("DOMContentLoaded", applyTheme);
 document.addEventListener("DOMContentLoaded", () => {
@@ -211,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function handleTimerAlertAction(action) {
         if (action === "open") {
-            window.location.href = "/timers";
+            navigateFromAppView("/timers");
             return;
         }
 

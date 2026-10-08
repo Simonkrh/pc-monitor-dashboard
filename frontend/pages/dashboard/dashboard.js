@@ -316,7 +316,7 @@ function isSessionHidden(id) {
 }
 
 async function fetchAudioSessionVolumes() {
-  if (document.hidden) return;
+  if (document.hidden || (window.appViewIsActive && !window.appViewIsActive())) return;
   if (volumeFetchInFlight) return;
   volumeFetchInFlight = true;
 
@@ -400,12 +400,18 @@ deviceReady = async () => {
   await fetchMacros();
   await fetchAudioSessionsMetadata();
   await fetchAudioSessionVolumes();
-  startBasePolling();
+  if (!window.appViewIsActive || window.appViewIsActive()) {
+    startBasePolling();
+  }
 };
 
 window.addEventListener('DOMContentLoaded', deviceReady);
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
+
+function updateDashboardPolling() {
+  const isActive = !document.hidden &&
+    (!window.appViewIsActive || window.appViewIsActive());
+
+  if (!isActive) {
     stopFastPolling();
     stopBasePolling();
     return;
@@ -414,5 +420,8 @@ document.addEventListener("visibilitychange", () => {
   if (currentSessionName) startFastPolling();
   startBasePolling();
   fetchAudioSessionVolumes();
-});
+}
+
+document.addEventListener("visibilitychange", updateDashboardPolling);
+window.addEventListener("appViewVisibilityChange", updateDashboardPolling);
  

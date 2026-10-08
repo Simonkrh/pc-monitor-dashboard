@@ -3,6 +3,17 @@ const macroServerIP = `${CONFIG.MACRO_PC_IP}`;
 const outputButtons  = new Map();
 const sessionButtons = new Map();
 
+function openSettingsDestination(path) {
+    if (window.parent !== window) {
+        window.parent.postMessage(
+            { type: "pc-monitor:navigate", path },
+            window.location.origin
+        );
+        return;
+    }
+    window.location.href = path;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const slideshowBtn = document.getElementById("slideshowButton");
     const uploadBtn = document.getElementById("uploadButton");
@@ -11,19 +22,19 @@ document.addEventListener("DOMContentLoaded", () => {
     
     
     slideshowBtn.addEventListener("click", () => {
-        window.location.href = "/";
+        openSettingsDestination("/");
     });
 
     uploadBtn.addEventListener("click", () => {
-        window.location.href = "/upload";
+        openSettingsDestination("/upload");
     });
 
     manageMacrosBtn.addEventListener("click", () => {
-        window.location.href = "/manageMacros";
+        openSettingsDestination("/manageMacros");
     });
 
     configBtn.addEventListener("click", () => {
-        window.location.href = "/config";
+        openSettingsDestination("/config");
     });
 
     fetchAudioOutputs();

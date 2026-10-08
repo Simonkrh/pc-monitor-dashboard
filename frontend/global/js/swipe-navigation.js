@@ -19,18 +19,28 @@ function setStart(x, y) {
 
 // Define the order of the pages
 const pages = ["/dashboard", "/spotify", "/timers", "/resources"];
-const hiddenPages = JSON.parse(localStorage.getItem("hiddenPages")) || [];
-const visiblePages = pages.filter((page) => !hiddenPages.includes(page));
+let visiblePages = [];
+let currentIndex = 0;
 
-if (visiblePages.length === 0) {
-  visiblePages.push("/dashboard");
-}
-let currentPage = window.location.pathname;
-let currentIndex = visiblePages.findIndex((page) => currentPage.includes(page.split('/').pop()));
+function syncNavigationPages() {
+  const hiddenPages = JSON.parse(localStorage.getItem("hiddenPages") || "[]");
+  visiblePages = pages.filter((page) => !hiddenPages.includes(page));
 
-if (currentIndex === -1) {
-  currentIndex = 0;
+  if (visiblePages.length === 0) {
+    visiblePages.push("/dashboard");
+  }
+
+  currentIndex = visiblePages.indexOf(window.location.pathname);
+  if (currentIndex === -1) currentIndex = 0;
 }
+
+syncNavigationPages();
+
+window.addEventListener("storage", (event) => {
+  if (["hiddenPages", "defaultPage"].includes(event.key)) {
+    syncNavigationPages();
+  }
+});
 
 function canPrefetch() {
   const conn =
@@ -54,6 +64,8 @@ function prefetchUrl(url) {
 }
 
 function prefetchNeighbors() {
+  syncNavigationPages();
+
   if (visiblePages.length <= 1) {
     prefetchUrl("/settings");
     return;
@@ -66,6 +78,29 @@ function prefetchNeighbors() {
   prefetchUrl(prev);
   prefetchUrl("/settings");
   prefetchUrl(getDefaultPage());
+}
+
+function navigateTo(path) {
+  setTimeout(() => {
+    if (window.parent !== window) {
+      window.parent.postMessage(
+        { type: "pc-monitor:navigate", path },
+        window.location.origin,
+      );
+
+      setTimeout(() => {
+        document.body.classList.remove(
+          "swipe-left",
+          "swipe-right",
+          "swipe-up",
+          "swipe-down",
+        );
+      }, 50);
+      return;
+    }
+
+    window.location.href = `/app#${path}`;
+  }, NAVIGATION_DELAY_MS);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -156,15 +191,11 @@ function handleSwipe() {
     if (diffY > 0 && !isSettingsPage) {
       // Swipe Down -> go to settings
       document.body.classList.add("swipe-down");
-      setTimeout(() => {
-        window.location.href = "/settings";
-      }, NAVIGATION_DELAY_MS);
+      navigateTo("/settings");
     } else if (diffY < 0 && isSettingsPage) {
       // Swipe Up -> go to default page
       document.body.classList.add("swipe-up");
-      setTimeout(() => {
-        window.location.href = getDefaultPage();
-      }, NAVIGATION_DELAY_MS);
+      navigateTo(getDefaultPage());
     }
   }
 }
@@ -172,6 +203,8 @@ function handleSwipe() {
 
 // Swipe Transition + Fade-in Effect on New Page
 function navigateHorizontally(direction) {
+  syncNavigationPages();
+
   if (direction === "next") {
     document.body.classList.add("swipe-left");
     currentIndex = (currentIndex + 1) % visiblePages.length;
@@ -180,9 +213,7 @@ function navigateHorizontally(direction) {
     currentIndex = (currentIndex - 1 + visiblePages.length) % visiblePages.length;
   }
 
-  setTimeout(() => {
-    window.location.href = visiblePages[currentIndex];
-  }, NAVIGATION_DELAY_MS);
+  navigateTo(visiblePages[currentIndex]);
 }
 
 function getDefaultPage() {

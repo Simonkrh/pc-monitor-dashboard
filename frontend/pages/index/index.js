@@ -578,7 +578,7 @@ function wakeAndRedirect() {
     .catch(error => {
       console.error("Failed to send WoL request:", error);
       const defaultPage = getDefaultPage();
-      window.location.href = defaultPage;
+      openDashboardPage(defaultPage);
 
     });
 }
@@ -591,6 +591,10 @@ function getDefaultPage() {
   }
   const fallbackOrder = ["/dashboard", "/spotify", "/timers", "/resources"];
   return fallbackOrder.find((p) => !hiddenPages.includes(p)) || "/dashboard";
+}
+
+function openDashboardPage(path) {
+  window.location.href = `/app#${path}`;
 }
 
 async function waitForPCAndMaybeMacro() {
@@ -630,7 +634,7 @@ async function waitForPCAndMaybeMacro() {
 
       if (macroRes.ok) {
         console.log("PC is online and Macro Server is responding!");
-        window.location.href = defaultPage;
+        openDashboardPage(defaultPage);
         return;
       } else {
         console.log(`PC online, macro server not ready (HTTP ${macroRes.status})...`);
@@ -644,5 +648,5 @@ async function waitForPCAndMaybeMacro() {
   }
 
   console.log("Timed out waiting - redirecting anyway.");
-  window.location.href = defaultPage;
+  openDashboardPage(defaultPage);
 }

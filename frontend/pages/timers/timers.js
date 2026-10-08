@@ -24,6 +24,13 @@ window.addEventListener("timerToolsUpdated", () => {
   renderTimers();
 });
 
+window.addEventListener("appViewVisibilityChange", (event) => {
+  if (!event.detail.active) return;
+  timers = readJson(TIMER_TOOLS_TIMERS_KEY, []);
+  hydrateExpiredTimers();
+  render();
+});
+
 function readJson(key, fallback) {
   try {
     const value = JSON.parse(localStorage.getItem(key) || "null");
@@ -152,7 +159,8 @@ function tickTimers() {
     saveTimers();
   }
 
-  if (shouldRender || shouldSave) {
+  const isActive = !window.appViewIsActive || window.appViewIsActive();
+  if ((shouldRender || shouldSave) && isActive) {
     renderTimers();
   }
 }

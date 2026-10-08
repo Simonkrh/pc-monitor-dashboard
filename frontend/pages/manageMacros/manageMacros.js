@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (returnButton) {
     returnButton.addEventListener('click', () => {
-      window.location.href = "/settings";
+      window.location.href = "/app#/settings";
     });
   }
 

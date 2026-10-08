@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const backBtn = document.getElementById("backToSettings");
     if (backBtn) {
         backBtn.addEventListener("click", () => {
-            window.location.href = "/settings";
+            window.location.href = "/app#/settings";
         });
     }
 

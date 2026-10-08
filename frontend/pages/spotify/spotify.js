@@ -610,6 +610,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 setInterval(() => {
+  if (window.appViewIsActive && !window.appViewIsActive()) return;
   updateSongInfo();
   fetchPlayerState();
 }, 10000);
+
+window.addEventListener("appViewVisibilityChange", (event) => {
+  if (!event.detail.active) return;
+  updateSongInfo();
+  fetchPlayerState();
+  getSpotifyVolume();
+});

@@ -64,6 +64,7 @@ function renderDisks(disks) {
 }
 
 socket.on("update_stats", (data) => {
+    if (window.appViewIsActive && !window.appViewIsActive()) return;
     lastUpdateAt = Date.now();
     setStatus("", "warn");
 
@@ -100,6 +101,7 @@ socket.on("disconnect", () => {
 });
 
 setInterval(() => {
+    if (window.appViewIsActive && !window.appViewIsActive()) return;
     const now = Date.now();
     if (!lastUpdateAt) {
         if (now - startTime > STALE_AFTER_MS) {

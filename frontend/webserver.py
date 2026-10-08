@@ -32,6 +32,13 @@ def index():
     )
 
 
+@app.route("/app")
+def app_shell():
+    return send_from_directory(
+        app.static_folder + "/pages/app", "app.html", max_age=0
+    )
+
+
 @app.route("/resources")
 def resources():
     return send_from_directory(

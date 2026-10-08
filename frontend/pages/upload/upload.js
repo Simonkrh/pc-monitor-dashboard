@@ -364,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     returnBtn.addEventListener("click", () => {
-        window.location.href = "/settings";
+        window.location.href = "/app#/settings";
     });
 
     fetchImages();
