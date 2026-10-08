@@ -145,15 +145,15 @@ async function fetchAudioSessionsMetadata() {
             };
 
 
-            sessionButtons.set(session.pid,  { button, img, volume: 0 });
+            sessionButtons.set(session.pid, { wrapper, button, img, volume: 0 });
         }
     });
 
     // Remove buttons for sessions that no longer exist
     for (const name of sessionButtons.keys()) {
         if (!seenSessions.has(name)) {
-            const { button } = sessionButtons.get(name);
-            container.removeChild(button);
+            const { wrapper } = sessionButtons.get(name);
+            wrapper.remove();
             sessionButtons.delete(name);
         }
     }

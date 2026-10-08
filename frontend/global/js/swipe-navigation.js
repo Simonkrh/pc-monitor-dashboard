@@ -3,7 +3,7 @@ let startY = 0;
 let moveX = 0;
 let moveY = 0;
 let isMouseDown = false;
-const NAVIGATION_DELAY_MS = 150;
+const NAVIGATION_DELAY_MS = 300;
 
 function getSwipeThreshold() {
   const base = Math.round(window.innerWidth * 0.18);

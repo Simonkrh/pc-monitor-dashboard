@@ -282,13 +282,17 @@ async function fetchAudioSessionsMetadata() {
     }
   });
 
-  // Remove buttons for sessions that no longer exist
+  // Remove sessions that ended or were hidden in Settings.
   for (const name of sessionButtons.keys()) {
-    if (!seenSessions.has(name)) {
+    if (!seenSessions.has(name) || isSessionHidden(name)) {
       const { tile } = sessionButtons.get(name);
-      container.removeChild(tile);
+      tile.remove();
       sessionButtons.delete(name);
     }
+  }
+
+  if (currentSessionName && isSessionHidden(currentSessionName)) {
+    returnToIcons();
   }
 
   if (currentSessionName) {
@@ -315,6 +319,18 @@ function isSessionHidden(id) {
   return isSessionHidden;
 }
 
+function removeHiddenSessions() {
+  for (const [name, entry] of sessionButtons) {
+    if (!isSessionHidden(name)) continue;
+    entry.tile.remove();
+    sessionButtons.delete(name);
+  }
+
+  if (currentSessionName && isSessionHidden(currentSessionName)) {
+    returnToIcons();
+  }
+}
+
 async function fetchAudioSessionVolumes() {
   if (document.hidden || (window.appViewIsActive && !window.appViewIsActive())) return;
   if (volumeFetchInFlight) return;
@@ -335,7 +351,7 @@ async function fetchAudioSessionVolumes() {
         if (currentSessionName === session.name) {
           updateSlider(session.volume);
         }
-      } else {
+      } else if (!isSessionHidden(session.name)) {
         shouldFetchMetadata = true;
       }
     });
@@ -406,6 +422,13 @@ deviceReady = async () => {
 };
 
 window.addEventListener('DOMContentLoaded', deviceReady);
+
+window.addEventListener("storage", (event) => {
+  if (event.key === "hiddenSessionIds") {
+    removeHiddenSessions();
+    fetchAudioSessionsMetadata();
+  }
+});
 
 function updateDashboardPolling() {
   const isActive = !document.hidden &&
