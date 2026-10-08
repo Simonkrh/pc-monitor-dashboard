@@ -39,33 +39,50 @@ If you prefer, you can edit the config files directly:
 - `.env` in the repo root (backend settings)
 - `frontend/config.js` (frontend IPs)
   - This file is optional at first run. If it doesn't exist, the frontend uses `frontend/config-default.js`, which sets `SERVER_PC_IP` to the current host and port `:5000`.
-## How to Use 
+
+## How to Use
+
 You don't need all integrations enabled. Each feature works independently:
+
 - Open Hardware Monitor is only needed for the Resources page stats.
 - Spotify integration is only needed for the Spotify page.
 - Macro Server is only needed for macros and volume control.
+
+### Shared Setup
 
 1. **Start Open Hardware Monitor** (optional) Launch `OpenHardwareMonitor.exe` on the PC you want to monitor (must match `MONITORED_PC_IP`). Then go to **Options > Remote Web Server > Run** to start the OHM web server. The default port is `8085`; change `OHM_PORT` in Config if you use a different port.
    - `MONITORED_PC_MAC` is optional and only needed for Wake-on-LAN.
 2. **Install requirements**: On the dashboard PC, run ```bash pip install -r requirements.txt```
    - For slideshow videos, also install `ffmpeg` if you want uploads to be optimized automatically.
      On Debian-based systems: ```bash sudo apt install ffmpeg```
-3. **Start the backend server**: On the same PC, run: ```bash python backend/app.py ``` (default port `5000`).
-4. **Start the frontend web server**: On the same PC, run: ```bash python frontend/webserver.py ``` 
-5. **Start the [Macro Server](https://github.com/Simonkrh/pc-macro-server)** (optional): Required for macro buttons and volume control. Run it on the PC where macros should be triggered.
+3. **Start the [Macro Server](https://github.com/Simonkrh/pc-macro-server)** (optional): Required for macro buttons and volume control. Run it on the PC where macros should be triggered.
 
-### Slideshow Video Optimization
-Uploaded videos are automatically converted to MP4 files before they are added to the slideshow:
-- max size: `1024x600`
-- max frame rate: `30 FPS`
-- codec: H.264 MP4
-- audio removed
-- fast-start metadata
+### Electron Desktop Mode
 
-This keeps the slideshow responsive while reducing decode load on the dashboard device. You can tune the conversion with optional `.env` values:
-- `SLIDESHOW_VIDEO_MAX_WIDTH=1024`
-- `SLIDESHOW_VIDEO_MAX_HEIGHT=600`
-- `SLIDESHOW_VIDEO_FPS=30`
-- `SLIDESHOW_VIDEO_CRF=27`
-- `SLIDESHOW_VIDEO_PRESET=veryfast`
-- `FFMPEG_PATH=/usr/bin/ffmpeg`
+Install Electron once:
+
+```powershell
+npm.cmd install
+```
+
+Start the desktop app:
+
+```powershell
+npm.cmd run desktop
+```
+
+Electron starts the backend and frontend automatically. For fullscreen mode, use `npm.cmd run desktop:fullscreen`.
+
+### Browser Mode
+
+Start the backend and frontend in separate terminals:
+
+```powershell
+python backend/app.py
+```
+
+```powershell
+python frontend/webserver.py
+```
+
+Then open `http://localhost:8080` in a browser.

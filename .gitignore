@@ -26,3 +26,9 @@ Thumbs.db
 
 # Ignore frontend config file
 frontend/config.js
+
+# Electron / Node
+node_modules/
+dist/
+release/
+*.tsbuildinfo

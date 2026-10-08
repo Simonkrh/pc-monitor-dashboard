@@ -1,0 +1,15 @@
+{
+  "name": "pc-monitor-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Touchscreen PC monitoring dashboard with optional Electron desktop mode",
+  "main": "electron/main.js",
+  "scripts": {
+    "desktop": "electron .",
+    "desktop:fullscreen": "electron . --fullscreen",
+    "desktop:no-services": "electron . --no-start-services"
+  },
+  "devDependencies": {
+    "electron": "^44.7.0"
+  }
+}

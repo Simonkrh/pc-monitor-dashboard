@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'unsafe-inline'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Starting PC Monitor Dashboard</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        align-items: center;
+        background: radial-gradient(circle at top, #20334a, #101418 58%);
+        color: #e9edf3;
+        display: flex;
+        font: 600 18px/1.5 system-ui, sans-serif;
+        justify-content: center;
+        margin: 0;
+        min-height: 100vh;
+      }
+      main { text-align: center; }
+      .spinner {
+        animation: spin 0.9s linear infinite;
+        border: 4px solid rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        border-top-color: #5ad1a2;
+        height: 44px;
+        margin: 0 auto 18px;
+        width: 44px;
+      }
+      p { color: #a6b3c6; font-size: 14px; font-weight: 400; margin: 4px 0; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="spinner" aria-hidden="true"></div>
+      <div>Starting PC Monitor Dashboard</div>
+      <p>Preparing the local services…</p>
+    </main>
+  </body>
+</html>
