@@ -1,4 +1,11 @@
-const { app, BrowserWindow, dialog, shell } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  WebContentsView,
+  dialog,
+  ipcMain,
+  shell,
+} = require("electron");
 const { spawn } = require("node:child_process");
 const http = require("node:http");
 const path = require("node:path");
@@ -8,8 +15,12 @@ const FRONTEND_URL = "http://127.0.0.1:8080";
 const BACKEND_URL = "http://127.0.0.1:5000";
 const START_SERVICES = !process.argv.includes("--no-start-services");
 const FULLSCREEN = process.argv.includes("--fullscreen");
+const BROWSER_TOOLBAR_HEIGHT = 64;
 
 let mainWindow = null;
+let browserPageView = null;
+let browserPageAttached = false;
+let browserPageUrl = null;
 let isQuitting = false;
 const childProcesses = new Set();
 
@@ -150,6 +161,88 @@ function stopLocalServices() {
   childProcesses.clear();
 }
 
+function layoutBrowserPage() {
+  if (!mainWindow || !browserPageView || !browserPageAttached) return;
+  const [width, height] = mainWindow.getContentSize();
+  browserPageView.setBounds({
+    x: 0,
+    y: BROWSER_TOOLBAR_HEIGHT,
+    width,
+    height: Math.max(0, height - BROWSER_TOOLBAR_HEIGHT),
+  });
+}
+
+function createBrowserPageView() {
+  if (browserPageView) return browserPageView;
+
+  browserPageView = new WebContentsView({
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true,
+      partition: "persist:browser-page",
+    },
+  });
+
+  browserPageView.webContents.setWindowOpenHandler(({ url }) => {
+    if (isHttpUrl(url)) void browserPageView.webContents.loadURL(url);
+    return { action: "deny" };
+  });
+
+  browserPageView.webContents.on("will-navigate", (event, url) => {
+    if (!isHttpUrl(url)) event.preventDefault();
+  });
+
+  browserPageView.webContents.session.setPermissionRequestHandler(
+    (_webContents, _permission, callback) => callback(false),
+  );
+
+  return browserPageView;
+}
+
+function showBrowserPage(url) {
+  if (!mainWindow || !isHttpUrl(url)) {
+    hideBrowserPage();
+    return;
+  }
+
+  const view = createBrowserPageView();
+  if (!browserPageAttached) {
+    mainWindow.contentView.addChildView(view);
+    browserPageAttached = true;
+  }
+  layoutBrowserPage();
+
+  if (browserPageUrl !== url) {
+    browserPageUrl = url;
+    void view.webContents.loadURL(url);
+  }
+}
+
+function hideBrowserPage() {
+  if (!mainWindow || !browserPageView || !browserPageAttached) return;
+  mainWindow.contentView.removeChildView(browserPageView);
+  browserPageAttached = false;
+}
+
+ipcMain.on("browser-page:show", (event, url) => {
+  if (event.sender !== mainWindow?.webContents) return;
+  showBrowserPage(typeof url === "string" ? url : "");
+});
+
+ipcMain.on("browser-page:hide", (event) => {
+  if (event.sender !== mainWindow?.webContents) return;
+  hideBrowserPage();
+});
+
+ipcMain.on("browser-page:back", (event) => {
+  if (event.sender !== mainWindow?.webContents || !browserPageView) return;
+  if (browserPageView.webContents.navigationHistory.canGoBack()) {
+    browserPageView.webContents.navigationHistory.goBack();
+  }
+});
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1024,
@@ -183,7 +276,14 @@ function createWindow() {
   });
 
   mainWindow.once("ready-to-show", () => mainWindow?.show());
+  mainWindow.on("resize", layoutBrowserPage);
   mainWindow.on("closed", () => {
+    if (browserPageView && !browserPageView.webContents.isDestroyed()) {
+      browserPageView.webContents.close();
+    }
+    browserPageView = null;
+    browserPageAttached = false;
+    browserPageUrl = null;
     mainWindow = null;
   });
 }

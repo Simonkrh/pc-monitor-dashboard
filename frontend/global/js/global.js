@@ -28,7 +28,7 @@ function navigateFromAppView(path) {
         );
         return;
     }
-    const managedPages = ["/dashboard", "/spotify", "/timers", "/resources", "/settings"];
+    const managedPages = ["/dashboard", "/spotify", "/browser", "/timers", "/resources", "/settings"];
     window.location.href = managedPages.includes(path) ? `/app#${path}` : path;
 }
 

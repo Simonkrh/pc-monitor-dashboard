@@ -1,8 +1,9 @@
-const SWIPE_PAGES = ["/dashboard", "/spotify", "/timers", "/resources"];
+const SWIPE_PAGES = ["/dashboard", "/spotify", "/browser", "/timers", "/resources"];
 const MANAGED_PAGES = new Set([...SWIPE_PAGES, "/settings"]);
 const PAGE_TITLES = {
   "/dashboard": "Dashboard",
   "/spotify": "Spotify",
+  "/browser": "Browser",
   "/timers": "Timers",
   "/resources": "Resources",
   "/settings": "Settings",
@@ -80,6 +81,18 @@ function notifyViewStates() {
   }
 }
 
+function updateDesktopBrowser() {
+  const desktop = window.pcMonitorDesktop;
+  if (!desktop?.isElectron) return;
+
+  if (activePath !== "/browser") {
+    desktop.hideBrowserPage();
+    return;
+  }
+
+  desktop.showBrowserPage(localStorage.getItem("browserPageUrl") || "");
+}
+
 function preloadNeighborViews() {
   clearTimeout(preloadTimer);
   preloadTimer = setTimeout(() => {
@@ -108,6 +121,7 @@ function showView(path, historyMode = "push") {
 
   activePath = path;
   document.title = `${PAGE_TITLES[path]} · PC Monitor Dashboard`;
+  updateDesktopBrowser();
 
   const nextUrl = `/app#${path}`;
   if (historyMode === "replace") {
@@ -135,12 +149,20 @@ window.addEventListener("message", (event) => {
 window.addEventListener("popstate", () => showView(getHashPath(), "none"));
 
 window.addEventListener("storage", (event) => {
+  if (event.key === "browserPageUrl") {
+    updateDesktopBrowser();
+    return;
+  }
   if (!["hiddenPages", "defaultPage"].includes(event.key)) return;
   if (SWIPE_PAGES.includes(activePath) && !getVisibleSwipePages().includes(activePath)) {
     showView(getDefaultPage(), "replace");
   } else {
     preloadNeighborViews();
   }
+});
+
+window.addEventListener("beforeunload", () => {
+  window.pcMonitorDesktop?.hideBrowserPage();
 });
 
 showView(getHashPath(), "replace");

@@ -41,8 +41,62 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchAudioSessionsMetadata()
     setupDefaultPageButtons();
     setupHiddenPagesButtons();
+    setupBrowserPageUrl();
     setupThemeButtons();
 });
+
+function setupBrowserPageUrl() {
+    const input = document.getElementById("browserPageUrl");
+    const saveButton = document.getElementById("saveBrowserPageUrl");
+    let feedbackTimer;
+    input.value = localStorage.getItem("browserPageUrl") || "";
+
+    const clearFeedback = () => {
+        clearTimeout(feedbackTimer);
+        saveButton.textContent = "Save";
+        saveButton.classList.remove("btn-default-selected");
+    };
+
+    const save = () => {
+        let value = input.value.trim();
+        if (value && !/^https?:\/\//i.test(value)) {
+            value = `https://${value}`;
+        }
+
+        if (value) {
+            try {
+                const url = new URL(value);
+                if (!["http:", "https:"].includes(url.protocol)) throw new Error();
+            } catch {
+                input.setCustomValidity("Enter a valid website address.");
+                input.reportValidity();
+                return;
+            }
+        }
+
+        input.setCustomValidity("");
+        input.value = value;
+        if (value) {
+            localStorage.setItem("browserPageUrl", value);
+        } else {
+            localStorage.removeItem("browserPageUrl");
+        }
+
+        saveButton.textContent = "Saved";
+        saveButton.classList.add("btn-default-selected");
+        clearTimeout(feedbackTimer);
+        feedbackTimer = setTimeout(clearFeedback, 1500);
+    };
+
+    input.addEventListener("input", () => {
+        input.setCustomValidity("");
+        clearFeedback();
+    });
+    input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") save();
+    });
+    saveButton.addEventListener("click", save);
+}
 
 async function fetchAudioOutputs() {
     const container = document.getElementById('audio-output-controls');

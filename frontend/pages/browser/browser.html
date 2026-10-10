@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser</title>
+  <link rel="icon" href="data:,">
+  <link href="/frontend/global/css/style.css" rel="stylesheet">
+  <link href="/frontend/pages/browser/browser.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="browser-toolbar">
+    <div class="browser-toolbar-side">
+      <button id="previousPage" type="button" aria-label="Go to Spotify">&#x2039; Spotify</button>
+      <button id="websiteBack" type="button" aria-label="Go back on the website">&#x2190; Back</button>
+    </div>
+    <div class="browser-clock">
+      <div id="current-time">00:00:00</div>
+      <div id="current-date">Loading...</div>
+    </div>
+    <div class="browser-toolbar-side browser-toolbar-right">
+      <button id="nextPage" type="button" aria-label="Go to Timers">Timers &#x203A;</button>
+    </div>
+  </header>
+
+  <main class="browser-content">
+    <div id="emptyBrowser" class="browser-empty">
+      Set a website address in Settings.
+    </div>
+    <iframe
+      id="websiteFrame"
+      title="Custom website"
+      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin"
+    ></iframe>
+  </main>
+
+  <script src="/frontend/global/js/swipe-navigation.js"></script>
+  <script src="/frontend/pages/browser/browser.js"></script>
+</body>
+</html>

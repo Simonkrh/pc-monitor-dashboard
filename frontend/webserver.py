@@ -53,6 +53,13 @@ def spotify():
     )
 
 
+@app.route("/browser")
+def browser():
+    return send_from_directory(
+        app.static_folder + "/pages/browser", "browser.html", max_age=0
+    )
+
+
 @app.route("/dashboard")
 def dashboard():
     return send_from_directory(

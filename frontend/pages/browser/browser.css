@@ -1,0 +1,99 @@
+:root {
+  --toolbar-height: 64px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  height: 100vh;
+  overflow: hidden;
+  font-family: "Sora", sans-serif;
+  background: #101418;
+}
+
+.browser-toolbar {
+  position: relative;
+  height: var(--toolbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #101418;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.browser-toolbar-side {
+  display: flex;
+  gap: 8px;
+}
+
+.browser-toolbar-right {
+  margin-left: auto;
+}
+
+.browser-toolbar button {
+  height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  background: #3159bd;
+  font: inherit;
+  font-weight: 600;
+}
+
+.browser-clock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  transform: translate(-50%, -50%);
+  color: #dce5f2;
+  text-align: center;
+  pointer-events: none;
+}
+
+#current-time {
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+#current-date {
+  margin-top: 2px;
+  color: #a6b3c6;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.browser-content {
+  position: relative;
+  height: calc(100vh - var(--toolbar-height));
+}
+
+#websiteFrame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+#websiteFrame:not([src]) {
+  display: none;
+}
+
+.browser-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #a6b3c6;
+  text-align: center;
+}
+
+.browser-empty[hidden] {
+  display: none;
+}

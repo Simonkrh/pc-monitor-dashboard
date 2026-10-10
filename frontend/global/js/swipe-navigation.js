@@ -18,7 +18,7 @@ function setStart(x, y) {
 }
 
 // Define the order of the pages
-const pages = ["/dashboard", "/spotify", "/timers", "/resources"];
+const pages = ["/dashboard", "/spotify", "/browser", "/timers", "/resources"];
 let visiblePages = [];
 let currentIndex = 0;
 
