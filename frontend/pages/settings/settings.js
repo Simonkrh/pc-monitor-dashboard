@@ -15,6 +15,9 @@ function openSettingsDestination(path) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("backButton").addEventListener("click", () => {
+        openSettingsDestination(getDefaultPage());
+    });
     const slideshowBtn = document.getElementById("slideshowButton");
     const uploadBtn = document.getElementById("uploadButton");
     const manageMacrosBtn = document.getElementById("manageMacrosButton");

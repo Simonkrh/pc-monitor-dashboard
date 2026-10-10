@@ -64,34 +64,19 @@
 </head>
 
 <body>
-  <h1>Settings</h1>
+  <header class="settings-header">
+    <h1>Settings</h1>
+    <button id="backButton" type="button">Back</button>
+  </header>
 
+  <main class="settings-content" data-no-swipe tabindex="0" aria-label="Settings controls">
   <div class="settings-grid">
-    <section class="panel">
-      <h2>Navigation</h2>
-      <div class="button-row">
-        <button id="slideshowButton">Slideshow</button>
-        <button id="uploadButton">Upload Page</button>
-        <button id="manageMacrosButton">Manage Macros</button>
-        <button id="configButton">Config</button>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>Audio Output</h2>
-      <div id="audio-output-controls" class="button-row"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Toggle Audio Sessions</h2>
-      <div id="audio-session-controls" class="button-row"></div>
-    </section>
-
-    <section class="panel">
+    <section class="panel panel-wide">
       <h2>Pages</h2>
       <div class="split-group">
         <div>
           <div class="section-label">Default Page</div>
+          <p class="section-description">Choose the page to open when the dashboard starts.</p>
           <div class="button-row">
             <button id="defaultDashboard">Dashboard</button>
             <button id="defaultSpotify">Spotify</button>
@@ -101,6 +86,7 @@
         </div>
         <div>
           <div class="section-label">Hidden Pages</div>
+          <p class="section-description">Tap a page to hide it. Red buttons are hidden.</p>
           <div class="button-row">
             <button id="toggleDashboardPage">Dashboard</button>
             <button id="toggleSpotifyPage">Spotify</button>
@@ -109,13 +95,17 @@
           </div>
         </div>
       </div>
-      <div>
-        <div class="section-label">Browser Page</div>
+      <div class="settings-group">
+        <label class="section-label" for="browserPageUrl">Browser Page</label>
         <div class="browser-url-row">
           <input id="browserPageUrl" type="url" placeholder="https://example.com" aria-label="Browser page URL">
           <button id="saveBrowserPageUrl" type="button" aria-live="polite">Save</button>
         </div>
       </div>
+    </section>
+
+    <section class="panel">
+      <h2>Appearance</h2>
       <div class="section-label">Theme</div>
       <div class="button-row">
         <button id="themeOcean">Ocean</button>
@@ -124,7 +114,32 @@
       </div>
     </section>
 
+    <section class="panel">
+      <h2>Tools</h2>
+      <div class="button-row">
+        <button id="slideshowButton">Slideshow</button>
+        <button id="uploadButton">Upload Page</button>
+        <button id="manageMacrosButton">Manage Macros</button>
+        <button id="configButton">Config</button>
+      </div>
+    </section>
+
+    <section class="panel panel-wide">
+      <h2>Audio</h2>
+      <div class="split-group">
+        <div>
+          <div class="section-label">Output device</div>
+          <div id="audio-output-controls" class="button-row"></div>
+        </div>
+        <div>
+          <div class="section-label">Audio sessions</div>
+          <p class="section-description">Tap a session to hide its volume control. Red buttons are hidden.</p>
+          <div id="audio-session-controls" class="button-row"></div>
+        </div>
+      </div>
+    </section>
   </div>
+  </main>
 
   <script src="/frontend/config-default.js"></script>
   <script src="/frontend/config.js"></script>

@@ -3,6 +3,7 @@ let startY = 0;
 let moveX = 0;
 let moveY = 0;
 let isMouseDown = false;
+let ignoreSwipe = false;
 const NAVIGATION_DELAY_MS = 300;
 
 function getSwipeThreshold() {
@@ -110,11 +111,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Touch Events
 document.addEventListener("touchstart", (event) => {
+  ignoreSwipe = Boolean(event.target.closest("[data-no-swipe]"));
   if (event.touches.length !== 1) return;
   setStart(event.touches[0].clientX, event.touches[0].clientY);
 });
 
 document.addEventListener("touchmove", (event) => {
+  if (ignoreSwipe) return;
   if (event.touches.length !== 1) return;
   moveX = event.touches[0].clientX;
   moveY = event.touches[0].clientY;
@@ -147,6 +150,8 @@ document.addEventListener("touchend", (event) => {
 
 // Mouse Events (for swiping with a mouse)
 document.addEventListener("mousedown", (event) => {
+  ignoreSwipe = Boolean(event.target.closest("[data-no-swipe]"));
+  if (ignoreSwipe) return;
   isMouseDown = true;
   setStart(event.clientX, event.clientY);
 });
@@ -165,6 +170,8 @@ document.addEventListener("mouseup", () => {
 
 // Swipe Handling
 function handleSwipe() {
+  // Let scrollable settings controls handle their own gestures.
+  if (ignoreSwipe) return;
   const threshold = getSwipeThreshold();
   const diffX = moveX - startX;
   const diffY = moveY - startY;

@@ -62,16 +62,16 @@ You don't need all integrations enabled. Each feature works independently:
 Install Electron once:
 
 ```powershell
-npm.cmd install
+npm install
 ```
 
 Start the desktop app:
 
 ```powershell
-npm.cmd run desktop
+npm run desktop
 ```
 
-Electron starts the backend and frontend automatically. For fullscreen mode, use `npm.cmd run desktop:fullscreen`.
+Electron starts the backend and frontend automatically. For fullscreen mode, use `npm run desktop:fullscreen`.
 
 ### Browser Mode
 
