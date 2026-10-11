@@ -1,4 +1,12 @@
-from flask import Flask, request, send_from_directory
+import json
+import sys
+from pathlib import Path
+
+import requests
+from flask import Flask, Response, jsonify, request, send_from_directory
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+from config_store import public_config, read_config
 
 app = Flask(__name__, static_folder="../frontend", static_url_path="/frontend")
 
@@ -90,7 +98,30 @@ def manageMacros():
 
 @app.route("/frontend/config.js")
 def frontend_config():
-    return send_no_cache(app.static_folder, "config.js")
+    public = public_config(read_config())
+    script = "window.CONFIG = " + json.dumps(public) + ";\n"
+    script += 'if (!CONFIG.SERVER_PC_IP) CONFIG.SERVER_PC_IP = window.location.hostname + ":5000";\n'
+    return Response(script, mimetype="application/javascript")
+
+
+@app.route("/api/config", methods=["GET", "POST"])
+def config_api():
+    # Config belongs to this installation, regardless of the browser's storage
+    # or the public address currently saved in .env.
+    try:
+        upstream = requests.request(
+            request.method, "http://127.0.0.1:5000/config",
+            data=request.get_data() if request.method == "POST" else None,
+            headers={"Content-Type": "application/json"},
+            timeout=5, allow_redirects=False,
+        )
+        response = Response(upstream.content, status=upstream.status_code,
+                            content_type=upstream.headers.get("Content-Type", "application/json"))
+    except requests.RequestException:
+        response = jsonify({"error": "Cannot reach the local backend on port 5000. Start backend/app.py and reload."})
+        response.status_code = 502
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.route("/settings")

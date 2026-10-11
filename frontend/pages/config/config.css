@@ -188,6 +188,11 @@ button:hover {
     color: var(--danger);
 }
 
+.button-row button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .config-note {
     font-size: 0.75rem;
     color: var(--muted);

@@ -31,14 +31,14 @@ This project sets up a PC monitoring dashboard using:
 ### Config UI (Recommended)
 Use the dashboard UI to set up and manage all required settings:
 - Open **Settings** → **Config** (or go to `/config`).
-- Changes are saved to disk. If the files don't exist yet, they are created on save.
+- Changes are saved to `.env` in the project root.
 - If you change `SERVER_PC_IP` or `MACRO_PC_IP`, refresh the page to use the new IPs.
 
-### Optional: Edit Files Manually
-If you prefer, you can edit the config files directly:
-- `.env` in the repo root (backend settings)
-- `frontend/config.js` (frontend IPs)
-  - This file is optional at first run. If it doesn't exist, the frontend uses `frontend/config-default.js`, which sets `SERVER_PC_IP` to the current host and port `:5000`.
+### Optional: Edit .env Manually
+All configuration is stored in `.env` in the repo root. Restart the backend after manual edits.
+- `SERVER_PC_IP` is the dashboard server (for example, the Pi's IP). A bare hostname or IP uses port 5000; an explicit `host:port` is also supported. If empty, pages use the current hostname with port 5000.
+- `MONITORED_PC_IP` is the PC running Open Hardware Monitor.
+- `MACRO_PC_IP` is the macro server address, including its port (for example, `192.168.1.10:5001`).
 
 ## How to Use
 

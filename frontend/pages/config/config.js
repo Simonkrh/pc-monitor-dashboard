@@ -1,46 +1,3 @@
-function getBackendServerIP() {
-    const stored = localStorage.getItem("backendServerOverride");
-    if (stored) return stored;
-
-    const input = document.getElementById("cfg-frontend-server");
-    if (input && input.value.trim()) return input.value.trim();
-
-    const fromConfig = (window.CONFIG && `${CONFIG.SERVER_PC_IP}`.trim()) || "";
-    if (fromConfig) return fromConfig;
-
-    return "";
-}
-
-function getConfigApiBase() {
-    const backendServerIP = getBackendServerIP();
-    return backendServerIP ? `http://${backendServerIP}/config` : "";
-}
-
-function getFallbackApiBase() {
-    const fallbackHost = window.location.hostname;
-    if (!fallbackHost) return "";
-    const fallback = `http://${fallbackHost}:5000/config`;
-    const primary = getConfigApiBase();
-    if (primary && primary.toLowerCase() === fallback.toLowerCase()) {
-        return "";
-    }
-    return fallback;
-}
-
-async function fetchWithFallback(url, options) {
-    try {
-        return await fetch(url, options);
-    } catch (err) {
-        const fallback = getFallbackApiBase();
-        if (!fallback || fallback === url) {
-            throw err;
-        }
-        const res = await fetch(fallback, options);
-        localStorage.setItem("backendServerOverride", `${window.location.hostname}:5000`);
-        return res;
-    }
-}
-
 let cachedConfig = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -58,7 +15,6 @@ function setupConfigUi() {
     const reloadBtn = document.getElementById("configReload");
     const saveBtn = document.getElementById("configSave");
     const showSpotify = document.getElementById("cfg-spotify-show");
-    const frontendServerInput = document.getElementById("cfg-frontend-server");
 
     if (!reloadBtn || !saveBtn) {
         return;
@@ -77,15 +33,6 @@ function setupConfigUi() {
         });
     }
 
-    if (frontendServerInput) {
-        frontendServerInput.addEventListener("change", () => {
-            const value = frontendServerInput.value.trim();
-            if (value) {
-                localStorage.setItem("backendServerOverride", value);
-            }
-        });
-    }
-
     loadConfig();
 }
 
@@ -98,15 +45,14 @@ function setConfigStatus(message, isError = false) {
 
 function fillConfigInputs(data) {
     const env = data?.env || {};
-    const frontend = data?.frontend || {};
 
     const setValue = (id, value) => {
         const el = document.getElementById(id);
         if (el) el.value = value ?? "";
     };
 
-    setValue("cfg-frontend-server", frontend.SERVER_PC_IP ?? CONFIG.SERVER_PC_IP ?? "");
-    setValue("cfg-frontend-macro", frontend.MACRO_PC_IP ?? CONFIG.MACRO_PC_IP ?? "");
+    setValue("cfg-frontend-server", env.SERVER_PC_IP ?? "");
+    setValue("cfg-frontend-macro", env.MACRO_PC_IP ?? "");
 
     setValue("cfg-monitored-ip", env.MONITORED_PC_IP ?? "");
     setValue("cfg-ohm-port", env.OHM_PORT || "8085");
@@ -116,30 +62,42 @@ function fillConfigInputs(data) {
     setValue("cfg-spotify-client-secret", env.SPOTIFY_CLIENT_SECRET ?? "");
     setValue("cfg-spotify-refresh-token", env.SPOTIFY_REFRESH_TOKEN ?? "");
     setValue("cfg-upload-folder", env.UPLOAD_FOLDER ?? "");
-    setValue("cfg-backend-server-ip", env.SERVER_PC_IP ?? "");
+}
+
+function setSaveEnabled(enabled) {
+    document.getElementById("configSave").disabled = !enabled;
+}
+
+async function requestConfig(options = {}) {
+    const response = await fetch("/api/config", { cache: "no-store", ...options });
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error(`The config service returned an unexpected response (HTTP ${response.status}). Restart the frontend and backend, then reload.`);
+    }
+    if (!response.ok) throw new Error(data.error || `Backend returned HTTP ${response.status}.`);
+    return data;
 }
 
 async function loadConfig() {
+    cachedConfig = null;
+    setSaveEnabled(false);
+    document.getElementById("configReload").disabled = true;
     setConfigStatus("Loading...");
-    const configApiBase = getConfigApiBase();
-    if (!configApiBase) {
-        setConfigStatus("Set Backend API IP:Port to load config.", true);
-        return;
-    }
     try {
-        const resp = await fetchWithFallback(configApiBase, { cache: "no-store" });
-        if (!resp.ok) {
-            setConfigStatus(`Failed to load config (${resp.status})`, true);
-            return;
+        const data = await requestConfig();
+        if (!data || !data.env || typeof data.env !== "object" || Array.isArray(data.env)) {
+            throw new Error("The backend returned an invalid configuration.");
         }
-
-        const data = await resp.json();
-        cachedConfig = data;
         fillConfigInputs(data);
+        cachedConfig = data;
+        setSaveEnabled(true);
         setConfigStatus("Loaded.");
     } catch (err) {
-        console.error("Failed to load config:", err);
-        setConfigStatus("Failed to load config.", true);
+        setConfigStatus(`Failed to load config. ${err.message} Your saved settings have not been changed.`, true);
+    } finally {
+        document.getElementById("configReload").disabled = false;
     }
 }
 
@@ -150,10 +108,6 @@ function buildConfigPayload() {
     };
 
     return {
-        frontend: {
-            SERVER_PC_IP: getValue("cfg-frontend-server"),
-            MACRO_PC_IP: getValue("cfg-frontend-macro")
-        },
         env: {
             MONITORED_PC_IP: getValue("cfg-monitored-ip"),
             OHM_PORT: getValue("cfg-ohm-port") || "8085",
@@ -163,53 +117,32 @@ function buildConfigPayload() {
             SPOTIFY_CLIENT_SECRET: getValue("cfg-spotify-client-secret"),
             SPOTIFY_REFRESH_TOKEN: getValue("cfg-spotify-refresh-token"),
             UPLOAD_FOLDER: getValue("cfg-upload-folder"),
-            SERVER_PC_IP: getValue("cfg-backend-server-ip")
+            SERVER_PC_IP: getValue("cfg-frontend-server"),
+            MACRO_PC_IP: getValue("cfg-frontend-macro")
         }
     };
 }
 
 async function saveConfig() {
+    if (!cachedConfig) return;
     const payload = buildConfigPayload();
-    const configApiBase = getConfigApiBase();
-    if (!configApiBase) {
-        setConfigStatus("Set Backend API IP:Port before saving.", true);
-        return;
-    }
-    const previous = cachedConfig?.frontend || {};
-    const frontendChanged =
-        previous.SERVER_PC_IP !== payload.frontend.SERVER_PC_IP ||
-        previous.MACRO_PC_IP !== payload.frontend.MACRO_PC_IP;
-
+    setSaveEnabled(false);
+    document.getElementById("configReload").disabled = true;
     setConfigStatus("Saving...");
     try {
-        const resp = await fetchWithFallback(configApiBase, {
+        const data = await requestConfig({
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
-
-        if (!resp.ok) {
-            const msg = await resp.text();
-            setConfigStatus(`Save failed: ${msg || resp.status}`, true);
-            return;
-        }
-
-        const data = await resp.json();
-        cachedConfig = data?.config || cachedConfig;
-        if (payload.frontend?.SERVER_PC_IP) {
-            localStorage.setItem("backendServerOverride", payload.frontend.SERVER_PC_IP);
-        }
-        if (cachedConfig) {
-            fillConfigInputs(cachedConfig);
-        }
-
-        if (frontendChanged) {
-            setConfigStatus("Saved. Refresh to use new server IPs.");
-        } else {
-            setConfigStatus("Saved.");
-        }
+        if (!data.config?.env) throw new Error("The backend did not confirm the saved configuration. Reload to check its current values.");
+        cachedConfig = data.config;
+        fillConfigInputs(cachedConfig);
+        setConfigStatus("Saved. Refresh the dashboard to use new server addresses.");
     } catch (err) {
-        console.error("Failed to save config:", err);
-        setConfigStatus("Save failed.", true);
+        setConfigStatus(`Save failed. ${err.message}`, true);
+    } finally {
+        setSaveEnabled(Boolean(cachedConfig));
+        document.getElementById("configReload").disabled = false;
     }
 }

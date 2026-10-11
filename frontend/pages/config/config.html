@@ -69,17 +69,18 @@
     <div class="button-row">
       <button id="backToSettings">Back to Settings</button>
       <button id="configReload">Reload</button>
-      <button id="configSave" class="btn-primary">Save</button>
+      <button id="configSave" class="btn-primary" disabled>Save</button>
     </div>
   </div>
 
   <div class="panel config-panel">
     <div class="config-grid">
       <div class="config-block">
-        <div class="section-label">Frontend</div>
+        <div class="section-label">Servers</div>
         <div class="field">
-          <label for="cfg-frontend-server">Backend API IP:Port</label>
-          <input id="cfg-frontend-server" type="text" autocomplete="off" placeholder="192.168.1.195:5000">
+          <label for="cfg-frontend-server">Dashboard Server IP (optional port)</label>
+          <input id="cfg-frontend-server" type="text" autocomplete="off" placeholder="192.168.1.73">
+          <div class="field-hint">The Pi or PC running the dashboard backend. Port 5000 is used by default.</div>
         </div>
         <div class="field">
           <label for="cfg-frontend-macro">Macro Server IP:Port</label>
@@ -136,17 +137,13 @@
           <input id="cfg-upload-folder" type="text" autocomplete="off" placeholder="/absolute/path/to/upload/folder">
           <div class="field-hint">Folder where uploaded slideshow images and videos are stored.</div>
         </div>
-        <div class="field">
-          <label for="cfg-backend-server-ip">Backend Host IP (env)</label>
-          <input id="cfg-backend-server-ip" type="text" autocomplete="off" placeholder="192.168.1.195">
-        </div>
       </div>
     </div>
 
     <div class="config-footer">
       <div id="configStatus" class="config-status">Ready.</div>
       <div class="config-note">
-        Saving updates <code>.env</code> and <code>frontend/config.js</code>. Refresh after changing server IPs.
+        Settings are shared by the browser and desktop app. Refresh after changing server addresses.
       </div>
     </div>
   </div>
