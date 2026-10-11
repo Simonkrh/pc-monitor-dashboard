@@ -9,6 +9,7 @@ const {
 const { spawn } = require("node:child_process");
 const http = require("node:http");
 const path = require("node:path");
+const { pythonCandidates } = require("./python");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
 const FRONTEND_URL = "http://127.0.0.1:8080";
@@ -57,29 +58,12 @@ async function waitForServer(url, timeoutMs) {
   return false;
 }
 
-function pythonCandidates() {
-  if (process.env.PC_MONITOR_PYTHON) {
-    return [{ command: process.env.PC_MONITOR_PYTHON, prefixArgs: [] }];
-  }
-
-  if (process.platform === "win32") {
-    return [
-      { command: "py", prefixArgs: ["-3"] },
-      { command: "python", prefixArgs: [] },
-    ];
-  }
-
-  return [
-    { command: "python3", prefixArgs: [] },
-    { command: "python", prefixArgs: [] },
-  ];
-}
-
 async function spawnPython(scriptPath, serviceName) {
   let lastError = null;
 
-  for (const candidate of pythonCandidates()) {
+  for (const candidate of pythonCandidates(ROOT_DIR)) {
     try {
+      console.log(`[${serviceName}] Starting with Python: ${candidate.command}`);
       const child = await new Promise((resolve, reject) => {
         const processHandle = spawn(
           candidate.command,
