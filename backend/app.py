@@ -10,6 +10,7 @@ from blueprints.slideshow import slideshow
 from blueprints.monitoring import monitoring, setup_socketio
 from blueprints.spotify import spotify
 from blueprints.config import config
+from browser_remote import setup_browser_remote
 
 load_dotenv()
 
@@ -28,6 +29,7 @@ app.register_blueprint(slideshow, url_prefix="/slideshow")
 app.register_blueprint(config, url_prefix="/config")
 
 setup_socketio(socketio)
+setup_browser_remote(app, socketio)
 
 if __name__ == "__main__":
     socketio.run(

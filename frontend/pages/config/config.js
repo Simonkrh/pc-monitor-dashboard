@@ -33,7 +33,55 @@ function setupConfigUi() {
         });
     }
 
+    setupBrowserToken();
     loadConfig();
+}
+
+function setupBrowserToken() {
+    const input = document.getElementById("cfg-browser-token");
+    const show = document.getElementById("cfg-browser-show");
+    show.addEventListener("change", () => {
+        input.type = show.checked ? "text" : "password";
+    });
+    document.getElementById("cfg-browser-generate").addEventListener("click", () => {
+        if (!cachedConfig) return;
+        const bytes = crypto.getRandomValues(new Uint8Array(32));
+        input.value = Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
+        setConfigStatus("Token generated. Click Save to enable it, then copy it to your extension.");
+    });
+    document.getElementById("cfg-browser-copy").addEventListener("click", async () => {
+        if (!cachedConfig) return;
+        if (!input.value.trim()) {
+            setConfigStatus("Generate a pairing token first.", true);
+            return;
+        }
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(input.value.trim());
+            } else {
+                // Clipboard API requires a secure context; LAN HTTP pages use
+                // the user-triggered selection fallback instead.
+                const originalType = input.type;
+                try {
+                    input.type = "text";
+                    input.focus();
+                    input.select();
+                    if (!document.execCommand("copy")) throw new Error("Copy unavailable");
+                } finally {
+                    input.type = originalType;
+                }
+            }
+            const saved = input.value.trim() === (cachedConfig.env.BROWSER_SEND_TOKEN || "");
+            setConfigStatus(saved ? "Token copied. Paste it into your extension's settings."
+                : "Token copied. Click Save before using it in your extension.");
+        } catch {
+            show.checked = true;
+            input.type = "text";
+            input.focus();
+            input.select();
+            setConfigStatus("Automatic copy is unavailable. Copy the selected token manually.", true);
+        }
+    });
 }
 
 function setConfigStatus(message, isError = false) {
@@ -53,6 +101,7 @@ function fillConfigInputs(data) {
 
     setValue("cfg-frontend-server", env.SERVER_PC_IP ?? "");
     setValue("cfg-frontend-macro", env.MACRO_PC_IP ?? "");
+    setValue("cfg-browser-token", env.BROWSER_SEND_TOKEN ?? "");
 
     setValue("cfg-monitored-ip", env.MONITORED_PC_IP ?? "");
     setValue("cfg-ohm-port", env.OHM_PORT || "8085");
@@ -66,6 +115,8 @@ function fillConfigInputs(data) {
 
 function setSaveEnabled(enabled) {
     document.getElementById("configSave").disabled = !enabled;
+    document.getElementById("cfg-browser-generate").disabled = !enabled;
+    document.getElementById("cfg-browser-copy").disabled = !enabled;
 }
 
 async function requestConfig(options = {}) {
@@ -118,7 +169,8 @@ function buildConfigPayload() {
             SPOTIFY_REFRESH_TOKEN: getValue("cfg-spotify-refresh-token"),
             UPLOAD_FOLDER: getValue("cfg-upload-folder"),
             SERVER_PC_IP: getValue("cfg-frontend-server"),
-            MACRO_PC_IP: getValue("cfg-frontend-macro")
+            MACRO_PC_IP: getValue("cfg-frontend-macro"),
+            BROWSER_SEND_TOKEN: getValue("cfg-browser-token")
         }
     };
 }

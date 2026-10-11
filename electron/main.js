@@ -10,6 +10,7 @@ const { spawn } = require("node:child_process");
 const http = require("node:http");
 const path = require("node:path");
 const { pythonCandidates } = require("./python");
+const { io } = require("socket.io-client");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
 const FRONTEND_URL = "http://127.0.0.1:8080";
@@ -23,6 +24,8 @@ let browserPageView = null;
 let browserPageAttached = false;
 let browserPageUrl = null;
 let isQuitting = false;
+let browserRemoteSocket = null;
+let pendingBrowserUrl = null;
 const childProcesses = new Set();
 
 function isHttpUrl(value) {
@@ -139,6 +142,7 @@ async function startLocalServices() {
 
 function stopLocalServices() {
   isQuitting = true;
+  browserRemoteSocket?.disconnect();
   for (const child of childProcesses) {
     if (!child.killed) child.kill();
   }
@@ -241,6 +245,45 @@ ipcMain.on("browser-page:back", (event) => {
   }
 });
 
+function deliverRemoteBrowserUrl() {
+  if (!pendingBrowserUrl || !mainWindow) return;
+  const current = new URL(mainWindow.webContents.getURL());
+  if (current.origin !== FRONTEND_URL || current.pathname !== "/app") return;
+  browserPageUrl = null;
+  mainWindow.webContents.send("browser-page:remote-open", pendingBrowserUrl);
+  pendingBrowserUrl = null;
+}
+
+ipcMain.on("browser-page:ready", (event) => {
+  if (event.sender !== mainWindow?.webContents || event.senderFrame !== mainWindow.webContents.mainFrame) return;
+  deliverRemoteBrowserUrl();
+});
+
+function connectBrowserRemote() {
+  browserRemoteSocket = io(`${BACKEND_URL}/browser-control`, { reconnection: true });
+  browserRemoteSocket.on("browser:open", async (data) => {
+    if (!mainWindow || !isHttpUrl(data?.url)) return;
+    pendingBrowserUrl = data.url;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    try {
+      const current = new URL(mainWindow.webContents.getURL());
+      if (current.origin === FRONTEND_URL && current.pathname === "/app"
+          && !mainWindow.webContents.isLoadingMainFrame()) {
+        deliverRemoteBrowserUrl();
+      } else {
+        // The app's ready handshake delivers the pending link after navigation.
+        await mainWindow.loadURL(`${FRONTEND_URL}/app#/browser`);
+      }
+    } catch (error) {
+      console.error(`[browser-page] Could not open received link: ${error.message}`);
+    }
+  });
+  browserRemoteSocket.on("connect_error", (error) => {
+    console.warn(`[browser-page] Link receiver unavailable: ${error.message}`);
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1024,
@@ -300,6 +343,7 @@ async function loadDashboard() {
       );
     }
     await mainWindow.loadURL(FRONTEND_URL);
+    connectBrowserRemote();
   } catch (error) {
     console.error(error);
     await dialog.showMessageBox(mainWindow, {

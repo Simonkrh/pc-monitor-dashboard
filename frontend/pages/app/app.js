@@ -166,3 +166,13 @@ window.addEventListener("beforeunload", () => {
 });
 
 showView(getHashPath(), "replace");
+
+window.pcMonitorDesktop?.onRemoteBrowserOpen((url) => {
+  try {
+    if (!["http:", "https:"].includes(new URL(url).protocol)) return;
+    localStorage.setItem("browserPageUrl", url);
+    showView("/browser");
+  } catch (error) {
+    console.error("Could not open received website:", error);
+  }
+});

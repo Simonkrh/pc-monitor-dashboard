@@ -79,13 +79,31 @@
         <div class="section-label">Servers</div>
         <div class="field">
           <label for="cfg-frontend-server">Dashboard Server IP (optional port)</label>
-          <input id="cfg-frontend-server" type="text" autocomplete="off" placeholder="192.168.1.73">
+          <input id="cfg-frontend-server" type="text" autocomplete="off" placeholder="192.168.1.10">
           <div class="field-hint">The Pi or PC running the dashboard backend. Port 5000 is used by default.</div>
         </div>
         <div class="field">
           <label for="cfg-frontend-macro">Macro Server IP:Port</label>
-          <input id="cfg-frontend-macro" type="text" autocomplete="off" placeholder="192.168.1.195:5001">
+          <input id="cfg-frontend-macro" type="text" autocomplete="off" placeholder="192.168.1.15:5001">
         </div>
+      </div>
+
+      <div class="config-block">
+        <div class="section-label">Browser Extension</div>
+        <div class="field">
+          <label for="cfg-browser-token">Pairing token</label>
+          <input id="cfg-browser-token" type="password" autocomplete="off" spellcheck="false">
+          <div class="field-hint">Generate a token, save it, and copy it into Send to Dashboard's settings. Leave empty to disable link sending.</div>
+        </div>
+        <div class="button-row">
+          <button id="cfg-browser-generate" type="button" disabled>Generate token</button>
+          <button id="cfg-browser-copy" type="button" disabled>Copy token</button>
+        </div>
+        <label class="toggle-row">
+          <input id="cfg-browser-show" type="checkbox">
+          Show token
+        </label>
+        <div class="field-hint">Generating a replacement takes effect when you click Save. Update your extension with the new token afterward.</div>
       </div>
 
       <div class="config-block">
