@@ -178,6 +178,17 @@ function createBrowserPageView() {
     if (!isHttpUrl(url)) event.preventDefault();
   });
 
+  browserPageView.webContents.on("did-fail-load", (_event, code, description, _url, isMainFrame) => {
+    if (isMainFrame && code !== -3) {
+      console.error(`[browser-page] Load failed (${code}): ${description}`);
+      browserPageUrl = null;
+    }
+  });
+  browserPageView.webContents.on("render-process-gone", (_event, details) => {
+    console.error(`[browser-page] Renderer exited: ${details.reason} (${details.exitCode})`);
+    browserPageUrl = null;
+  });
+
   browserPageView.webContents.session.setPermissionRequestHandler(
     (_webContents, _permission, callback) => callback(false),
   );
@@ -197,17 +208,20 @@ function showBrowserPage(url) {
     browserPageAttached = true;
   }
   layoutBrowserPage();
+  view.setVisible(true);
 
   if (browserPageUrl !== url) {
     browserPageUrl = url;
-    void view.webContents.loadURL(url);
+    void view.webContents.loadURL(url).catch((error) => {
+      console.error(`[browser-page] Navigation failed: ${error.message}`);
+      if (browserPageUrl === url) browserPageUrl = null;
+    });
   }
 }
 
 function hideBrowserPage() {
   if (!mainWindow || !browserPageView || !browserPageAttached) return;
-  mainWindow.contentView.removeChildView(browserPageView);
-  browserPageAttached = false;
+  browserPageView.setVisible(false);
 }
 
 ipcMain.on("browser-page:show", (event, url) => {
