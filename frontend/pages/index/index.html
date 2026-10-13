@@ -16,8 +16,18 @@
     <div id="slide2" class="slideshow-img slide-right"></div>
   </div>
 
-  <div id="loading-spinner">
-    <div class="spinner"></div>
+  <div id="loading-spinner" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true">
+      <span class="spinner-ring spinner-ring-outer"></span>
+      <span class="spinner-ring spinner-ring-inner"></span>
+      <svg class="spinner-core" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M12 3v8M7 5.7a8 8 0 1 0 10 0" />
+      </svg>
+    </div>
+    <div class="spinner-copy">
+      <span class="spinner-title">Connecting to your PC</span>
+      <span class="spinner-subtitle">Getting things ready<span class="spinner-dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
+    </div>
   </div>
 
   <div id="status-overlay" aria-hidden="false">
