@@ -10,6 +10,7 @@ const TAP_MAX_DISTANCE = 18;
 const TAP_MAX_DURATION_MS = 450;
 
 let pcStatusLabel = "Checking";
+let dashboardReturnPending = false;
 let keepSlideshowOpen = new URLSearchParams(window.location.search).get("manual") === "1";
 
 const dimOverlay =
@@ -80,7 +81,7 @@ async function checkPCStatus() {
       pcIsOn = data.status === "online";
       pcStatusLabel = pcIsOn ? "Online" : "Offline";
       if (data.status === "offline") keepSlideshowOpen = false;
-      if (pcIsOn && !keepSlideshowOpen && localStorage.getItem("autoExitSlideshow") !== "false") {
+      if (pcIsOn && !dashboardReturnPending && !keepSlideshowOpen && localStorage.getItem("autoExitSlideshow") !== "false") {
         openDashboardPage(getDefaultPage());
       }
     } else {
@@ -499,8 +500,6 @@ function startSlideshow() {
 }
 
 
-let swipeStartY = 0;
-let swipeEndY = 0;
 let pointerStartX = 0;
 let pointerStartY = 0;
 let pointerEndX = 0;
@@ -516,15 +515,12 @@ document.addEventListener("touchstart", (event) => {
   pointerEndX = pointerStartX;
   pointerEndY = pointerStartY;
   pointerStartTime = Date.now();
-  swipeStartY = pointerStartY;
-  swipeEndY = pointerStartY;
 });
 
 document.addEventListener("touchmove", (event) => {
   const touch = event.touches[0];
   pointerEndX = touch.clientX;
   pointerEndY = touch.clientY;
-  swipeEndY = pointerEndY;
 });
 
 document.addEventListener("mousedown", (event) => {
@@ -533,14 +529,11 @@ document.addEventListener("mousedown", (event) => {
   pointerEndX = pointerStartX;
   pointerEndY = pointerStartY;
   pointerStartTime = Date.now();
-  swipeStartY = pointerStartY;
-  swipeEndY = pointerStartY;
 });
 
 document.addEventListener("mousemove", (event) => {
   pointerEndX = event.clientX;
   pointerEndY = event.clientY;
-  swipeEndY = pointerEndY;
 });
 
 document.addEventListener("mouseup", handleSwipe);
@@ -557,7 +550,6 @@ function handleSwipe(event) {
   if (Number.isFinite(end.clientX) && Number.isFinite(end.clientY)) {
     pointerEndX = end.clientX;
     pointerEndY = end.clientY;
-    swipeEndY = pointerEndY;
   }
 
   const dx = pointerEndX - pointerStartX;
@@ -573,11 +565,28 @@ function handleSwipe(event) {
   if (Math.abs(dy) <= Math.abs(dx)) return;
 
   if (dy > swipeThreshold) {
-    openDashboardPage(getDefaultPage());
-  } else if (swipeStartY - swipeEndY > swipeThreshold) {
-    console.log("Swipe up detected - waking PC...");
-    wakeAndRedirect();
+    return returnToDashboard();
   }
+}
+
+async function returnToDashboard() {
+  if (dashboardReturnPending) return;
+  dashboardReturnPending = true;
+  document.getElementById("loading-spinner").style.display = "flex";
+
+  try {
+    const response = await fetch(`http://${serverIP}/monitoring/ping`, {
+      method: "GET", cache: "no-store", signal: AbortSignal.timeout(8000),
+    });
+    if (response.ok && (await response.json()).status === "online") {
+      openDashboardPage(getDefaultPage());
+      return;
+    }
+  } catch (error) {
+    console.warn("Could not check PC before waking:", error);
+  }
+
+  await wakeAndRedirect();
 }
 
 function wakeAndRedirect() {
@@ -585,11 +594,11 @@ function wakeAndRedirect() {
 
   document.getElementById("loading-spinner").style.display = "flex";
 
-  fetch(`http://${serverIP}/monitoring/wake`, { method: "POST" })
+  return fetch(`http://${serverIP}/monitoring/wake`, { method: "POST" })
     .then(response => response.json())
     .then(data => {
       console.log(data.status);
-      waitForPCAndMaybeMacro();
+      return waitForPCAndMaybeMacro();
     })
     .catch(error => {
       console.error("Failed to send WoL request:", error);
