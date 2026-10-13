@@ -19,16 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("backButton").addEventListener("click", () => {
         openSettingsDestination(getDefaultPage());
     });
-    const slideshowBtn = document.getElementById("slideshowButton");
     const uploadBtn = document.getElementById("uploadButton");
     const manageMacrosBtn = document.getElementById("manageMacrosButton");
     const configBtn = document.getElementById("configButton");
     
     
-    slideshowBtn.addEventListener("click", () => {
-        openSettingsDestination("/?manual=1");
-    });
-
     uploadBtn.addEventListener("click", () => {
         openSettingsDestination("/upload");
     });
