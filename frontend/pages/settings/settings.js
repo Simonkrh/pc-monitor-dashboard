@@ -15,6 +15,7 @@ function openSettingsDestination(path) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    setupBrowserPageUrl();
     document.getElementById("backButton").addEventListener("click", () => {
         openSettingsDestination(getDefaultPage());
     });
@@ -44,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchAudioSessionsMetadata()
     setupDefaultPageButtons();
     setupHiddenPagesButtons();
-    setupBrowserPageUrl();
     setupThemeButtons();
     setupSlideshowToggle();
 });
@@ -76,11 +76,13 @@ function setupBrowserPageUrl() {
     window.addEventListener("storage", event => {
         if (event.key === "browserPageUrl") syncInput();
     });
-    window.BrowserPageSettings.load().then(url => {
-        if (!dirty) input.value = url;
-    }).catch(() => {
-        status.textContent = "Could not load the shared browser setting. Check the backend and try again.";
-    });
+
+    const settingsApi = () => {
+        if (!window.BrowserPageSettings) {
+            throw new Error("Browser settings did not load. Reload the dashboard and try again.");
+        }
+        return window.BrowserPageSettings;
+    };
 
     const clearFeedback = () => {
         clearTimeout(feedbackTimer);
@@ -100,6 +102,7 @@ function setupBrowserPageUrl() {
                 const url = new URL(value);
                 if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) throw new Error();
             } catch {
+                status.textContent = "Enter a valid HTTP or HTTPS website address.";
                 input.setCustomValidity("Enter a valid website address.");
                 input.reportValidity();
                 return;
@@ -111,7 +114,7 @@ function setupBrowserPageUrl() {
         saveButton.disabled = true;
         status.textContent = "Saving...";
         try {
-            const saved = await window.BrowserPageSettings.save(value);
+            const saved = await settingsApi().save(value);
             // Preserve edits made while the save request was in progress.
             if (input.value === originalValue) {
                 input.value = saved;
@@ -138,6 +141,12 @@ function setupBrowserPageUrl() {
         if (event.key === "Enter") save();
     });
     saveButton.addEventListener("click", save);
+
+    Promise.resolve().then(() => settingsApi().load()).then(url => {
+        if (!dirty && typeof url === "string") input.value = url;
+    }).catch(error => {
+        status.textContent = `Could not load the shared browser setting. ${error.message}`;
+    });
 }
 
 async function fetchAudioOutputs() {
