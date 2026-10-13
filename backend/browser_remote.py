@@ -3,16 +3,44 @@ import ipaddress
 import os
 from urllib.parse import urlsplit
 
-from dotenv import dotenv_values
+from dotenv import dotenv_values, set_key
 from flask import Blueprint, jsonify, request
 
 from config_store import ENV_PATH
+
+
+def valid_browser_url(url, allow_empty=False):
+    if not isinstance(url, str) or len(url) > 8192:
+        return False
+    if allow_empty and url == "":
+        return True
+    try:
+        parsed = urlsplit(url)
+        _ = parsed.port
+        return bool(parsed.scheme in ("http", "https") and parsed.hostname
+                    and parsed.username is None and parsed.password is None
+                    and not any(ord(char) < 33 for char in url))
+    except ValueError:
+        return False
 
 
 def setup_browser_remote(app, socketio):
     routes = Blueprint("browser_remote", __name__)
     displays = set()
     namespace = "/browser-control"
+
+    @routes.route("/page", methods=["GET", "POST"])
+    def browser_page():
+        if request.method == "POST":
+            data = request.get_json(silent=True)
+            url = data.get("url") if isinstance(data, dict) else None
+            if not valid_browser_url(url, allow_empty=True):
+                return jsonify(error="Enter an HTTP or HTTPS website URL, or leave it empty."), 400
+            set_key(str(ENV_PATH), "BROWSER_PAGE_URL", url, quote_mode="always")
+        values = dotenv_values(ENV_PATH, interpolate=False)
+        response = jsonify(url=values.get("BROWSER_PAGE_URL") or "", configured="BROWSER_PAGE_URL" in values)
+        response.headers["Cache-Control"] = "no-store"
+        return response
 
     @socketio.on("connect", namespace=namespace)
     def connect(auth=None):
@@ -41,20 +69,11 @@ def setup_browser_remote(app, socketio):
             return jsonify(error="Request is too large."), 413
         data = request.get_json(silent=True)
         url = data.get("url") if isinstance(data, dict) else None
-        if not isinstance(url, str) or len(url) > 8192:
-            return jsonify(error="Send an HTTP or HTTPS website URL."), 400
-        try:
-            parsed = urlsplit(url)
-            valid = (parsed.scheme in ("http", "https") and parsed.hostname
-                     and not parsed.username and not parsed.password
-                     and not any(ord(char) < 33 for char in url))
-            _ = parsed.port
-        except ValueError:
-            valid = False
-        if not valid:
+        if not valid_browser_url(url):
             return jsonify(error="Send an HTTP or HTTPS URL without embedded login details."), 400
         if not displays:
             return jsonify(error="The Pi backend is online, but Electron is not connected. Start npm run desktop on the Pi."), 503
+        set_key(str(ENV_PATH), "BROWSER_PAGE_URL", url, quote_mode="always")
         socketio.emit("browser:open", {"url": url}, namespace=namespace)
         return jsonify(status="sent"), 202
 

@@ -100,7 +100,7 @@ function navigateTo(path) {
       return;
     }
 
-    window.location.href = `/app#${path}`;
+    window.location.href = path.startsWith("/?") ? path : `/app#${path}`;
   }, NAVIGATION_DELAY_MS);
 }
 
@@ -203,6 +203,9 @@ function handleSwipe() {
       // Swipe Up -> go to default page
       document.body.classList.add("swipe-up");
       navigateTo(getDefaultPage());
+    } else if (diffY < 0 && pages.includes(window.location.pathname)) {
+      document.body.classList.add("swipe-up");
+      navigateTo("/?manual=1");
     }
   }
 }

@@ -101,6 +101,7 @@
           <input id="browserPageUrl" type="url" placeholder="https://example.com" aria-label="Browser page URL">
           <button id="saveBrowserPageUrl" type="button" aria-live="polite">Save</button>
         </div>
+        <p id="browserPageStatus" role="status" aria-live="polite">Shared by devices connected to this dashboard.</p>
       </div>
     </section>
 
@@ -116,8 +117,11 @@
 
     <section class="panel">
       <h2>Tools</h2>
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="autoExitSlideshow">
+        <label class="form-check-label" for="autoExitSlideshow">Open default page when PC is on</label>
+      </div>
       <div class="button-row">
-        <button id="slideshowButton">Slideshow</button>
         <button id="uploadButton">Upload Page</button>
         <button id="manageMacrosButton">Manage Macros</button>
         <button id="configButton">Config</button>
@@ -145,6 +149,7 @@
   <script src="/frontend/config.js"></script>
   <script src="/frontend/global/js/global.js"></script>
   <script src="/frontend/global/js/swipe-navigation.js"></script>
+  <script src="/frontend/global/js/browser-settings.js"></script>
   <script src="/frontend/pages/settings/settings.js"></script>
 </body>
 </html>

@@ -105,12 +105,15 @@ def frontend_config():
 
 
 @app.route("/api/config", methods=["GET", "POST"])
+@app.route("/api/browser-page", methods=["GET", "POST"])
 def config_api():
     # Config belongs to this installation, regardless of the browser's storage
     # or the public address currently saved in .env.
     try:
         upstream = requests.request(
-            request.method, "http://127.0.0.1:5000/config",
+            request.method, "http://127.0.0.1:5000" + (
+                "/browser/page" if request.path == "/api/browser-page" else "/config"
+            ),
             data=request.get_data() if request.method == "POST" else None,
             headers={"Content-Type": "application/json"},
             timeout=5, allow_redirects=False,

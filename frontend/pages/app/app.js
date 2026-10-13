@@ -166,11 +166,13 @@ window.addEventListener("beforeunload", () => {
 });
 
 showView(getHashPath(), "replace");
+window.addEventListener("browser-page-url-changed", updateDesktopBrowser);
+window.BrowserPageSettings.load().catch(error => console.warn("Shared browser setting unavailable:", error.message));
 
 window.pcMonitorDesktop?.onRemoteBrowserOpen((url) => {
   try {
     if (!["http:", "https:"].includes(new URL(url).protocol)) return;
-    localStorage.setItem("browserPageUrl", url);
+    window.BrowserPageSettings.accept(url);
     showView("/browser");
   } catch (error) {
     console.error("Could not open received website:", error);

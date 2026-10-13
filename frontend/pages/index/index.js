@@ -10,6 +10,7 @@ const TAP_MAX_DISTANCE = 18;
 const TAP_MAX_DURATION_MS = 450;
 
 let pcStatusLabel = "Checking";
+let keepSlideshowOpen = new URLSearchParams(window.location.search).get("manual") === "1";
 
 const dimOverlay =
   document.getElementById("dimOverlay") ||
@@ -76,8 +77,12 @@ async function checkPCStatus() {
 
     if (response.ok) {
       const data = await response.json();
-      pcIsOn = data.status !== "offline";
+      pcIsOn = data.status === "online";
       pcStatusLabel = pcIsOn ? "Online" : "Offline";
+      if (data.status === "offline") keepSlideshowOpen = false;
+      if (pcIsOn && !keepSlideshowOpen && localStorage.getItem("autoExitSlideshow") !== "false") {
+        openDashboardPage(getDefaultPage());
+      }
     } else {
       throw new Error("Server did not respond");
     }
@@ -548,6 +553,13 @@ function handleSwipe(event) {
     return;
   }
 
+  const end = event.changedTouches?.[0] || event;
+  if (Number.isFinite(end.clientX) && Number.isFinite(end.clientY)) {
+    pointerEndX = end.clientX;
+    pointerEndY = end.clientY;
+    swipeEndY = pointerEndY;
+  }
+
   const dx = pointerEndX - pointerStartX;
   const dy = pointerEndY - pointerStartY;
   const distance = Math.hypot(dx, dy);
@@ -558,7 +570,11 @@ function handleSwipe(event) {
     return;
   }
 
-  if (swipeStartY - swipeEndY > swipeThreshold) {
+  if (Math.abs(dy) <= Math.abs(dx)) return;
+
+  if (dy > swipeThreshold) {
+    openDashboardPage(getDefaultPage());
+  } else if (swipeStartY - swipeEndY > swipeThreshold) {
     console.log("Swipe up detected - waking PC...");
     wakeAndRedirect();
   }

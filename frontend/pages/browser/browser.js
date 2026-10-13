@@ -64,5 +64,7 @@ window.addEventListener("storage", (event) => {
 });
 
 updateWebsite();
+window.addEventListener("browser-page-url-changed", updateWebsite);
+window.BrowserPageSettings.load().catch(error => console.warn("Shared browser setting unavailable:", error.message));
 updateClock();
 setInterval(updateClock, 1000);

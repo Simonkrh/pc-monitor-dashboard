@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     
     slideshowBtn.addEventListener("click", () => {
-        openSettingsDestination("/");
+        openSettingsDestination("/?manual=1");
     });
 
     uploadBtn.addEventListener("click", () => {
@@ -46,13 +46,41 @@ document.addEventListener("DOMContentLoaded", () => {
     setupHiddenPagesButtons();
     setupBrowserPageUrl();
     setupThemeButtons();
+    setupSlideshowToggle();
 });
+
+function setupSlideshowToggle() {
+    const toggle = document.getElementById("autoExitSlideshow");
+    toggle.checked = localStorage.getItem("autoExitSlideshow") !== "false";
+    toggle.addEventListener("change", () => {
+        localStorage.setItem("autoExitSlideshow", String(toggle.checked));
+    });
+    window.addEventListener("storage", (event) => {
+        if (event.key === "autoExitSlideshow") {
+            toggle.checked = localStorage.getItem("autoExitSlideshow") !== "false";
+        }
+    });
+}
 
 function setupBrowserPageUrl() {
     const input = document.getElementById("browserPageUrl");
     const saveButton = document.getElementById("saveBrowserPageUrl");
     let feedbackTimer;
+    let dirty = false;
     input.value = localStorage.getItem("browserPageUrl") || "";
+    const status = document.getElementById("browserPageStatus");
+    const syncInput = () => {
+        if (!dirty) input.value = localStorage.getItem("browserPageUrl") || "";
+    };
+    window.addEventListener("browser-page-url-changed", syncInput);
+    window.addEventListener("storage", event => {
+        if (event.key === "browserPageUrl") syncInput();
+    });
+    window.BrowserPageSettings.load().then(url => {
+        if (!dirty) input.value = url;
+    }).catch(() => {
+        status.textContent = "Could not load the shared browser setting. Check the backend and try again.";
+    });
 
     const clearFeedback = () => {
         clearTimeout(feedbackTimer);
@@ -60,7 +88,8 @@ function setupBrowserPageUrl() {
         saveButton.classList.remove("btn-default-selected");
     };
 
-    const save = () => {
+    const save = async () => {
+        if (saveButton.disabled) return;
         let value = input.value.trim();
         if (value && !/^https?:\/\//i.test(value)) {
             value = `https://${value}`;
@@ -69,7 +98,7 @@ function setupBrowserPageUrl() {
         if (value) {
             try {
                 const url = new URL(value);
-                if (!["http:", "https:"].includes(url.protocol)) throw new Error();
+                if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) throw new Error();
             } catch {
                 input.setCustomValidity("Enter a valid website address.");
                 input.reportValidity();
@@ -78,20 +107,30 @@ function setupBrowserPageUrl() {
         }
 
         input.setCustomValidity("");
-        input.value = value;
-        if (value) {
-            localStorage.setItem("browserPageUrl", value);
-        } else {
-            localStorage.removeItem("browserPageUrl");
+        const originalValue = input.value;
+        saveButton.disabled = true;
+        status.textContent = "Saving...";
+        try {
+            const saved = await window.BrowserPageSettings.save(value);
+            // Preserve edits made while the save request was in progress.
+            if (input.value === originalValue) {
+                input.value = saved;
+                dirty = false;
+            }
+            status.textContent = "Saved on the dashboard. Other connected browsers will update automatically.";
+            saveButton.textContent = "Saved";
+            saveButton.classList.add("btn-default-selected");
+            clearTimeout(feedbackTimer);
+            feedbackTimer = setTimeout(clearFeedback, 1500);
+        } catch (error) {
+            status.textContent = `Could not save the browser setting. ${error.message}`;
+        } finally {
+            saveButton.disabled = false;
         }
-
-        saveButton.textContent = "Saved";
-        saveButton.classList.add("btn-default-selected");
-        clearTimeout(feedbackTimer);
-        feedbackTimer = setTimeout(clearFeedback, 1500);
     };
 
     input.addEventListener("input", () => {
+        dirty = true;
         input.setCustomValidity("");
         clearFeedback();
     });
