@@ -4,10 +4,10 @@ Flask-SocketIO
 eventlet
 python-dotenv
 pyautogui
-comtypes
-pycaw
+comtypes; sys_platform == "win32"
+pycaw; sys_platform == "win32"
 Pillow
-pywin32
+pywin32; sys_platform == "win32"
 wakeonlan
 urllib3
 requests

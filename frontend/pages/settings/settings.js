@@ -38,8 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     fetchAudioOutputs();
     fetchAudioSessionsMetadata()
-    setupDefaultPageButtons();
-    setupHiddenPagesButtons();
+    const highlightDefaultPage = setupDefaultPageButtons();
+    setupHiddenPagesButtons(highlightDefaultPage);
     setupThemeButtons();
     setupSlideshowToggle();
 });
@@ -277,6 +277,7 @@ function setupDefaultPageButtons() {
         dashboard: document.getElementById("defaultDashboard"),
         timers: document.getElementById("defaultTimers"),
         spotify: document.getElementById("defaultSpotify"),
+        browser: document.getElementById("defaultBrowser"),
         resources: document.getElementById("defaultResources")
     };
 
@@ -303,6 +304,13 @@ function setupDefaultPageButtons() {
         highlightSelected(getDefaultPage());
     });
 
+    buttons.browser.addEventListener("click", () => {
+        setDefaultPage("/browser");
+        highlightSelected(getDefaultPage());
+    });
+
+    return highlightSelected;
+
     function highlightSelected(selected) {
     Object.entries(buttons).forEach(([key, btn]) => {
         btn.classList.remove("btn-default-selected");
@@ -324,7 +332,7 @@ function getDefaultPage() {
     if (!hiddenPages.includes(candidate)) {
         return candidate;
     }
-    const fallbackOrder = ["/dashboard", "/spotify", "/timers", "/resources"];
+    const fallbackOrder = ["/dashboard", "/spotify", "/browser", "/timers", "/resources"];
     return fallbackOrder.find((p) => !hiddenPages.includes(p)) || "/dashboard";
 }
 
@@ -336,15 +344,16 @@ function setDefaultPage(page) {
     localStorage.setItem("defaultPage", page);
 }
 
-function setupHiddenPagesButtons() {
+function setupHiddenPagesButtons(highlightDefaultPage) {
     const pageButtons = [
         { id: "toggleDashboardPage", path: "/dashboard", label: "Dashboard" },
         { id: "toggleSpotifyPage", path: "/spotify", label: "Spotify" },
+        { id: "toggleBrowserPage", path: "/browser", label: "Browser" },
         { id: "toggleTimersPage", path: "/timers", label: "Timers" },
         { id: "toggleResourcesPage", path: "/resources", label: "Resources" }
     ];
 
-    const swipePages = ["/dashboard", "/spotify", "/timers", "/resources"];
+    const swipePages = ["/dashboard", "/spotify", "/browser", "/timers", "/resources"];
     const hiddenPages = getHiddenPages();
 
     const applyState = (btn, path, label, canHide) => {
@@ -367,6 +376,7 @@ function setupHiddenPagesButtons() {
 
         const defaultPage = getDefaultPage();
         localStorage.setItem("defaultPage", defaultPage);
+        highlightDefaultPage(defaultPage);
     };
 
     pageButtons.forEach(({ id, path, label }) => {
