@@ -22,9 +22,15 @@ This project sets up a PC monitoring dashboard using:
 
 <br/>
 
+<div align="center">
+  <img src="images/Spotify.png" alt="Pager View 3" width="45%" style="margin: 0 1%"/>
+  <img src="images/Timers.png" alt="Timers page" width="45%" style="margin: 0 1%"/>
+  <p><em>Spotify page and Timers .</em></p>
+</div>
+
 <p align="center">
-  <img src="images/Spotify.png" alt="Pager View 3" width="400"/><br/>
-  <em>Spotify page.</em>
+  <img src="images/Browser.png" alt="Browser page" width="400"/><br/>
+  <em>Browser pages.</em>
 </p>
 
 ## Configs
@@ -34,11 +40,14 @@ Use the dashboard UI to set up and manage all required settings:
 - Changes are saved to `.env` in the project root.
 - If you change `SERVER_PC_IP` or `MACRO_PC_IP`, refresh the page to use the new IPs.
 
-### Optional: Edit .env Manually
+### Or Edit .env Manually
 All configuration is stored in `.env` in the repo root. Restart the backend after manual edits.
 - `SERVER_PC_IP` is the dashboard server (for example, the Pi's IP). A bare hostname or IP uses port 5000; an explicit `host:port` is also supported. If empty, pages use the current hostname with port 5000.
 - `MONITORED_PC_IP` is the PC running Open Hardware Monitor.
 - `MACRO_PC_IP` is the macro server address, including its port (for example, `192.168.1.10:5001`).
+- For Spotify, supply `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, and `SPOTIFY_REFRESH_TOKEN` through Config or `.env`.
+
+**Optional:** [Send to Dashboard for Firefox](https://github.com/Simonkrh/send-to-dashboard-firefox) — send links from Firefox to the dashboard's Browser page.
 
 ## How to Use
 
@@ -48,7 +57,9 @@ You don't need all integrations enabled. Each feature works independently:
 - Spotify integration is only needed for the Spotify page.
 - Macro Server is only needed for macros and volume control.
 
-### Shared Setup
+### Setup
+
+ Run the commands below from the repository root. On Linux/Pi, use `python3` and `python3 -m pip` in place of `python` and `pip`.
 
 1. **Start Open Hardware Monitor** (optional) Launch `OpenHardwareMonitor.exe` on the PC you want to monitor (must match `MONITORED_PC_IP`). Then go to **Options > Remote Web Server > Run** to start the OHM web server. The default port is `8085`; change `OHM_PORT` in Config if you use a different port.
    - `MONITORED_PC_MAC` is optional and only needed for Wake-on-LAN.
@@ -58,6 +69,7 @@ You don't need all integrations enabled. Each feature works independently:
 3. **Start the [Macro Server](https://github.com/Simonkrh/pc-macro-server)** (optional): Required for macro buttons and volume control. Run it on the PC where macros should be triggered.
 
 ### Electron Desktop Mode
+Electron mode requires Node.js and npm.
 
 Install Electron once:
 
