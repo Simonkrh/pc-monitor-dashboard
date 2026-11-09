@@ -95,12 +95,18 @@
         <div class="player">
           <div class="wrapper">
             <!-- Music Info -->
-            <div class="info-wrapper" id="song-info">
-              <img id="album-art" src="https://cdn.pixabay.com/photo/2016/03/26/13/09/cup-of-coffee-1280537_1280.jpg"
-                alt="Album Art" />
+            <div class="info-wrapper is-unavailable" id="song-info">
+              <img id="album-art" src="/frontend/pages/spotify/placeholder.svg"
+                alt="" />
               <div class="info">
-                <h1 id="song-title">Loading...</h1>
-                <p id="artist-name">Fetching artist...</p>
+                <div aria-live="polite">
+                  <h1 id="song-title">Connecting to Spotify</h1>
+                  <p id="artist-name">Your music will appear here.</p>
+                </div>
+                <button id="open-spotify-btn" class="open-spotify-btn" type="button" hidden>
+                  <i class="fa-brands fa-spotify" aria-hidden="true"></i>
+                  Open Spotify
+                </button>
               </div>
             </div>
 

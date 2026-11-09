@@ -21,6 +21,85 @@ _access_token_expires_at = 0.0
 _access_token_credentials = None
 
 
+class SpotifyReadError(Exception):
+    def __init__(self, message, status=502, retry_after=None):
+        self.message = message
+        self.status = status
+        self.retry_after = retry_after
+
+
+@spotify.errorhandler(SpotifyReadError)
+def handle_spotify_read_error(error):
+    response = jsonify({"error": error.message, "retry_after": error.retry_after})
+    response.status_code = error.status
+    if error.retry_after is not None:
+        response.headers["Retry-After"] = str(error.retry_after)
+    return response
+
+
+def read_spotify(path, params=None):
+    """Bound playlist reads and refresh an expired token once, without retry storms."""
+    global _access_token_expires_at
+    for attempt in range(2):
+        token = get_access_token()
+        if not token:
+            raise SpotifyReadError("Could not connect to Spotify. Check your Spotify credentials in Settings.", 401)
+        try:
+            response = requests.get(
+                f"{SPOTIFY_API_GENERIC}/{path}",
+                headers={"Authorization": f"Bearer {token}"},
+                params=params, timeout=(5, 10),
+            )
+        except requests.Timeout:
+            raise SpotifyReadError("Spotify took too long to respond. Please retry.", 504)
+        except requests.RequestException:
+            raise SpotifyReadError("Could not reach Spotify. Please retry.")
+        if response.status_code == 401 and attempt == 0:
+            _access_token_expires_at = 0
+            continue
+        if response.status_code != 200:
+            messages = {
+                401: "Spotify authorization expired. Check your Spotify credentials in Settings.",
+                403: "Spotify denied access. In Development Mode, playlist songs are available only for playlists you own or collaborate on. Private playlists also require permission.",
+                404: "Spotify could not find this playlist, or it is no longer available to your account.",
+                429: "Spotify is limiting requests. Please wait before retrying.",
+            }
+            retry_after = response.headers.get("Retry-After")
+            retry_after = int(retry_after) if retry_after and retry_after.isdigit() else None
+            raise SpotifyReadError(
+                messages.get(response.status_code, "Spotify could not load the playlist. Please retry."),
+                response.status_code, retry_after,
+            )
+        try:
+            data = response.json()
+        except ValueError:
+            raise SpotifyReadError("Spotify returned an invalid response. Please retry.")
+        if not isinstance(data, dict):
+            raise SpotifyReadError("Spotify returned an invalid response. Please retry.")
+        return data
+
+
+def playlist_offset():
+    try:
+        offset = int(request.args.get("offset", "0"))
+        if offset < 0:
+            raise ValueError
+        return offset
+    except ValueError:
+        raise SpotifyReadError("Invalid playlist offset.", 400)
+
+
+def playlist_page(data, offset):
+    items = data.get("items")
+    if not isinstance(items, list) or (data.get("next") and not items):
+        raise SpotifyReadError("Spotify returned an incomplete playlist page. Please retry.")
+    return {
+        "items": items,
+        "total": data.get("total", len(items)),
+        "next_offset": offset + len(items) if data.get("next") else None,
+    }
+
+
 def get_access_token():
     global _access_token, _access_token_expires_at, _access_token_credentials
 
@@ -178,43 +257,25 @@ def get_player_state():
 
 @spotify.route("/playlist/<playlist_id>", methods=["GET"])
 def get_playlist(playlist_id):
-    access_token = get_access_token()
-    if not access_token:
-        return jsonify({"error": "Failed to get access token"}), 401
-
-    headers = {"Authorization": f"Bearer {access_token}"}
-    all_tracks = []
-    offset = 0
-    limit = 100
-
-    while True:
-        url = f"{SPOTIFY_API_GENERIC}/playlists/{playlist_id}/tracks?limit={limit}&offset={offset}"
-        response = requests.get(url, headers=headers)
-
-        if response.status_code != 200:
-            return jsonify(
-                {"error": "Failed to fetch playlist info"}
-            ), response.status_code
-
-        data = response.json()
-        tracks = data.get("items", [])
-        all_tracks.extend(tracks)
-
-        if len(tracks) < limit:  # No more tracks left to fetch
-            break
-
-        offset += limit  # Move to next batch
-
-    playlist_info_url = f"{SPOTIFY_API_GENERIC}/playlists/{playlist_id}"
-    response = requests.get(playlist_info_url, headers=headers)
-    playlist_info = response.json() if response.status_code == 200 else {}
-
-    return jsonify(
-        {
-            "name": playlist_info.get("name", "Unknown Playlist"),
-            "tracks": {"items": all_tracks},
-        }
-    )
+    offset = playlist_offset()
+    name = None
+    if offset == 0:
+        info = read_spotify(f"playlists/{playlist_id}")
+        name = info.get("name", "Unknown Playlist")
+        data = info.get("items") or info.get("tracks")
+        if not isinstance(data, dict):
+            raise SpotifyReadError(
+                "Spotify only provides the name of this playlist. In Development Mode, songs are available only for playlists you own or collaborate on.",
+                403,
+            )
+    else:
+        data = read_spotify(f"playlists/{playlist_id}/items", {"limit": 50, "offset": offset})
+    page = playlist_page(data, offset)
+    page["items"] = [
+        {"track": item.get("item", item.get("track"))} if isinstance(item, dict) else {"track": None}
+        for item in page["items"]
+    ]
+    return jsonify({"name": name, "tracks": page})
 
 
 @spotify.route("/play-track", methods=["POST"])
@@ -367,23 +428,6 @@ def get_volume():
 
 @spotify.route("/playlists", methods=["GET"])
 def get_playlists():
-    access_token = get_access_token()
-    if not access_token:
-        return jsonify({"error": "Failed to get access token"}), 401
-
-    playlists = []
-    next_url = f"{SPOTIFY_API_GENERIC}/me/playlists?limit=50"
-
-    while next_url:
-        headers = {"Authorization": f"Bearer {access_token}"}
-        response = requests.get(next_url, headers=headers)
-
-        if response.status_code != 200:
-            return jsonify({"error": "Failed to fetch playlists"}), response.status_code
-
-        data = response.json()
-        playlists.extend(data["items"])
-
-        next_url = data.get("next")
-
-    return jsonify({"items": playlists})
+    offset = playlist_offset()
+    data = read_spotify("me/playlists", {"limit": 50, "offset": offset})
+    return jsonify(playlist_page(data, offset))
