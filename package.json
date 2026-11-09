@@ -10,7 +10,7 @@
     "desktop:no-services": "electron . --no-start-services"
   },
   "devDependencies": {
-    "electron": "^44.7.0"
+    "electron": "^44.10.2"
   },
   "dependencies": {
     "socket.io-client": "^4.8.1"
